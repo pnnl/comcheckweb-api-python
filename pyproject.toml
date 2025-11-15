@@ -1,5 +1,5 @@
 [project]
-name = "comcheckweb-api-python"
+name = "comcheckweb_api"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -19,12 +19,21 @@ python_version = 3.12
 strict = true
 ignore_missing_imports = true
 
+# Exclude generated type files from type checking
+[[tool.mypy.overrides]]
+module = [
+    "src.types.core_types",
+]
+ignore_errors = true
+
 
 [dependency-groups]
 dev = [
     "black>=25.11.0",
-    "isort>=7.0.0",
+    "datamodel-code-generator>=0.35.0",
+    "isort>=6.0.0,<7.0.0",
     "mypy>=1.18.2",
     "pre-commit>=4.4.0",
+    "pydantic>=2.12.4",
     "pytest>=9.0.1",
 ]

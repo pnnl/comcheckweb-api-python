@@ -37,6 +37,12 @@ Clone the repository and follow the commands below to set up developer tooling.
 - Setup pre-commit (run once after cloning):
 	`uv run pre-commit install`
 
+- Fetch the latest COMcheck schema and regenerate types:
+	`./fetch_comcheck_schema.sh`
+
+- Regenerate types from existing schema (without fetching):
+	`uv run src/schemas/schema_generate.py`
+
 - Run a script from `scripts/`:
 	`uv run scripts/<script>`
 
