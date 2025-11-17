@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "httpx>=0.28.1",
+    "jsonschema>=4.25.1",
+]
 
 [tool.uv.workspace]
 members = [
@@ -14,25 +17,10 @@ members = [
 [tool.uv.sources]
 comcheckweb-api-python = { workspace = true }
 
-[tool.mypy]
-python_version = 3.12
-strict = true
-ignore_missing_imports = true
-
-# Exclude generated type files from type checking
-[[tool.mypy.overrides]]
-module = [
-    "src.types.core_types",
-]
-ignore_errors = true
-
-
 [dependency-groups]
 dev = [
     "black>=25.11.0",
     "datamodel-code-generator>=0.35.0",
-    "isort>=6.0.0,<7.0.0",
-    "mypy>=1.18.2",
     "pre-commit>=4.4.0",
     "pydantic>=2.12.4",
     "pytest>=9.0.1",
