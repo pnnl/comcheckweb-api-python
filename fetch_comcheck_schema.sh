@@ -27,4 +27,4 @@ echo "Saved $OUT"
 # Generate TypedDict types from the schema
 echo "Generating TypedDict types..."
 cd "$OLDPWD"
-uv run src/schemas/schema_generate.py
+uv run src/schemas/generate_core_types.py
