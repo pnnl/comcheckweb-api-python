@@ -1,7 +1,6 @@
 """AgWall (exterior wall) manager for COMcheck projects."""
 
-from typing import Any
-
+from typing import cast
 from src.constants.envelope_constants import DEFAULT_THERMAL_BRIDGE
 from src.types.core_types import (
     AgWall,
@@ -56,9 +55,9 @@ class AgWallListManager(DataManager[AgWall]):
     def add_new_thermal_bridge(
         self,
         ag_wall: AgWall,
-        thermal_bridge_type=ThermalBridgeTypeOptions.THERMAL_BRIDGE_OTHER,
-        thermal_bridge_category=ThermalBridgeCategoryOptions.THERMAL_BRIDGE_UNCATEGORIZED,
-        thermal_bridge_compliance_type=ThermalBridgeComplianceTypeOptions.THERMAL_BRIDGE_NON_PRESCRIPTIVE,
+        thermal_bridge_type: ThermalBridgeTypeOptions = "THERMAL_BRIDGE_OTHER",
+        thermal_bridge_category: ThermalBridgeCategoryOptions = "THERMAL_BRIDGE_UNCATEGORIZED",
+        thermal_bridge_compliance_type: ThermalBridgeComplianceTypeOptions = "THERMAL_BRIDGE_NON_PRESCRIPTIVE",
         psi_factor: float = 0.0,
         chi_factor: float = 0.0,
         thermal_bridge_length: float = 0.0,
@@ -78,10 +77,12 @@ class AgWallListManager(DataManager[AgWall]):
             The updated AgWall.
         """
         # Get thermal bridge manager
-        tb_manager = self.get_thermal_bridges(ag_wall)
+        thermal_bridge_manager: ThermalBridgeListManager = ThermalBridgeListManager(
+            ag_wall["thermalBridge"] if "thermalBridge" in ag_wall else []
+        )
 
         # Initialize new thermal bridge
-        initialize_thermal_bridge = {
+        initialize_thermal_bridge: ThermalBridge = {
             **DEFAULT_THERMAL_BRIDGE,
             "thermalBridgeType": thermal_bridge_type,
             "thermalBridgeCategory": thermal_bridge_category,
@@ -92,25 +93,10 @@ class AgWallListManager(DataManager[AgWall]):
         }
 
         # Add to wall and update
-        ag_wall["thermalBridge"] = tb_manager.add_new(initialize_thermal_bridge)
+        ag_wall["thermalBridge"] = thermal_bridge_manager.add_new(
+            initialize_thermal_bridge
+        )
         return self.modify_one(ag_wall["assemblyType"], ag_wall)
-
-    def get_thermal_bridges(self, ag_wall: AgWall) -> ThermalBridgeListManager:
-        """Get the thermal bridge manager for an AgWall.
-
-        Args:
-            ag_wall: The AgWall to get thermal bridges from.
-
-        Returns:
-            A ThermalBridgeListManager for the AgWall's thermal bridges.
-        """
-        # Ensure thermalBridge array exists
-        if not ag_wall.get("thermalBridge") or not isinstance(
-            ag_wall.get("thermalBridge"), list
-        ):
-            ag_wall["thermalBridge"] = []
-
-        return ThermalBridgeListManager(ag_wall["thermalBridge"])
 
     def add_new_door(self, ag_wall: AgWall, door: Door) -> AgWall:
         """Add a new door to an AgWall.
@@ -122,12 +108,9 @@ class AgWallListManager(DataManager[AgWall]):
         Returns:
             The updated AgWall.
         """
-        # Ensure door array exists
-        if not ag_wall.get("door") or not isinstance(ag_wall.get("door"), list):
-            ag_wall["door"] = []
 
         # Create door manager
-        door_mgr = DoorListManager(ag_wall["door"])
+        door_manager = DoorListManager(ag_wall["door"] if "door" in ag_wall else [])
 
         # Generate default door assembly
         door_count = len(ag_wall["door"]) + 1
@@ -138,8 +121,8 @@ class AgWallListManager(DataManager[AgWall]):
         )
 
         # Merge with provided door data and add
-        merged_door = {**door, **initialize_door}
-        ag_wall["door"] = door_mgr.add_new(merged_door)
+        merged_door: Door = cast(Door, {**door, **initialize_door})
+        ag_wall["door"] = door_manager.add_new(merged_door)
         return self.modify_one(ag_wall["assemblyType"], ag_wall)
 
     def add_new_window(self, ag_wall: AgWall, window: Window) -> AgWall:
@@ -152,12 +135,10 @@ class AgWallListManager(DataManager[AgWall]):
         Returns:
             The updated AgWall.
         """
-        # Ensure window array exists
-        if not ag_wall.get("window") or not isinstance(ag_wall.get("window"), list):
-            ag_wall["window"] = []
-
         # Create window manager
-        window_mgr = WindowListManager(ag_wall["window"])
+        window_manager = WindowListManager(
+            ag_wall["window"] if "window" in ag_wall else []
+        )
 
         # Generate default window assembly
         window_count = len(ag_wall["window"]) + 1
@@ -168,6 +149,6 @@ class AgWallListManager(DataManager[AgWall]):
         )
 
         # Merge with provided window data and add
-        merged_window = {**window, **initialize_window}
-        ag_wall["window"] = window_mgr.add_new(merged_window)
+        merged_window: Window = cast(Window, {**window, **initialize_window})
+        ag_wall["window"] = window_manager.add_new(merged_window)
         return self.modify_one(ag_wall["assemblyType"], ag_wall)

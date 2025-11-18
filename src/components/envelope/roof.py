@@ -1,6 +1,6 @@
 """Roof manager for COMcheck projects."""
 
-from typing import Any
+from typing import cast
 
 from src.types.core_types import Roof, Skylight
 from src.utilities.data_manager import DataManager
@@ -46,7 +46,7 @@ class RoofListManager(DataManager[Roof]):
         Returns:
             The updated list of roofs.
         """
-        assembly_type = roof.get("assemblyType", "")
+        assembly_type = str(roof["assemblyType"] if "assemblyType" in roof else "")
 
         # Check if assemblyType is missing or doesn't start with "Roof:"
         if not assembly_type or not assembly_type.startswith("Roof:"):
@@ -68,7 +68,7 @@ class RoofListManager(DataManager[Roof]):
         new_assembly_type = f"Roof:Roof{counter}"
 
         # Ensure uniqueness
-        while any(r.get("assemblyType") == new_assembly_type for r in self._data):
+        while any(r["assemblyType"] == new_assembly_type for r in self._data):
             counter += 1
             new_assembly_type = f"Roof:Roof{counter}"
 
@@ -84,12 +84,10 @@ class RoofListManager(DataManager[Roof]):
         Returns:
             The updated Roof.
         """
-        # Ensure skylight array exists
-        if not roof.get("skylight") or not isinstance(roof.get("skylight"), list):
-            roof["skylight"] = []
-
         # Create skylight manager
-        skylight_mgr = SkylightListManager(roof["skylight"])
+        skylight_manager = SkylightListManager(
+            roof["skylight"] if "skylight" in roof else []
+        )
 
         # Generate default skylight assembly
         skylight_count = len(roof["skylight"]) + 1
@@ -100,6 +98,6 @@ class RoofListManager(DataManager[Roof]):
         )
 
         # Merge with provided skylight data and add
-        merged_skylight = {**skylight, **initialize_skylight}
-        roof["skylight"] = skylight_mgr.add_new(merged_skylight)
+        merged_skylight: Skylight = cast(Skylight, {**skylight, **initialize_skylight})  # type: ignore[typeddict-item]
+        roof["skylight"] = skylight_manager.add_new(merged_skylight)
         return self.modify_one(roof["assemblyType"], roof)

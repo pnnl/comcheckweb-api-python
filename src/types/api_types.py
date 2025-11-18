@@ -1,10 +1,8 @@
-from typing import Any, List, Optional
-
-from pydantic import BaseModel
+from typing import Any, NotRequired, TypedDict
 
 
-class ApiResponse(BaseModel):
+class ApiResponse(TypedDict):
     success: bool
-    message: Optional[str] = None
-    data: Optional[Any] = None
-    errors: Optional[List[str]] = None
+    message: NotRequired[str | None]
+    data: NotRequired[Any]
+    errors: NotRequired[list[str] | None]

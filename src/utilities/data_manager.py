@@ -1,12 +1,11 @@
 """Generic data manager with JSON schema validation."""
 
 import copy
+import json
 from pathlib import Path
-from typing import Any, Generic, TypeVar
+from typing import Any, Dict, Generic, TypeVar
 
 from jsonschema import ValidationError, validate
-
-from src.utilities.common import read_json
 
 T = TypeVar("T")
 
@@ -43,7 +42,8 @@ class DataManager(Generic[T]):
         if schema_path:
             schema_path = Path(schema_path)
             if schema_path.exists():
-                self._schema = read_json(schema_path)
+                with open(schema_path, "r", encoding="utf-8") as f:
+                    self._schema = json.load(f)
 
         # Add initial data
         if initial_data:
@@ -161,7 +161,7 @@ class DataManager(Generic[T]):
         ]
         return len(self._data) != initial_length
 
-    def modify_one(self, id_value: Any, updates: dict[str, Any]) -> T:
+    def modify_one(self, id_value: Any, updates: T) -> T:
         """Modify an existing item by its identifier.
 
         If the identifier changes, ensures no duplicates exist in the data array.
@@ -187,7 +187,7 @@ class DataManager(Generic[T]):
             raise ValueError(f"Item with {self._identifier} '{id_value}' not found")
 
         # If identifier is changing, validate its uniqueness
-        new_identifier = updates.get(self._identifier)
+        new_identifier: T = updates[self._identifier]  # type: ignore[index]
         if new_identifier and new_identifier != id_value:
             if any(
                 self._get_identifier_value(existing) == new_identifier
@@ -198,6 +198,5 @@ class DataManager(Generic[T]):
                 )
 
         # Apply updates
-        updated_item = {**self._data[item_index], **updates}
-        self._data[item_index] = updated_item
+        updated_item: T = {**self._data[item_index], **updates}  # type: ignore
         return copy.deepcopy(updated_item)

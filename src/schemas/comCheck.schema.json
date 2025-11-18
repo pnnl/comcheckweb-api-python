@@ -1422,10 +1422,10 @@
                 },
                 "grossArea": {
                     "description": "gross area",
-                    "type": "number",
+                    "type": ["null", "number"],
                     "unit": "ft2",
                     "minimum": 0.0,
-                    "default": 0.0
+                    "default": null
                 },
                 "altExemptType": {
                     "description": "alteration exemption type",
@@ -1584,6 +1584,20 @@
                         { "$ref": "comCheck.schema.json#/definitions/DoorEntranceTypeOptions" }
                     ],
                     "default": null
+                },
+                "cavityRValue": {
+                    "descriptions": "Average insulation R-value in the cavity between two studs.",
+                    "type": "number",
+                    "unit": "h-ft2-F/Btu",
+                    "minimum": 0.0,
+                    "default": 0.0
+                },
+                "continuousRValue": {
+                    "description": "Continuous insulation on the door. Can be exterior or interior or both.",
+                    "type": "number",
+                    "unit": "h-ft2-F/Btu",
+                    "minimum": 0.0,
+                    "default": 0.0
                 }
             },
             "required": [

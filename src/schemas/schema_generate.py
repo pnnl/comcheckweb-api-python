@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Pydantic v2 models from comCheck.schema.json."""
+"""Generate TypedDict from comCheck.schema.json."""
 import subprocess
 import sys
 from pathlib import Path
@@ -22,7 +22,7 @@ result = subprocess.run(
         "--output",
         str(OUTPUT_TYPES),
         "--output-model-type",
-        "pydantic_v2.BaseModel",
+        "typing.TypedDict",
         "--target-python-version",
         "3.13",
         "--use-standard-collections",

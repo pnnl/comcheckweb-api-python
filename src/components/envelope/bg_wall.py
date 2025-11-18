@@ -1,6 +1,6 @@
 """BgWall (basement wall) manager for COMcheck projects."""
 
-from typing import Any
+from typing import cast
 
 from src.types.core_types import BgWall, Door, Window
 from src.utilities.data_manager import DataManager
@@ -39,12 +39,8 @@ class BgWallListManager(DataManager[BgWall]):
         Returns:
             The updated BgWall.
         """
-        # Ensure door array exists
-        if not bg_wall.get("door") or not isinstance(bg_wall.get("door"), list):
-            bg_wall["door"] = list[Door]([])
-
         # Create door manager
-        door_mgr = DoorListManager(bg_wall["door"])
+        door_manager = DoorListManager(bg_wall["door"] if "door" in bg_wall else [])
 
         # Generate default door assembly
         door_count = len(bg_wall["door"]) + 1
@@ -55,8 +51,8 @@ class BgWallListManager(DataManager[BgWall]):
         )
 
         # Merge with provided door data and add
-        merged_door = {**door, **initialize_door}
-        bg_wall["door"] = door_mgr.add_new(merged_door)
+        merged_door: Door = cast(Door, {**door, **initialize_door})
+        bg_wall["door"] = door_manager.add_new(merged_door)
         return self.modify_one(bg_wall["assemblyType"], bg_wall)
 
     def add_new_window(self, bg_wall: BgWall, window: Window) -> BgWall:
@@ -69,12 +65,10 @@ class BgWallListManager(DataManager[BgWall]):
         Returns:
             The updated BgWall.
         """
-        # Ensure window array exists
-        if not bg_wall.get("window") or not isinstance(bg_wall.get("window"), list):
-            bg_wall["window"] = []
-
         # Create window manager
-        window_mgr = WindowListManager(bg_wall["window"])
+        window_manager = WindowListManager(
+            bg_wall["window"] if "window" in bg_wall else []
+        )
 
         # Generate default window assembly
         window_count = len(bg_wall["window"]) + 1
@@ -85,6 +79,6 @@ class BgWallListManager(DataManager[BgWall]):
         )
 
         # Merge with provided window data and add
-        merged_window = {**window, **initialize_window}
-        bg_wall["window"] = window_mgr.add_new(merged_window)
+        merged_window: Window = cast(Window, {**window, **initialize_window})
+        bg_wall["window"] = window_manager.add_new(merged_window)
         return self.modify_one(bg_wall["assemblyType"], bg_wall)

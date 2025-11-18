@@ -24,7 +24,7 @@ cp "$PATH_IN_REPO" "$OLDPWD/$OUT"
 
 echo "Saved $OUT"
 
-# Generate Pydantic types from the schema
-echo "Generating Pydantic types..."
+# Generate TypedDict types from the schema
+echo "Generating TypedDict types..."
 cd "$OLDPWD"
 uv run src/schemas/schema_generate.py

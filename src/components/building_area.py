@@ -9,7 +9,7 @@ from src.utilities.data_manager import DataManager
 class BuildingAreaListManager(DataManager[WholeBldgUse]):
     """Manager for WholeBldgUse (building area) items."""
 
-    def __init__(self, initial_whole_bldg_use: list[dict[str, Any]]):
+    def __init__(self, initial_whole_bldg_use: list[WholeBldgUse]):
         """Initialize the building area list manager.
 
         Args:
