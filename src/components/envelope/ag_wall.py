@@ -28,7 +28,7 @@ class ThermalBridgeListManager(DataManager[ThermalBridge]):
         """
         super().__init__(
             initial_data=initial_thermal_bridges,
-            identifier="assemblyType",
+            identifier="id",
             schema_reference="ThermalBridge",
         )
 

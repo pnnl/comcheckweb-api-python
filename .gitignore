@@ -51,3 +51,6 @@ htmlcov/
 # Temporary files
 *.tmp
 *.swp
+
+.env
+testprojectJson/

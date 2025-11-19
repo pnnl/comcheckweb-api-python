@@ -1,6 +1,5 @@
 """Script to test COMcheck API client and project operations."""
 
-import asyncio
 import os
 import sys
 
@@ -41,12 +40,10 @@ def test_get_project_and_project_list():
     try:
         response = client.list_projects()
         project_list = response.get("data", [])
-        # print('Project list:', project_list)
 
         if project_list and (project_list[0].get("_id") or project_list[0].get("id")):
             project_id = project_list[0].get("_id") or project_list[0].get("id")
             project = client.get_project(project_id)
-            print("First project details:", project.get("data"))
             return project.get("data")
         return None
     except Exception as err:
@@ -59,7 +56,7 @@ def test_update_project_with_default_dummy_project(test_project_id: str):
     try:
         default_project = get_default_project_template()
         update_resp = client.update_project(test_project_id, default_project)
-        print("Project after updating with defaults:", update_resp)
+        return update_resp
     except Exception as err:
         print(f"Error in test_update_project_with_default_dummy_project: {err}")
 
@@ -79,11 +76,13 @@ def test_update_project_with_add_building_area(test_project_id: str):
         )
         if updated_project.get("id"):
             update_resp = client.update_project(updated_project["id"], updated_project)
-            print("Project after adding building area:", update_resp)
+            return update_resp
         else:
             print("No id found on updated project, skipping updateProject API call.")
+            return
     except Exception as err:
         print(f"Error in test_update_project_with_add_building_area: {err}")
+        return
 
 
 # Test envelope operations
@@ -112,11 +111,13 @@ def test_update_project_with_add_roof(test_project_id: str):
         )
         if updated_project.get("id"):
             update_resp = client.update_project(updated_project["id"], updated_project)
-            print("Project after adding roof:", update_resp)
+            return update_resp
         else:
             print("No id found on updated project, skipping updateProject API call.")
+            return
     except Exception as err:
         print(f"Error in test_update_project_with_add_roof: {err}")
+        return
 
 
 def test_update_project_with_add_skylight(test_project_id: str):
@@ -136,9 +137,6 @@ def test_update_project_with_add_skylight(test_project_id: str):
             default_skylight = get_default_skylight_template()
             whole_bldg_use = test_project.get("lighting", {}).get("wholeBldgUse", [])
 
-            print("here roof", roof_list[0])
-            print("here building", whole_bldg_use[0])
-
             updated_project = project_envelope_operations.add_skylight_to_project(
                 test_project,
                 whole_bldg_use[0]["key"],
@@ -149,15 +147,18 @@ def test_update_project_with_add_skylight(test_project_id: str):
                 update_resp = client.update_project(
                     updated_project["id"], updated_project
                 )
-                print("Project after adding roof and skylight:", update_resp)
+                return update_resp
             else:
                 print(
                     "No id found on updated project, skipping updateProject API call."
                 )
+                return
         else:
             print("No roof found in test project, cannot add skylight.")
+            return
     except Exception as err:
         print(f"Error in test_update_project_with_add_roof_and_skylight: {err}")
+        return
 
 
 # Adding window, door are similar, only window shown here
@@ -208,11 +209,13 @@ def test_update_project_with_add_window(test_project_id: str):
 
         if updated_project.get("id"):
             update_resp = client.update_project(updated_project["id"], updated_project)
-            print("Project after adding window:", update_resp)
+            return update_resp
         else:
             print("No id found on updated project, skipping updateProject API call.")
+            return
     except Exception as err:
         print(f"Error in test_update_project_with_add_window: {err}")
+        return
 
 
 def test_update_project_with_add_thermal_bridge(test_project_id: str):
@@ -265,11 +268,13 @@ def test_update_project_with_add_thermal_bridge(test_project_id: str):
 
         if updated_project.get("id"):
             update_resp = client.update_project(updated_project["id"], updated_project)
-            print("Project after adding thermal bridge:", update_resp)
+            return update_resp
         else:
             print("No id found on updated project, skipping updateProject API call.")
+            return
     except Exception as err:
         print(f"Error in test_update_project_with_add_thermal_bridge: {err}")
+        return
 
 
 def test_update_project_with_fixture_schedule(test_project_id: str):
@@ -290,7 +295,6 @@ def test_update_project_with_fixture_schedule(test_project_id: str):
             # from src.projectOperations import project_lighting_operations
             # from src.utilities.project_defaults import get_default_fixture_schedule_template
             # default_fixture_schedule = get_default_fixture_schedule_template()
-            # print(default_fixture_schedule)
             # updated_project = project_lighting_operations.add_fixture_schedule_to_project(
             #     test_project, default_fixture_schedule
             # )
@@ -298,13 +302,17 @@ def test_update_project_with_fixture_schedule(test_project_id: str):
             #     update_resp = client.update_project(
             #         updated_project["id"], updated_project
             #     )
-            #     print("Project after adding fixture schedule:", update_resp)
+            #     # print("Project after adding fixture schedule:", update_resp)
+            #     return update_resp
             # else:
             #     print("No id found on updated project, skipping updateProject API call.")
+            #     return
         else:
             print("No lighting found in test project, cannot add fixture schedule.")
+            return
     except Exception as err:
         print(f"Error in test_update_project_with_fixture_schedule: {err}")
+        return
 
 
 # Main Test Execution
@@ -312,22 +320,30 @@ def main():
     """Main test execution function."""
     # test project is the first project in the project list
     test_project = test_get_project_and_project_list()
-    export_to_json(test_project, "initialProject.json")
+    export_to_json(test_project, "testProjectJson/initialProject.json")
 
     if test_project:
-        # test_update_project_with_default_dummy_project(test_project["id"])
+        # default_project=test_update_project_with_default_dummy_project(test_project["id"])
+        # export_to_json(default_project, "testProjectJson/defaultProject.json")
+        # building_area_project = test_update_project_with_add_building_area(test_project["id"])
+        # export_to_json(building_area_project, "testProjectJson/buildingAreaAddedProject.json")
 
-        # test_update_project_with_add_building_area(test_project["id"])
+        # roof_project = test_update_project_with_add_roof(test_project["id"])
+        # export_to_json(roof_project, "testProjectJson/roofAddedProject.json")
 
-        # test_update_project_with_add_roof(test_project["id"])
+        # skylight_project = test_update_project_with_add_skylight(test_project["id"])
+        # export_to_json(skylight_project, "testProjectJson/skylightAddedProject.json")
+        # window_project = test_update_project_with_add_window(test_project["id"])
+        # export_to_json(window_project, "testProjectJson/windowAddedProject.json")
 
-        # test_update_project_with_add_skylight(test_project["id"])
-
-        # test_update_project_with_add_window(test_project["id"])
-
-        test_update_project_with_add_thermal_bridge(test_project["id"])
-        test_update_project_with_fixture_schedule(test_project["id"])
+        thermal_bridge_project = test_update_project_with_add_thermal_bridge(
+            test_project["id"]
+        )
+        export_to_json(
+            thermal_bridge_project, "testProjectJson/thermalBridgeAddedProject.json"
+        )
+        # test_update_project_with_fixture_schedule(test_project["id"])
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

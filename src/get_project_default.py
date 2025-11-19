@@ -14,16 +14,14 @@ from src.constants.envelope_constants import (
     DEFAULT_WINDOW,
 )
 
-# TODO: Import these when the modules are created
-# from src.constants import DUMMY_PROJECT
+from src.constants.common_constants import DUMMY_PROJECT
+
 # from src.constants.lighting_constants import DEFAULT_FIXTURE_SCHEDULE
 
 
 def get_default_project_template():
     """Get project defaults."""
-    # TODO: Implement when DUMMY_PROJECT constant is available
-    # return DUMMY_PROJECT
-    raise NotImplementedError("DUMMY_PROJECT constant not yet implemented")
+    return DUMMY_PROJECT
 
 
 def get_default_building_area_template():
