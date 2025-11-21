@@ -2,7 +2,7 @@
 
 from uuid import uuid4
 
-from src.types.core_types import (
+from comcheck_api.types.core_types import (
     AgWall,
     BgWall,
     Door,
@@ -12,7 +12,7 @@ from src.types.core_types import (
     ThermalBridge,
     Window,
 )
-from src.utilities.common import get_random_number
+from comcheck_api.utilities.common import get_random_number
 
 DEFAULT_WINDOW: Window = {
     "adjacentSpaceBuildingType": "WHOLE_BUILDING_OFFICE",
@@ -21,9 +21,7 @@ DEFAULT_WINDOW: Window = {
     "altExemptType": None,
     "assemblyType": "Window:Default Window",
     "bldgUseKey": str(uuid4()),
-    "cavityRValue": 0,
     "constructionType": "NON_RESIDENTIAL",
-    "continuousRValue": 0,
     "description": "",
     "exemptionType": "ENV_EXEMPTION_NONE",
     "frameType": "METAL",
@@ -83,8 +81,6 @@ DEFAULT_SKYLIGHT: Skylight = {
     "allowanceType": None,
     "assemblyType": "Skylight:Default Skylight",
     "bldgUseKey": "",
-    "cavityRValue": 0,
-    "continuousRValue": 0,
     "curbType": "NO_CURB_SKYLIGHT",
     "description": "",
     "exemptionType": None,
@@ -116,7 +112,6 @@ DEFAULT_ROOF: Roof = {
     "exemptionType": None,
     "grossArea": 6000,
     "highAlbedoRoofReqType": "HA_ROOF_EXEMPTION_VEGETATED",
-    "highAlbedoRoofType": None,
     "orientation": "UNSPECIFIED_ORIENTATION",
     "propUValue": 0.26,
     "purlinSpacing": 0,
@@ -161,7 +156,6 @@ DEFAULT_AG_WALL: AgWall = {
     "cmuType": None,
     "concreteDensity": 0,
     "concreteThickness": 0,
-    "continuousRDerateFactor": None,
     "continuousRValue": 10,
     "description": "",
     "door": [],

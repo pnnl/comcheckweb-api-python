@@ -7,8 +7,8 @@ from uuid import uuid4
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
-from src.components.envelope.door import DoorListManager
-from src.types.core_types import Door
+from comcheck_api.components.envelope.door import DoorListManager
+from comcheck_api.types.core_types import Door
 
 # Example usage
 manager = DoorListManager([])

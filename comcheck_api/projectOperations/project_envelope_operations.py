@@ -3,14 +3,14 @@
 import copy
 from typing import Any, cast
 
-from src.components.envelope.ag_wall import AgWallListManager
-from src.components.envelope.bg_wall import BgWallListManager
-from src.components.envelope.door import DoorListManager
-from src.components.envelope.floor import FloorListManager
-from src.components.envelope.roof import RoofListManager
-from src.components.envelope.skylight import SkylightListManager
-from src.components.envelope.window import WindowListManager
-from src.types.core_types import (
+from comcheck_api.components.envelope.ag_wall import AgWallListManager
+from comcheck_api.components.envelope.bg_wall import BgWallListManager
+from comcheck_api.components.envelope.door import DoorListManager
+from comcheck_api.components.envelope.floor import FloorListManager
+from comcheck_api.components.envelope.roof import RoofListManager
+from comcheck_api.components.envelope.skylight import SkylightListManager
+from comcheck_api.components.envelope.window import WindowListManager
+from comcheck_api.types.core_types import (
     AgWall,
     BgWall,
     Door,

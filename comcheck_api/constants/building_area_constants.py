@@ -2,7 +2,7 @@
 
 from uuid import uuid4
 
-from src.types.core_types import WholeBldgUse
+from comcheck_api.types.core_types import WholeBldgUse
 
 # Default building area structure with interior lighting space
 DEFAULT_BUILDING_AREA: WholeBldgUse = {
@@ -18,7 +18,6 @@ DEFAULT_BUILDING_AREA: WholeBldgUse = {
     "interiorLightingSpace": {
         "altExemptType": "EXEMPT_NOT_SET",
         "description": "",
-        "listPosition": None,
         "numFixturesAlteredOrAdded": 0,
         "postAltTotalWattage": 0,
         "preAltNumberFixtures": 0,

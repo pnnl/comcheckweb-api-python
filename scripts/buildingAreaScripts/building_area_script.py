@@ -6,8 +6,8 @@ import sys
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
-from src.components.building_area import BuildingAreaListManager
-from src.constants.building_area_constants import DEFAULT_BUILDING_AREA
+from comcheck_api.components.building_area import BuildingAreaListManager
+from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
 
 manager = BuildingAreaListManager([])
 

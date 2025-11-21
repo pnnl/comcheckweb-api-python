@@ -2,8 +2,8 @@
 
 import pytest
 
-from src.components.envelope.bg_wall import BgWallListManager
-from src.constants.envelope_constants import (
+from comcheck_api.components.envelope.bg_wall import BgWallListManager
+from comcheck_api.constants.envelope_constants import (
     DEFAULT_BG_WALL,
     DEFAULT_DOOR,
     DEFAULT_WINDOW,

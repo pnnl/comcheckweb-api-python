@@ -2,8 +2,8 @@
 
 from typing import Any, Dict
 
-from src.constants.envelope_constants import DEFAULT_ASSEMBLIES
-from src.types.common_types import AssemblyType
+from comcheck_api.constants.envelope_constants import DEFAULT_ASSEMBLIES
+from comcheck_api.types.common_types import AssemblyType
 
 
 def type_map_description(type_name: str) -> str:

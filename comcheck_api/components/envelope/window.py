@@ -2,8 +2,8 @@
 
 from typing import Any
 
-from src.types.core_types import Window
-from src.utilities.data_manager import DataManager
+from comcheck_api.types.core_types import Window
+from comcheck_api.utilities.data_manager import DataManager
 
 
 class WindowListManager(DataManager[Window]):

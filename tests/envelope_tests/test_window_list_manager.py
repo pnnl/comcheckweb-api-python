@@ -1,7 +1,7 @@
 """Tests for WindowListManager."""
 
-from src.components.envelope.window import WindowListManager
-from src.constants.envelope_constants import DEFAULT_WINDOW
+from comcheck_api.components.envelope.window import WindowListManager
+from comcheck_api.constants.envelope_constants import DEFAULT_WINDOW
 
 
 class TestWindowListManager:

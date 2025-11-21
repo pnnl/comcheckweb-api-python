@@ -2,8 +2,8 @@
 
 from uuid import uuid4
 
-from src.constants.building_area_constants import DEFAULT_BUILDING_AREA
-from src.constants.envelope_constants import (
+from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
+from comcheck_api.constants.envelope_constants import (
     DEFAULT_AG_WALL,
     DEFAULT_BG_WALL,
     DEFAULT_DOOR,
@@ -14,7 +14,7 @@ from src.constants.envelope_constants import (
     DEFAULT_WINDOW,
 )
 
-from src.constants.common_constants import DUMMY_PROJECT
+from comcheck_api.constants.common_constants import DUMMY_PROJECT
 
 # from src.constants.lighting_constants import DEFAULT_FIXTURE_SCHEDULE
 

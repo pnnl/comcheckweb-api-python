@@ -2,8 +2,8 @@
 
 from typing import Any, Dict, Optional
 
-from src.api.api_services import COMCheckApiService
-from src.constants.building_area_constants import DEFAULT_BUILDING_AREA
+from comcheck_api.api.api_services import COMCheckApiService
+from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
 
 
 class COMcheckClient:

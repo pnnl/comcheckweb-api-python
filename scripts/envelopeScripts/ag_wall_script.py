@@ -6,8 +6,8 @@ import sys
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
-from src.components.envelope.ag_wall import AgWallListManager
-from src.types.core_types import AgWall
+from comcheck_api.components.envelope.ag_wall import AgWallListManager
+from comcheck_api.types.core_types import AgWall
 
 manager = AgWallListManager([])
 

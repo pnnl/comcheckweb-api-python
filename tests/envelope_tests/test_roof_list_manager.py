@@ -2,8 +2,8 @@
 
 import pytest
 
-from src.components.envelope.roof import RoofListManager
-from src.constants.envelope_constants import DEFAULT_ROOF, DEFAULT_SKYLIGHT
+from comcheck_api.components.envelope.roof import RoofListManager
+from comcheck_api.constants.envelope_constants import DEFAULT_ROOF, DEFAULT_SKYLIGHT
 
 
 class TestRoofListManager:

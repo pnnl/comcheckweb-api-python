@@ -6,8 +6,8 @@ import sys
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
-from src.components.envelope.bg_wall import BgWallListManager
-from src.types.core_types import BgWall, Door, Window
+from comcheck_api.components.envelope.bg_wall import BgWallListManager
+from comcheck_api.types.core_types import BgWall, Door, Window
 
 manager = BgWallListManager([])
 

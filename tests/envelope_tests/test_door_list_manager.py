@@ -1,7 +1,7 @@
 """Tests for DoorListManager."""
 
-from src.components.envelope.door import DoorListManager
-from src.constants.envelope_constants import DEFAULT_DOOR
+from comcheck_api.components.envelope.door import DoorListManager
+from comcheck_api.constants.envelope_constants import DEFAULT_DOOR
 
 
 def test_initialization_with_provided_data():

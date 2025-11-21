@@ -8,13 +8,13 @@ from dotenv import load_dotenv
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.comcheck_client import COMcheckClient
-from src.projectOperations import (
+from comcheck_api.comcheck_client import COMcheckClient
+from comcheck_api.projectOperations import (
     project_building_area_operations,
     project_envelope_operations,
 )
-from src.utilities.common import export_to_json
-from src.get_project_default import (
+from comcheck_api.utilities.common import export_to_json
+from comcheck_api.get_project_default import (
     get_default_ag_wall_template,
     get_default_building_area_template,
     get_default_project_template,

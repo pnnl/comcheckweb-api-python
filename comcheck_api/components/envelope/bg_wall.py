@@ -2,9 +2,9 @@
 
 from typing import cast
 
-from src.types.core_types import BgWall, Door, Window
-from src.utilities.data_manager import DataManager
-from src.utilities.envelope_utilities import generate_assembly
+from comcheck_api.types.core_types import BgWall, Door, Window
+from comcheck_api.utilities.data_manager import DataManager
+from comcheck_api.utilities.envelope_utilities import generate_assembly
 
 from .door import DoorListManager
 from .window import WindowListManager

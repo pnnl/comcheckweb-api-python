@@ -7,8 +7,8 @@ from uuid import uuid4
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
-from src.components.envelope.window import WindowListManager
-from src.types.core_types import Window
+from comcheck_api.components.envelope.window import WindowListManager
+from comcheck_api.types.core_types import Window
 
 # Example usage
 manager = WindowListManager([])
