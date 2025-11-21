@@ -4,12 +4,12 @@ repos:
     hooks:
       - id: black
         language_version: python3
-        exclude: ^src/types/core_types\.py$
+        exclude: ^compcheck_api/types/core_types\.py$
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.18.2
     hooks:
       - id: mypy
         language_version: python3
-        exclude: ^src/types/core_types\.py$
+        exclude: ^compcheck_api/types/core_types\.py$
 

@@ -5,7 +5,7 @@ import sys
 
 from dotenv import load_dotenv
 
-# Add src to path for imports
+# Add compcheck_api to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from comcheck_api.comcheck_client import COMcheckClient
@@ -292,8 +292,8 @@ def test_update_project_with_fixture_schedule(test_project_id: str):
             print(
                 "Fixture schedule test not yet implemented - requires lighting operations module"
             )
-            # from src.projectOperations import project_lighting_operations
-            # from src.utilities.project_defaults import get_default_fixture_schedule_template
+            # from compcheck_api.projectOperations import project_lighting_operations
+            # from compcheck_api.utilities.project_defaults import get_default_fixture_schedule_template
             # default_fixture_schedule = get_default_fixture_schedule_template()
             # updated_project = project_lighting_operations.add_fixture_schedule_to_project(
             #     test_project, default_fixture_schedule

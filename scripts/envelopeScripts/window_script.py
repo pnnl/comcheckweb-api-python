@@ -4,7 +4,7 @@ import os
 import sys
 from uuid import uuid4
 
-# Add src to path for imports
+# Add compcheck_api to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 from comcheck_api.components.envelope.window import WindowListManager

@@ -16,7 +16,7 @@ from comcheck_api.constants.envelope_constants import (
 
 from comcheck_api.constants.common_constants import DUMMY_PROJECT
 
-# from src.constants.lighting_constants import DEFAULT_FIXTURE_SCHEDULE
+# from compcheck_api.constants.lighting_constants import DEFAULT_FIXTURE_SCHEDULE
 
 
 def get_default_project_template():

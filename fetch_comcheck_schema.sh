@@ -5,7 +5,7 @@ set -euo pipefail
 REPO_SSH="${REPO_SSH:-ssh://git@gitlab-data.pnnl.gov:2222/becp/comcheck-schema.git}"
 BRANCH="${BRANCH:-main}"
 PATH_IN_REPO="${PATH_IN_REPO:-comCheck.schema.json}"
-OUT="${OUT:-src/schemas/comCheck.schema.json}"
+OUT="${OUT:-comcheck_api/schemas/comCheck.schema.json}"
 
 TMP_DIR="$(mktemp -d)"
 cleanup() { rm -rf "$TMP_DIR"; }
@@ -27,4 +27,4 @@ echo "Saved $OUT"
 # Generate TypedDict types from the schema
 echo "Generating TypedDict types..."
 cd "$OLDPWD"
-uv run src/schemas/generate_core_types.py
+uv run comcheck_api/schemas/generate_core_types.py

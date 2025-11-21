@@ -41,7 +41,7 @@ Clone the repository and follow the commands below to set up developer tooling.
 	`./fetch_comcheck_schema.sh`
 
 - Regenerate types from existing schema (without fetching):
-	`uv run src/schemas/schema_generate.py`
+	`uv run compcheck_api/schemas/schema_generate.py`
 
 - Run a script from `scripts/`:
 	`uv run scripts/<script>`
@@ -50,10 +50,10 @@ Clone the repository and follow the commands below to set up developer tooling.
 	`uv run pytest`
 
 - Format the repository with Black:
-	`uv run black src tests scripts`
+	`uv run black compcheck_api tests scripts`
 
 - Run type checking:
-	`uv run mypy src`
+	`uv run mypy compcheck_api`
 
 ## Contributing
 
