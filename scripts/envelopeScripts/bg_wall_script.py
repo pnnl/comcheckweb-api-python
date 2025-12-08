@@ -78,7 +78,7 @@ manager.add_new_door(
 )
 
 print("After adding door:", bg_wall_list[0])
-print("Door list:", bg_wall_list[0]["door"])
+print("Door list:", bg_wall_list[0].door)
 
 manager.add_new_window(
     bg_wall_list[0],
@@ -114,4 +114,4 @@ manager.add_new_window(
 )
 
 print("After adding window:", bg_wall_list[0])
-print("Window list:", bg_wall_list[0]["window"])
+print("Window list:", bg_wall_list[0].window)

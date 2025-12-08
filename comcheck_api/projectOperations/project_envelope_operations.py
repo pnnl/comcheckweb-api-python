@@ -1,7 +1,7 @@
 """Project Envelope Operations."""
 
 import copy
-from typing import Any, cast
+from typing import Any, Union, cast
 
 from comcheck_api.components.envelope.ag_wall import AgWallListManager
 from comcheck_api.components.envelope.bg_wall import BgWallListManager
@@ -13,6 +13,7 @@ from comcheck_api.components.envelope.window import WindowListManager
 from comcheck_api.types.core_types import (
     AgWall,
     BgWall,
+    ComBuilding,
     Door,
     Floor,
     Roof,
@@ -21,15 +22,17 @@ from comcheck_api.types.core_types import (
     ThermalBridgeComplianceTypeOptions,
     ThermalBridgeTypeOptions,
     Window,
+    Envelope,
 )
+from comcheck_api.utilities.data_manager import T
 
 
 # TODO: assemblyType needs to be set properly and uniquely.
 
 
 def add_roof_to_project(
-    project: dict[str, Any], building_area_key: str, new_roof: Roof
-) -> dict[str, Any]:
+    project: ComBuilding, building_area_key: str, new_roof: Roof
+) -> ComBuilding:
     """Add a new roof to the envelope in any project object using RoofListManager.
 
     Args:
@@ -44,43 +47,20 @@ def add_roof_to_project(
         ValueError: If buildingAreaKey is not found in lighting.wholeBldgUse list
     """
     # Deep clone to avoid mutating the original project
-    updated_project = copy.deepcopy(project)
+    _require_building_area(project, building_area_key)
 
-    # Check if buildingAreaKey exists in lighting.wholeBldgUse list
-    if (
-        "lighting" not in updated_project
-        or "wholeBldgUse" not in updated_project["lighting"]
-        or not isinstance(updated_project["lighting"]["wholeBldgUse"], list)
-    ):
-        raise ValueError("No building area found in project.")
+    updated_project = project.model_copy(deep=True)
 
-    building_area_exists = any(
-        item.get("key") == building_area_key
-        for item in updated_project["lighting"]["wholeBldgUse"]
-    )
-
-    if not building_area_exists:
-        raise ValueError(
-            f"Adding roof error: Building area with key '{building_area_key}' not found in lighting.wholeBldgUse list."
-        )
-
-    if (
-        "envelope" in updated_project
-        and "roof" in updated_project["envelope"]
-        and isinstance(updated_project["envelope"]["roof"], list)
-    ):
-        roof_to_add: Roof = cast(Roof, {**new_roof, "bldgUseKey": building_area_key})
-        manager = RoofListManager(updated_project["envelope"]["roof"])
-        updated_project["envelope"]["roof"] = manager.add_new(roof_to_add)
-    else:
-        raise ValueError("Envelope or roof array not found in project.")
+    updated_project.envelope.add_subcomponent(new_roof)
+    new_roof.bldgUseKey = building_area_key
+    updated_project.envelope.add_subcomponent(new_roof)
 
     return updated_project
 
 
 def add_ag_wall_to_project(
-    project: dict[str, Any], building_area_key: str, new_ag_wall: AgWall
-) -> dict[str, Any]:
+    project: ComBuilding, building_area_key: str, new_ag_wall: AgWall
+) -> ComBuilding:
     """Add a new agWall to the envelope in any project object using AgWallListManager.
 
     Args:
@@ -94,44 +74,20 @@ def add_ag_wall_to_project(
     Raises:
         ValueError: If buildingAreaKey is not found in lighting.wholeBldgUse list
     """
-    updated_project = copy.deepcopy(project)
 
-    if (
-        "lighting" not in updated_project
-        or "wholeBldgUse" not in updated_project["lighting"]
-        or not isinstance(updated_project["lighting"]["wholeBldgUse"], list)
-    ):
-        raise ValueError("No building area found in project.")
+    _require_building_area(project, building_area_key)
 
-    building_area_exists = any(
-        item.get("key") == building_area_key
-        for item in updated_project["lighting"]["wholeBldgUse"]
-    )
+    updated_project = project.model_copy(deep=True)
 
-    if not building_area_exists:
-        raise ValueError(
-            f"Adding agWall error: Building area with key '{building_area_key}' not found in lighting.wholeBldgUse list."
-        )
-
-    if (
-        "envelope" in updated_project
-        and "agWall" in updated_project["envelope"]
-        and isinstance(updated_project["envelope"]["agWall"], list)
-    ):
-        ag_wall_to_add: AgWall = cast(
-            AgWall, {**new_ag_wall, "bldgUseKey": building_area_key}
-        )
-        manager = AgWallListManager(updated_project["envelope"]["agWall"])
-        updated_project["envelope"]["agWall"] = manager.add_new(ag_wall_to_add)
-    else:
-        raise ValueError("Envelope or agWall array not found in project.")
+    new_ag_wall.bldgUseKey = building_area_key
+    updated_project.envelope.add_subcomponent(new_ag_wall)
 
     return updated_project
 
 
 def add_bg_wall_to_project(
-    project: dict[str, Any], building_area_key: str, new_bg_wall: BgWall
-) -> dict[str, Any]:
+    project: ComBuilding, building_area_key: str, new_bg_wall: BgWall
+) -> ComBuilding:
     """Add a new bgWall to the envelope in any project object using BgWallListManager.
 
     Args:
@@ -145,44 +101,19 @@ def add_bg_wall_to_project(
     Raises:
         ValueError: If buildingAreaKey is not found in lighting.wholeBldgUse list
     """
-    updated_project = copy.deepcopy(project)
+    _require_building_area(project, building_area_key)
 
-    if (
-        "lighting" not in updated_project
-        or "wholeBldgUse" not in updated_project["lighting"]
-        or not isinstance(updated_project["lighting"]["wholeBldgUse"], list)
-    ):
-        raise ValueError("No building area found in project.")
+    updated_project = project.model_copy(deep=True)
 
-    building_area_exists = any(
-        item.get("key") == building_area_key
-        for item in updated_project["lighting"]["wholeBldgUse"]
-    )
-
-    if not building_area_exists:
-        raise ValueError(
-            f"Adding bgWall error: Building area with key '{building_area_key}' not found in lighting.wholeBldgUse list."
-        )
-
-    if (
-        "envelope" in updated_project
-        and "bgWall" in updated_project["envelope"]
-        and isinstance(updated_project["envelope"]["bgWall"], list)
-    ):
-        bg_wall_to_add: BgWall = cast(
-            BgWall, {**new_bg_wall, "bldgUseKey": building_area_key}
-        )
-        manager = BgWallListManager(updated_project["envelope"]["bgWall"])
-        updated_project["envelope"]["bgWall"] = manager.add_new(bg_wall_to_add)
-    else:
-        raise ValueError("Envelope or bgWall array not found in project.")
+    new_bg_wall.bldgUseKey = building_area_key
+    updated_project.envelope.add_subcomponent(new_bg_wall)
 
     return updated_project
 
 
 def add_floor_to_project(
-    project: dict[str, Any], building_area_key: str, new_floor: Floor
-) -> dict[str, Any]:
+    project: ComBuilding, building_area_key: str, new_floor: Floor
+) -> ComBuilding:
     """Add a new floor to the envelope in any project object using FloorListManager.
 
     Args:
@@ -196,51 +127,41 @@ def add_floor_to_project(
     Raises:
         ValueError: If buildingAreaKey is not found in lighting.wholeBldgUse list
     """
-    updated_project = copy.deepcopy(project)
+    _require_building_area(project, building_area_key)
 
-    if (
-        "lighting" not in updated_project
-        or "wholeBldgUse" not in updated_project["lighting"]
-        or not isinstance(updated_project["lighting"]["wholeBldgUse"], list)
-    ):
-        raise ValueError("No building area found in project.")
+    updated_project = project.model_copy(deep=True)
 
-    building_area_exists = any(
-        item.get("key") == building_area_key
-        for item in updated_project["lighting"]["wholeBldgUse"]
-    )
-
-    if not building_area_exists:
-        raise ValueError(
-            f"Adding floor error: Building area with key '{building_area_key}' not found in lighting.wholeBldgUse list."
-        )
-
-    if (
-        "envelope" in updated_project
-        and "floor" in updated_project["envelope"]
-        and isinstance(updated_project["envelope"]["floor"], list)
-    ):
-        floor_to_add: Floor = cast(
-            Floor, {**new_floor, "bldgUseKey": building_area_key}
-        )
-        manager = FloorListManager(updated_project["envelope"]["floor"])
-        updated_project["envelope"]["floor"] = manager.add_new(floor_to_add)
-    else:
-        raise ValueError("Envelope or floor array not found in project.")
+    new_floor.bldgUseKey = building_area_key
+    updated_project.envelope.add_subcomponent(new_floor)
 
     return updated_project
+
+
+def _require_building_area(project: ComBuilding, building_area_key: str) -> None:
+    """
+    Ensure that project.lighting.wholeBldgUse exists and contains the given key.
+    """
+    whole_use = project.get_by_path("lighting.wholeBldgUse")
+
+    if not isinstance(whole_use, list):
+        raise ValueError("No building area (wholeBldgUse) found in project.")
+
+    if not any(getattr(area, "key", None) == building_area_key for area in whole_use):
+        raise ValueError(
+            f"Building area key '{building_area_key}' not found in lighting.wholeBldgUse."
+        )
 
 
 # *********** Assemblies or Components attached to wall or roof ***********
 
 
 def add_skylight_to_project(
-    project: dict[str, Any],
+    project: ComBuilding,
     building_area_key: str,
     new_skylight: Skylight,
     roof: Roof | None = None,
-) -> dict[str, Any]:
-    """Add a new skylight to a specific roof in the envelope using RoofListManager's add_new_skylight.
+) -> ComBuilding:
+    """Add a new skylight to a specific roof in the envelope.
 
     Args:
         project: The project object to modify
@@ -254,81 +175,55 @@ def add_skylight_to_project(
     Raises:
         ValueError: If buildingAreaKey is not found or if roof's bldgUseKey doesn't match buildingAreaKey
     """
-    # TODO: alteration projects allow orphaned skylights/windows/doors. Handle that case as well.
-    updated_project = copy.deepcopy(project)
+    updated_project = project.model_copy(deep=True)
 
-    if (
-        "lighting" not in updated_project
-        or "wholeBldgUse" not in updated_project["lighting"]
-        or not isinstance(updated_project["lighting"]["wholeBldgUse"], list)
-    ):
-        raise ValueError("No building area found in project.")
+    _require_building_area(project, building_area_key)
 
-    building_area_exists = any(
-        item.get("key") == building_area_key
-        for item in updated_project["lighting"]["wholeBldgUse"]
-    )
-
-    if not building_area_exists:
-        raise ValueError(
-            f"Adding skylight error: Building area with key '{building_area_key}' not found in lighting.wholeBldgUse list."
-        )
-
-    if updated_project.get("project") != "ALTERATION":
-        if not roof:
+    if updated_project.projectType != "ALTERATION":
+        if roof is None:
             raise ValueError("Roof must be specified for non-alteration projects.")
 
-        if roof.get("bldgUseKey") and roof.get("bldgUseKey") != building_area_key:
+        if (roof_use_key := getattr(roof, "bldgUseKey", None)) != building_area_key:
             raise ValueError(
-                f"Roof's bldgUseKey '{roof.get('bldgUseKey')}' does not match the provided buildingAreaKey '{building_area_key}'."
+                f"Roof's bldgUseKey '{roof_use_key}' does not match buildingAreaKey '{building_area_key}'."
             )
 
-        if (
-            "envelope" in updated_project
-            and "roof" in updated_project["envelope"]
-            and isinstance(updated_project["envelope"]["roof"], list)
-        ):
-            # Find the matching roof by assemblyType
-            target_index = next(
-                (
-                    i
-                    for i, r in enumerate(updated_project["envelope"]["roof"])
-                    if r.get("assemblyType") == roof.get("assemblyType")
-                ),
+        roofs = updated_project.get_by_path("envelope.roof")
+        if isinstance(roofs, list):
+            roof_index = next(
+                (i for i, r in enumerate(roofs) if getattr(r, "assemblyType") == getattr(roof, "assemblyType")),
                 -1,
             )
-            if target_index == -1:
+            if roof_index == -1:
                 raise ValueError("Specified roof not found in project.")
 
-            roof_manager = RoofListManager(updated_project["envelope"]["roof"])
-            updated_roof = roof_manager.add_new_skylight(
-                updated_project["envelope"]["roof"][target_index], new_skylight
-            )
-            updated_project["envelope"]["roof"][target_index] = updated_roof
+            roof_manager = RoofListManager(roofs)
+            updated_roof = roof_manager.add_new_skylight(roofs[roof_index], new_skylight)
+            updated_project.envelope.roof[roof_index] = updated_roof
         else:
-            raise ValueError("Envelope or roof array not found in project.")
+            raise ValueError("Envelope roof list not found or invalid in project.")
     else:
-        # For alteration projects, add skylight without specifying roof
-        skylight_to_add: Skylight = cast(
-            Skylight, {**new_skylight, "bldgUseKey": building_area_key}
-        )
-        if "envelope" in updated_project:
-            skylight_manager = SkylightListManager(
-                updated_project["envelope"].get("skylight", [])
-            )
-            updated_project["envelope"]["skylight"] = skylight_manager.add_new(
-                skylight_to_add
-            )
+        # Alteration projects: orphaned skylights
+        skylight_to_add = new_skylight.model_copy(update={"bldgUseKey": building_area_key})
+
+        envelope = getattr(updated_project, "envelope", None)
+        if envelope is None:
+            raise ValueError("Envelope not found in project.")
+
+        skylight_manager = SkylightListManager(getattr(envelope, "skylight", []))
+        updated_skylight_list = skylight_manager.add_new(skylight_to_add)
+        updated_project.envelope.skylight = updated_skylight_list
 
     return updated_project
 
 
+
 def add_window_to_project(
-    project: dict[str, Any],
+    project: ComBuilding,
     building_area_key: str,
     new_window: Window,
     wall: AgWall | BgWall | None = None,
-) -> dict[str, Any]:
+) -> ComBuilding:
     """Add a new window to a wall (AgWall or BgWall) in the envelope.
 
     Args:
@@ -343,104 +238,80 @@ def add_window_to_project(
     Raises:
         ValueError: If buildingAreaKey is not found or if wall's bldgUseKey doesn't match buildingAreaKey
     """
-    updated_project = copy.deepcopy(project)
+    updated_project = project.model_copy(deep=True)
 
-    if (
-        "lighting" not in updated_project
-        or "wholeBldgUse" not in updated_project["lighting"]
-        or not isinstance(updated_project["lighting"]["wholeBldgUse"], list)
-    ):
-        raise ValueError("No building area found in project.")
+    _require_building_area(project, building_area_key)
 
-    building_area_exists = any(
-        item.get("key") == building_area_key
-        for item in updated_project["lighting"]["wholeBldgUse"]
-    )
-
-    if not building_area_exists:
-        raise ValueError(
-            f"Adding window error: Building area with key '{building_area_key}' not found in lighting.wholeBldgUse list."
-        )
-
-    if updated_project.get("project") != "ALTERATION":
+    if updated_project.projectType != "ALTERATION":
         if not wall:
             raise ValueError(
                 "Wall (AgWall or BgWall) must be specified for non-alteration projects."
             )
 
-        if wall.get("bldgUseKey") and wall.get("bldgUseKey") != building_area_key:
+        if (wall_use_key := getattr(wall, "bldgUseKey")) != building_area_key:
             raise ValueError(
-                f"Wall's bldgUseKey '{wall.get('bldgUseKey')}' does not match buildingAreaKey '{building_area_key}'."
+                f"Wall's bldgUseKey '{wall_use_key}' does not match buildingAreaKey '{building_area_key}'."
             )
 
-        if "envelope" not in updated_project:
-            raise ValueError("Envelope not found in project.")
-
-        # Try to find in agWall array first
-        if "agWall" in updated_project["envelope"] and isinstance(
-            updated_project["envelope"]["agWall"], list
-        ):
+        ag_wall = updated_project.get_by_path("envelope.agWall")
+        if isinstance(ag_wall, list):
             ag_wall_index = next(
                 (
                     i
-                    for i, w in enumerate(updated_project["envelope"]["agWall"])
-                    if w.get("assemblyType") == wall.get("assemblyType")
+                    for i, w in enumerate(ag_wall)
+                    if getattr(w, "assemblyType") == getattr(wall, "assemblyType")
                 ),
                 -1,
             )
             if ag_wall_index != -1:
                 ag_wall_manager = AgWallListManager(
-                    updated_project["envelope"]["agWall"]
+                    updated_project.envelope.agWall
                 )
                 updated_ag_wall = ag_wall_manager.add_new_window(
-                    updated_project["envelope"]["agWall"][ag_wall_index], new_window
+                    updated_project.envelope.agWall[ag_wall_index], new_window
                 )
-                updated_project["envelope"]["agWall"][ag_wall_index] = updated_ag_wall
+                updated_project.envelope.agWall[ag_wall_index] = updated_ag_wall
                 return updated_project
 
         # Try to find in bgWall array
-        if "bgWall" in updated_project["envelope"] and isinstance(
-            updated_project["envelope"]["bgWall"], list
-        ):
+        bg_wall = updated_project.get_by_path("envelope.bgWall")
+        if isinstance(bg_wall, list):
             bg_wall_index = next(
                 (
                     i
-                    for i, w in enumerate(updated_project["envelope"]["bgWall"])
-                    if w.get("assemblyType") == wall.get("assemblyType")
+                    for i, w in enumerate(bg_wall)
+                    if getattr(w, "assemblyType") == getattr(wall, "assemblyType")
                 ),
                 -1,
             )
             if bg_wall_index != -1:
-                bg_wall_list = cast(list[BgWall], updated_project["envelope"]["bgWall"])
-                bg_wall_manager = BgWallListManager(bg_wall_list)
+                bg_wall_manager = BgWallListManager(updated_project.envelope.bgWall)
                 updated_bg_wall = bg_wall_manager.add_new_window(
-                    bg_wall_list[bg_wall_index], new_window
+                    updated_project.envelope.bgWall[bg_wall_index], new_window
                 )
-                updated_project["envelope"]["bgWall"][bg_wall_index] = updated_bg_wall
+                updated_project.envelope.bgWall[bg_wall_index] = updated_bg_wall
                 return updated_project
 
         raise ValueError("Specified wall not found in project.")
     else:
         # Alteration projects: orphaned windows
-        window_to_add: Window = cast(
-            Window, {**new_window, "bldgUseKey": building_area_key}
-        )
-        if "envelope" not in updated_project:
+        window_to_add: Window = new_window.model_copy(update={"bldgUseKey": building_area_key})
+        if not getattr(updated_project, "envelope"):
             raise ValueError("Envelope not found in project.")
         window_manager = WindowListManager(
-            updated_project["envelope"].get("window", [])
+            updated_project.get_by_path("envelope.window", [])
         )
-        updated_project["envelope"]["window"] = window_manager.add_new(window_to_add)
+        updated_project.envelope.window = window_manager.add_new(window_to_add)
 
     return updated_project
 
 
 def add_door_to_project(
-    project: dict[str, Any],
+    project: ComBuilding,
     building_area_key: str,
     new_door: Door,
     wall: AgWall | BgWall | None = None,
-) -> dict[str, Any]:
+) -> ComBuilding:
     """Add a new door to a wall (AgWall or BgWall) in the envelope.
 
     Args:
@@ -455,107 +326,90 @@ def add_door_to_project(
     Raises:
         ValueError: If buildingAreaKey is not found or if wall's bldgUseKey doesn't match buildingAreaKey
     """
-    updated_project = copy.deepcopy(project)
 
-    if (
-        "lighting" not in updated_project
-        or "wholeBldgUse" not in updated_project["lighting"]
-        or not isinstance(updated_project["lighting"]["wholeBldgUse"], list)
-    ):
-        raise ValueError("No building area found in project.")
+    updated_project = project.model_copy(deep=True)
 
-    building_area_exists = any(
-        item.get("key") == building_area_key
-        for item in updated_project["lighting"]["wholeBldgUse"]
-    )
+    _require_building_area(project, building_area_key)
 
-    if not building_area_exists:
-        raise ValueError(
-            f"Adding door error: Building area with key '{building_area_key}' not found in lighting.wholeBldgUse list."
-        )
+    if updated_project.projectType != "ALTERATION":
 
-    if updated_project.get("project") != "ALTERATION":
         if not wall:
             raise ValueError(
                 "Wall (AgWall or BgWall) must be specified for non-alteration projects."
             )
 
-        if wall.get("bldgUseKey") and wall.get("bldgUseKey") != building_area_key:
+        if (wall_use_key := getattr(wall, "bldgUseKey")) != building_area_key:
             raise ValueError(
-                f"Wall's bldgUseKey '{wall.get('bldgUseKey')}' does not match buildingAreaKey '{building_area_key}'."
+                f"Wall's bldgUseKey '{wall_use_key}' does not match buildingAreaKey '{building_area_key}'."
             )
 
-        if "envelope" not in updated_project:
-            raise ValueError("Envelope not found in project.")
-
-        # Try to find in agWall array first
-        if "agWall" in updated_project["envelope"] and isinstance(
-            updated_project["envelope"]["agWall"], list
-        ):
+        # Try AgWall list
+        ag_wall = updated_project.get_by_path("envelope.agWall")
+        if isinstance(ag_wall, list):
             ag_wall_index = next(
                 (
                     i
-                    for i, w in enumerate(updated_project["envelope"]["agWall"])
-                    if w.get("assemblyType") == wall.get("assemblyType")
+                    for i, w in enumerate(ag_wall)
+                    if getattr(w, "assemblyType") == getattr(wall, "assemblyType")
                 ),
                 -1,
             )
             if ag_wall_index != -1:
-                ag_wall_manager = AgWallListManager(
-                    updated_project["envelope"]["agWall"]
-                )
+                ag_wall_manager = AgWallListManager(updated_project.envelope.agWall)
                 updated_ag_wall = ag_wall_manager.add_new_door(
-                    updated_project["envelope"]["agWall"][ag_wall_index], new_door
+                    updated_project.envelope.agWall[ag_wall_index], new_door
                 )
-                updated_project["envelope"]["agWall"][ag_wall_index] = updated_ag_wall
+                updated_project.envelope.agWall[ag_wall_index] = updated_ag_wall
                 return updated_project
 
-        # Try to find in bgWall array
-        if "bgWall" in updated_project["envelope"] and isinstance(
-            updated_project["envelope"]["bgWall"], list
-        ):
+        # Try BgWall list
+        bg_wall = updated_project.get_by_path("envelope.bgWall")
+        if isinstance(bg_wall, list):
             bg_wall_index = next(
                 (
                     i
-                    for i, w in enumerate(updated_project["envelope"]["bgWall"])
-                    if w.get("assemblyType") == wall.get("assemblyType")
+                    for i, w in enumerate(bg_wall)
+                    if getattr(w, "assemblyType") == getattr(wall, "assemblyType")
                 ),
                 -1,
             )
             if bg_wall_index != -1:
-                bg_wall_manager = BgWallListManager(
-                    updated_project["envelope"]["bgWall"]
-                )
+                bg_wall_manager = BgWallListManager(updated_project.envelope.bgWall)
                 updated_bg_wall = bg_wall_manager.add_new_door(
-                    updated_project["envelope"]["bgWall"][bg_wall_index], new_door
+                    updated_project.envelope.bgWall[bg_wall_index], new_door
                 )
-                updated_project["envelope"]["bgWall"][bg_wall_index] = updated_bg_wall
+                updated_project.envelope.bgWall[bg_wall_index] = updated_bg_wall
                 return updated_project
 
         raise ValueError("Specified wall not found in project.")
-    else:
-        # Alteration projects: orphaned doors
-        door_to_add: Door = cast(Door, {**new_door, "bldgUseKey": building_area_key})
-        if "envelope" not in updated_project:
-            raise ValueError("Envelope not found in project.")
-        door_manager = DoorListManager(updated_project["envelope"].get("door", []))
-        updated_project["envelope"]["door"] = door_manager.add_new(door_to_add)
 
-    return updated_project
+    else:
+        door_to_add = new_door.model_copy(update={"bldgUseKey": building_area_key})
+
+        if not getattr(updated_project, "envelope"):
+            raise ValueError("Envelope not found in project.")
+
+        door_manager = DoorListManager(
+            updated_project.get_by_path("envelope.door", [])
+        )
+        updated_project.envelope.door = door_manager.add_new(door_to_add)
+
+        return updated_project
+
 
 
 # TODO: verify when thermal bridges are needed
 def add_thermal_bridge_to_project(
-    project: dict[str, Any],
+    project: ComBuilding,
     building_area_key: str,
     ag_wall: AgWall,
-    thermal_bridge_type: ThermalBridgeTypeOptions = "THERMAL_BRIDGE_OTHER",
-    thermal_bridge_category: ThermalBridgeCategoryOptions = "THERMAL_BRIDGE_UNCATEGORIZED",
-    thermal_bridge_compliance_type: ThermalBridgeComplianceTypeOptions = "THERMAL_BRIDGE_NON_PRESCRIPTIVE",
+    thermal_bridge_type: Union[ThermalBridgeTypeOptions, str] = ThermalBridgeTypeOptions.THERMAL_BRIDGE_OTHER,
+    thermal_bridge_category: Union[ThermalBridgeCategoryOptions, str] = ThermalBridgeCategoryOptions.THERMAL_BRIDGE_UNCATEGORIZED,
+    thermal_bridge_compliance_type: Union[ThermalBridgeComplianceTypeOptions, str] = ThermalBridgeComplianceTypeOptions.THERMAL_BRIDGE_NON_PRESCRIPTIVE,
     psi_factor: float = 0.0,
     chi_factor: float = 0.0,
     thermal_bridge_length: float = 0.0,
-) -> dict[str, Any]:
+) -> ComBuilding:
     """Add a new thermal bridge to an AgWall in the envelope.
 
     Note: Thermal bridges can only be added to AgWalls and cannot be orphaned.
@@ -577,45 +431,35 @@ def add_thermal_bridge_to_project(
     Raises:
         ValueError: If buildingAreaKey is not found, agWall is not provided, or wall's bldgUseKey doesn't match buildingAreaKey
     """
-    updated_project = copy.deepcopy(project)
+    updated_project = project.model_copy(deep=True)
 
-    if (
-        "lighting" not in updated_project
-        or "wholeBldgUse" not in updated_project["lighting"]
-        or not isinstance(updated_project["lighting"]["wholeBldgUse"], list)
-    ):
-        raise ValueError("No building area found in project.")
+    _require_building_area(
+        project, building_area_key
+    )  # assuming this works with models
 
-    building_area_exists = any(
-        item.get("key") == building_area_key
-        for item in updated_project["lighting"]["wholeBldgUse"]
-    )
-
-    if not building_area_exists:
-        raise ValueError(
-            f"Adding thermal bridge error: Building area with key '{building_area_key}' not found in lighting.wholeBldgUse list."
-        )
-
-    if not ag_wall:
+    if ag_wall is None:
         raise ValueError("AgWall must be specified for thermal bridges.")
 
-    if ag_wall.get("bldgUseKey") and ag_wall.get("bldgUseKey") != building_area_key:
+    if getattr(ag_wall, "bldgUseKey", None) != building_area_key:
         raise ValueError(
-            f"AgWall's bldgUseKey '{ag_wall.get('bldgUseKey')}' does not match buildingAreaKey '{building_area_key}'."
+            f"AgWall's bldgUseKey '{getattr(ag_wall, 'bldgUseKey')}' does not match buildingAreaKey '{building_area_key}'."
         )
 
-    if (
-        "envelope" not in updated_project
-        or "agWall" not in updated_project["envelope"]
-        or not isinstance(updated_project["envelope"]["agWall"], list)
-    ):
-        raise ValueError("Envelope or agWall array not found in project.")
+    envelope = getattr(updated_project, "envelope", None)
+    if envelope is None:
+        raise ValueError("Envelope not found in project.")
 
+    ag_wall_list = getattr(envelope, "agWall", None)
+    if not isinstance(ag_wall_list, list):
+        raise ValueError("agWall list not found or invalid.")
+
+    # Find index of matching agWall by assemblyType (attribute access)
     ag_wall_index = next(
         (
             i
-            for i, w in enumerate(updated_project["envelope"]["agWall"])
-            if w.get("assemblyType") == ag_wall.get("assemblyType")
+            for i, w in enumerate(ag_wall_list)
+            if getattr(w, "assemblyType", None)
+            == getattr(ag_wall, "assemblyType", None)
         ),
         -1,
     )
@@ -623,9 +467,10 @@ def add_thermal_bridge_to_project(
     if ag_wall_index == -1:
         raise ValueError("Specified agWall not found in project.")
 
-    manager = AgWallListManager(updated_project["envelope"]["agWall"])
+    # Use your manager on Pydantic list
+    manager = AgWallListManager(ag_wall_list)
     updated_wall = manager.add_new_thermal_bridge(
-        updated_project["envelope"]["agWall"][ag_wall_index],
+        ag_wall_list[ag_wall_index],
         thermal_bridge_type,
         thermal_bridge_category,
         thermal_bridge_compliance_type,
@@ -633,6 +478,14 @@ def add_thermal_bridge_to_project(
         chi_factor,
         thermal_bridge_length,
     )
-    updated_project["envelope"]["agWall"][ag_wall_index] = updated_wall
+
+    # Replace the agWall in the list
+    ag_wall_list[ag_wall_index] = updated_wall
+
+    # If envelope.agWall is a Pydantic field with validation, reassign updated list
+    envelope.agWall = ag_wall_list
+
+    # If updated_project.envelope is frozen or uses validators, reassign as needed
+    updated_project.envelope = envelope
 
     return updated_project

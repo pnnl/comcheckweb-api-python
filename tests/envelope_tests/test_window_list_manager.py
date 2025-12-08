@@ -1,16 +1,14 @@
 """Tests for WindowListManager."""
 
 from comcheck_api.components.envelope.window import WindowListManager
-from comcheck_api.constants.envelope_constants import DEFAULT_WINDOW
-
 
 class TestWindowListManager:
     """Test suite for WindowListManager."""
 
-    def test_initialization_with_provided_data(self):
+    def test_initialization_with_provided_data(self, window):
         """Should initialize with provided data."""
-        manager = WindowListManager([DEFAULT_WINDOW])
-        assert manager.get_all() == [DEFAULT_WINDOW]
+        manager = WindowListManager([window])
+        assert manager.get_all() == [window]
 
     # TODO: Determine window uniqueness, assemblyType instead of id?
     # def test_add_new_window(self):

@@ -1,4 +1,6 @@
-DUMMY_PROJECT = {
+from comcheck_api.types.core_types import ComBuilding
+
+DUMMY_PROJECT = ComBuilding(**{
     "control": {
         "code": "CEZ_IECC2018",
         "complianceMode": "UA",
@@ -101,4 +103,4 @@ DUMMY_PROJECT = {
     "hasBattery": None,
     "hasCharger": None,
     "hasHeatPump": None,
-}
+})

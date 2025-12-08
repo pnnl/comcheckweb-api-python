@@ -41,7 +41,7 @@ manager.add_new(sample_roof)
 print("before adding skylight:", manager.get_all())
 
 sample_skylight = Skylight(
-    bldgUseKey=sample_roof["bldgUseKey"],
+    bldgUseKey=sample_roof.bldgUseKey,
     adjacentSpaceType=None,
     altExemptType=None,
     assemblyType="Skylight:Skylight",

@@ -14,7 +14,7 @@ from comcheck_api.types.core_types import (
 )
 from comcheck_api.utilities.common import get_random_number
 
-DEFAULT_WINDOW: Window = {
+DEFAULT_WINDOW: Window = Window(**{
     "adjacentSpaceBuildingType": "WHOLE_BUILDING_OFFICE",
     "adjacentSpaceType": "ADJACENT_SPACE_EXTERIOR",
     "allowanceType": "ENV_ALLOWANCE_NONE",
@@ -41,9 +41,9 @@ DEFAULT_WINDOW: Window = {
     "propVt": 0.65,
     "solarType": "CLEAR",
     "windowOpenType": "NON_OPERABLE_WINDOW",
-}
+})
 
-DEFAULT_DOOR: Door = {
+DEFAULT_DOOR: Door = Door(**{
     "adjacentSpaceBuildingType": None,
     "adjacentSpaceType": None,
     "allowanceType": None,
@@ -74,9 +74,9 @@ DEFAULT_DOOR: Door = {
     "propUValue": 0.37,
     "propVt": None,
     "solarType": None,
-}
+})
 
-DEFAULT_SKYLIGHT: Skylight = {
+DEFAULT_SKYLIGHT: Skylight = Skylight(**{
     "adjacentSpaceType": None,
     "allowanceType": None,
     "assemblyType": "Skylight:Default Skylight",
@@ -99,9 +99,9 @@ DEFAULT_SKYLIGHT: Skylight = {
     "propUValue": 0.55,
     "propVt": None,
     "solarType": "TINTED",
-}
+})
 
-DEFAULT_ROOF: Roof = {
+DEFAULT_ROOF: Roof = Roof(**{
     "adjacentSpaceType": None,
     "allowanceType": None,
     "assemblyType": "Roof:Default Roof",
@@ -121,9 +121,9 @@ DEFAULT_ROOF: Roof = {
     "solarReflectance": 0,
     "solarReflectanceIndex": 0,
     "thermalEmittance": 0,
-}
+})
 
-DEFAULT_FLOOR: Floor = {
+DEFAULT_FLOOR: Floor = Floor(**{
     "adjacentSpaceType": None,
     "allowanceType": None,
     "altExemptType": None,
@@ -143,9 +143,9 @@ DEFAULT_FLOOR: Floor = {
     "orientation": "UNSPECIFIED_ORIENTATION",
     "propUValue": 0.72,
     "slabFullInsulBelowMinRValue": 0,
-}
+})
 
-DEFAULT_AG_WALL: AgWall = {
+DEFAULT_AG_WALL: AgWall = AgWall(**{
     "adjacentSpaceType": None,
     "agWallConstructionDetailsType": "NONE",
     "agWallExteriorFinishDetailsType": None,
@@ -174,9 +174,9 @@ DEFAULT_AG_WALL: AgWall = {
     "thermalBridgeExceptionType": "THERMAL_BRIDGE_EXCEPTION_NONE",
     "wallType": "METAL_FRAME_24_AG_WALL",
     "window": [],
-}
+})
 
-DEFAULT_THERMAL_BRIDGE: ThermalBridge = {
+DEFAULT_THERMAL_BRIDGE: ThermalBridge = ThermalBridge(**{
     "chiFactor": 0,
     "id": get_random_number(),
     "numberOfPoints": 0,
@@ -185,9 +185,9 @@ DEFAULT_THERMAL_BRIDGE: ThermalBridge = {
     "thermalBridgeComplianceType": "THERMAL_BRIDGE_PRESCRIPTIVE",
     "thermalBridgeLength": 100,
     "thermalBridgeType": "THERMAL_BRIDGE_FLOOR_TO_WALL_INTERSECTION",
-}
+})
 
-DEFAULT_BG_WALL: BgWall = {
+DEFAULT_BG_WALL: BgWall = BgWall(**{
     "adjacentSpaceBuildingType": None,
     "adjacentSpaceType": None,
     "allowanceType": None,
@@ -213,7 +213,8 @@ DEFAULT_BG_WALL: BgWall = {
     "wallHeightBelowGrade": 6,
     "wallType": "CONCRETE_BG_WALL",
     "window": [],
-}
+})
+
 
 # TODO: add values to other assemblies
 DEFAULT_ASSEMBLIES = {

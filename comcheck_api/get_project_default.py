@@ -1,6 +1,6 @@
 """Module for project default templates/values."""
 
-from uuid import uuid4
+import copy
 
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
 from comcheck_api.constants.envelope_constants import (
@@ -21,52 +21,52 @@ from comcheck_api.constants.common_constants import DUMMY_PROJECT
 
 def get_default_project_template():
     """Get project defaults."""
-    return DUMMY_PROJECT
+    return copy.deepcopy(DUMMY_PROJECT)
 
 
 def get_default_building_area_template():
     """Get building area defaults."""
-    return DEFAULT_BUILDING_AREA
+    return copy.deepcopy(DEFAULT_BUILDING_AREA)
 
 
 def get_default_roof_template():
     """Get default roof template."""
-    return DEFAULT_ROOF
+    return copy.deepcopy(DEFAULT_ROOF)
 
 
 def get_default_ag_wall_template():
     """Get default above-grade wall template."""
-    return DEFAULT_AG_WALL
+    return copy.deepcopy(DEFAULT_AG_WALL)
 
 
 def get_default_floor_template():
     """Get default floor template."""
-    return DEFAULT_FLOOR
+    return copy.deepcopy(DEFAULT_FLOOR)
 
 
 def get_default_bg_wall_template():
     """Get default below-grade wall template."""
-    return DEFAULT_BG_WALL
+    return copy.deepcopy(DEFAULT_BG_WALL)
 
 
 def get_default_skylight_template():
     """Get default skylight template."""
-    return DEFAULT_SKYLIGHT
+    return copy.deepcopy(DEFAULT_SKYLIGHT)
 
 
 def get_default_window_template():
     """Get default window template."""
-    return DEFAULT_WINDOW
+    return copy.deepcopy(DEFAULT_WINDOW)
 
 
 def get_default_door_template():
     """Get default door template."""
-    return DEFAULT_DOOR
+    return copy.deepcopy(DEFAULT_DOOR)
 
 
 def get_default_thermal_bridge_template():
     """Get default thermal bridge template."""
-    return DEFAULT_THERMAL_BRIDGE
+    return copy.deepcopy(DEFAULT_THERMAL_BRIDGE)
 
 
 def get_default_fixture_schedule_template():

@@ -2,6 +2,7 @@
 
 import os
 import sys
+from typing import List
 
 from dotenv import load_dotenv
 
@@ -22,6 +23,7 @@ from comcheck_api.get_project_default import (
     get_default_skylight_template,
     get_default_window_template,
 )
+from comcheck_api.types.core_types import *
 
 load_dotenv()
 
@@ -35,16 +37,30 @@ client.set_api_key(api_key)
 
 
 # Test API services Functions
-def test_get_project_and_project_list():
+def test_get_project_and_project_list_json():
     """Test getting project list and first project details."""
     try:
-        response = client.list_projects()
+        response = client.list_projects(mode="json")
         project_list = response.get("data", [])
 
         if project_list and (project_list[0].get("_id") or project_list[0].get("id")):
             project_id = project_list[0].get("_id") or project_list[0].get("id")
             project = client.get_project(project_id)
-            return project.get("data")
+            return project
+        return None
+    except Exception as err:
+        print(f"Error in test_get_project_and_project_list: {err}")
+        return None
+    
+def test_get_project_and_project_list_python():
+    """Test getting project list and first project details."""
+    try:
+        projects = client.list_projects()
+        print('hello', projects)
+        if projects and (project_id:=projects[0].get("_id")):
+            print(project_id)
+            project = client.get_project(project_id)
+            return project
         return None
     except Exception as err:
         print(f"Error in test_get_project_and_project_list: {err}")
@@ -65,8 +81,7 @@ def test_update_project_with_default_dummy_project(test_project_id: str):
 def test_update_project_with_add_building_area(test_project_id: str):
     """Test adding a building area to project."""
     try:
-        response = client.get_project(test_project_id)
-        test_project = response.get("data")
+        test_project = client.get_project(test_project_id)
         if not test_project:
             print("No test project data found.")
             return
@@ -74,8 +89,8 @@ def test_update_project_with_add_building_area(test_project_id: str):
         updated_project = project_building_area_operations.add_building_area_to_project(
             test_project, default_building_area
         )
-        if updated_project.get("id"):
-            update_resp = client.update_project(updated_project["id"], updated_project)
+        if project_id:=getattr(updated_project, "id"):
+            update_resp = client.update_project(project_id, updated_project)
             return update_resp
         else:
             print("No id found on updated project, skipping updateProject API call.")
@@ -84,23 +99,23 @@ def test_update_project_with_add_building_area(test_project_id: str):
         print(f"Error in test_update_project_with_add_building_area: {err}")
         return
 
-
 # Test envelope operations
 # Adding roof, agWall, bgWall, and floor are similar, only roof and bgWall shown here
 def test_update_project_with_add_roof(test_project_id: str):
     """Test adding a roof to project."""
     try:
         default_roof = get_default_roof_template()
-        response = client.get_project(test_project_id)
+        response_project = client.get_project(test_project_id)
         # Add a new roof to the project
-        response_project = response.get("data")
 
         if not response_project:
             print("No test project data found.")
             return
 
-        whole_bldg_use = response_project.get("lighting", {}).get("wholeBldgUse", [])
-        building_area_key = whole_bldg_use[0].get("key") if whole_bldg_use else None
+        response_project.get_by_path("lighting.wholeBldgUse")
+
+        whole_bldg_use = response_project.get_by_path("lighting.wholeBldgUse", [])
+        building_area_key = getattr(whole_bldg_use[0], "key") if whole_bldg_use else None
 
         if not building_area_key:
             print("No building area key found in whole building use, cannot add roof.")
@@ -109,8 +124,8 @@ def test_update_project_with_add_roof(test_project_id: str):
         updated_project = project_envelope_operations.add_roof_to_project(
             response_project, building_area_key, default_roof
         )
-        if updated_project.get("id"):
-            update_resp = client.update_project(updated_project["id"], updated_project)
+        if (project_id:=getattr(updated_project, "id")):
+            update_resp = client.update_project(project_id, updated_project)
             return update_resp
         else:
             print("No id found on updated project, skipping updateProject API call.")
@@ -123,29 +138,27 @@ def test_update_project_with_add_roof(test_project_id: str):
 def test_update_project_with_add_skylight(test_project_id: str):
     """Test adding a skylight to project."""
     try:
-        response = client.get_project(test_project_id)
-        test_project = response.get("data")
+        test_project = client.get_project(test_project_id)
 
         if not test_project:
             print("No test project data found.")
             return
 
-        envelope = test_project.get("envelope", {})
-        roof_list = envelope.get("roof", [])
+        roof_list = test_project.get_by_path("envelope.roof", [])
 
         if roof_list:
             default_skylight = get_default_skylight_template()
-            whole_bldg_use = test_project.get("lighting", {}).get("wholeBldgUse", [])
+            whole_bldg_use: List[WholeBldgUse] = test_project.get_by_path("lighting.wholeBldgUse", [])
 
             updated_project = project_envelope_operations.add_skylight_to_project(
                 test_project,
-                whole_bldg_use[0]["key"],
+                whole_bldg_use[0].key,
                 default_skylight,
                 roof_list[0],
             )
-            if updated_project.get("id"):
+            if (project_id:=getattr(updated_project, "id")):
                 update_resp = client.update_project(
-                    updated_project["id"], updated_project
+                    project_id, updated_project
                 )
                 return update_resp
             else:
@@ -165,24 +178,23 @@ def test_update_project_with_add_skylight(test_project_id: str):
 def test_update_project_with_add_window(test_project_id: str):
     """Test adding a window to project."""
     try:
-        response = client.get_project(test_project_id)
-        test_project = response.get("data")
+        test_project = client.get_project(test_project_id)
 
         if not test_project:
             print("No test project data found.")
             return
 
-        # Get building area key
-        whole_bldg_use = test_project.get("lighting", {}).get("wholeBldgUse", [])
-        building_area_key = whole_bldg_use[0].get("key") if whole_bldg_use else None
+        test_project.get_by_path("lighting.wholeBldgUse")
+
+        whole_bldg_use = test_project.get_by_path("lighting.wholeBldgUse", [])
+        building_area_key = getattr(whole_bldg_use[0], "key") if whole_bldg_use else None
 
         if not building_area_key:
-            print("No building area key found, cannot add agWall and window.")
+            print("No building area key found in whole building use, cannot add agWall and Window.")
             return
 
         # Check if an agWall exists
-        envelope = test_project.get("envelope", {})
-        ag_wall_list = envelope.get("agWall", [])
+        ag_wall_list = test_project.get_by_path("envelope.agWall", [])
 
         if ag_wall_list:
             # Use existing agWall
@@ -193,13 +205,13 @@ def test_update_project_with_add_window(test_project_id: str):
             print("No agWall found, adding a new one")
             default_ag_wall = get_default_ag_wall_template()
             # Set the bldgUseKey on the agWall
-            default_ag_wall["bldgUseKey"] = building_area_key
+            default_ag_wall.bldgUseKey = building_area_key
             test_project = project_envelope_operations.add_ag_wall_to_project(
                 test_project, building_area_key, default_ag_wall
             )
 
             # Get the newly added agWall (it should be the last one in the array)
-            ag_wall = test_project["envelope"]["agWall"][-1]
+            ag_wall = test_project.envelope.agWall[-1]
 
         # Now add a window to the agWall
         default_window = get_default_window_template()
@@ -207,8 +219,10 @@ def test_update_project_with_add_window(test_project_id: str):
             test_project, building_area_key, default_window, ag_wall
         )
 
-        if updated_project.get("id"):
-            update_resp = client.update_project(updated_project["id"], updated_project)
+        if (project_id:=getattr(updated_project, "id")):
+            update_resp = client.update_project(
+                project_id, updated_project
+            )
             return update_resp
         else:
             print("No id found on updated project, skipping updateProject API call.")
@@ -221,24 +235,22 @@ def test_update_project_with_add_window(test_project_id: str):
 def test_update_project_with_add_thermal_bridge(test_project_id: str):
     """Test adding a thermal bridge to project."""
     try:
-        response = client.get_project(test_project_id)
-        test_project = response.get("data")
+        test_project = client.get_project(test_project_id)
 
         if not test_project:
             print("No test project data found.")
             return
 
         # Get building area key
-        whole_bldg_use = test_project.get("lighting", {}).get("wholeBldgUse", [])
-        building_area_key = whole_bldg_use[0].get("key") if whole_bldg_use else None
+        whole_bldg_use: List[WholeBldgUse] = test_project.get_by_path("lighting.wholeBldgUse") or []
+        building_area_key = whole_bldg_use[0].key if whole_bldg_use else None
 
         if not building_area_key:
             print("No building area key found, cannot add thermal bridge.")
             return
 
         # Check if an agWall exists (thermal bridges can only be added to agWalls)
-        envelope = test_project.get("envelope", {})
-        ag_wall_list = envelope.get("agWall", [])
+        ag_wall_list: List[AgWall] = test_project.get_by_path("envelope.agWall") or []
 
         if ag_wall_list:
             # Use existing agWall
@@ -249,13 +261,17 @@ def test_update_project_with_add_thermal_bridge(test_project_id: str):
             print("No agWall found, adding a new one for thermal bridge")
             default_ag_wall = get_default_ag_wall_template()
             # Set the bldgUseKey on the agWall
-            default_ag_wall["bldgUseKey"] = building_area_key
+            default_ag_wall.bldgUseKey = building_area_key
+            
+            test_project.add_subcomponent(default_ag_wall)
             test_project = project_envelope_operations.add_ag_wall_to_project(
                 test_project, building_area_key, default_ag_wall
             )
-
-            # Get the newly added agWall (it should be the last one in the array)
-            ag_wall = test_project["envelope"]["agWall"][-1]
+            
+            # After adding, get the new agWall (should be last in list)
+            envelope = getattr(test_project, "envelope", None)
+            ag_wall_list = getattr(envelope, "agWall", []) if envelope else []
+            ag_wall = ag_wall_list[-1] if ag_wall_list else None
 
         # Now add a thermal bridge to the agWall
         updated_project = project_envelope_operations.add_thermal_bridge_to_project(
@@ -266,8 +282,8 @@ def test_update_project_with_add_thermal_bridge(test_project_id: str):
             # thermal_bridge_compliance_type, psi_factor, chi_factor, thermal_bridge_length
         )
 
-        if updated_project.get("id"):
-            update_resp = client.update_project(updated_project["id"], updated_project)
+        if project_id:=getattr(updated_project, "id", None):
+            update_resp = client.update_project(project_id, updated_project)
             return update_resp
         else:
             print("No id found on updated project, skipping updateProject API call.")
@@ -275,19 +291,18 @@ def test_update_project_with_add_thermal_bridge(test_project_id: str):
     except Exception as err:
         print(f"Error in test_update_project_with_add_thermal_bridge: {err}")
         return
-
+    
 
 def test_update_project_with_fixture_schedule(test_project_id: str):
     """Test adding fixture schedule to project."""
     try:
-        response = client.get_project(test_project_id)
-        test_project = response.get("data")
+        test_project = client.get_project(test_project_id)
 
         if not test_project:
             print("No test project data found.")
             return
 
-        if test_project.get("lighting"):
+        if getattr(test_project, "lighting"):
             # Note: This requires project_lighting_operations module to be converted
             print(
                 "Fixture schedule test not yet implemented - requires lighting operations module"
@@ -319,25 +334,26 @@ def test_update_project_with_fixture_schedule(test_project_id: str):
 def main():
     """Main test execution function."""
     # test project is the first project in the project list
-    test_project = test_get_project_and_project_list()
-    export_to_json(test_project, "testProjectJson/initialProject.json")
+    test_project = test_get_project_and_project_list_python()
+    test_project_json = test_project.model_dump(mode="json")
+    export_to_json(test_project_json, "testProjectJson/initialProject.json")
 
     if test_project:
-        # default_project=test_update_project_with_default_dummy_project(test_project["id"])
-        # export_to_json(default_project, "testProjectJson/defaultProject.json")
-        # building_area_project = test_update_project_with_add_building_area(test_project["id"])
-        # export_to_json(building_area_project, "testProjectJson/buildingAreaAddedProject.json")
+        default_project=test_update_project_with_default_dummy_project(test_project.id)
+        export_to_json(default_project, "testProjectJson/defaultProject.json")
+        building_area_project = test_update_project_with_add_building_area(test_project.id)
+        export_to_json(building_area_project, "testProjectJson/buildingAreaAddedProject.json")
 
-        # roof_project = test_update_project_with_add_roof(test_project["id"])
-        # export_to_json(roof_project, "testProjectJson/roofAddedProject.json")
+        roof_project = test_update_project_with_add_roof(test_project.id)
+        export_to_json(roof_project, "testProjectJson/roofAddedProject.json")
 
-        # skylight_project = test_update_project_with_add_skylight(test_project["id"])
-        # export_to_json(skylight_project, "testProjectJson/skylightAddedProject.json")
-        # window_project = test_update_project_with_add_window(test_project["id"])
-        # export_to_json(window_project, "testProjectJson/windowAddedProject.json")
+        skylight_project = test_update_project_with_add_skylight(test_project.id)
+        export_to_json(skylight_project, "testProjectJson/skylightAddedProject.json")
+        window_project = test_update_project_with_add_window(test_project.id)
+        export_to_json(window_project, "testProjectJson/windowAddedProject.json")
 
         thermal_bridge_project = test_update_project_with_add_thermal_bridge(
-            test_project["id"]
+            test_project.id
         )
         export_to_json(
             thermal_bridge_project, "testProjectJson/thermalBridgeAddedProject.json"
