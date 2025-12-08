@@ -130,7 +130,6 @@ class COMCheckApiService:
         try:
             client = self._get_client()
             response = client.put(f"/project/{project_id}", json=project_data)
-            print(project_data)
             response.raise_for_status()
             return response.json()
         except Exception as error:
