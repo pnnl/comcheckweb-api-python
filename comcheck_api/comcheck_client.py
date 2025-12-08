@@ -106,7 +106,7 @@ class COMcheckClient:
         if not old_project:
             raise ValueError(f"Project with ID {project_id} not found.")
         
-        project_data_json = project_data.model_dump(mode="json")
+        project_data_json = project_data.model_dump(mode="json", exclude_unset=True)
 
         # Preserve user project reference
         user_project = old_project["userProject"]
@@ -120,7 +120,7 @@ class COMcheckClient:
         # Ensure each building area has interiorLightingSpace initialized
         for building_area in project_data_json["lighting"]["wholeBldgUse"]:
             building_area["interiorLightingSpace"] = {
-                **DEFAULT_BUILDING_AREA.interiorLightingSpace.model_dump(mode="json")
+                **DEFAULT_BUILDING_AREA.interiorLightingSpace.model_dump(mode="json", exclude_unset=True)
             }
 
         return self._service.update_project(project_id, project_data_json)

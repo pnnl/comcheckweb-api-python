@@ -282,115 +282,6 @@ class DataManager(Generic[T]):
         )  # Protect returned object from external mutation
 
 
-class CustomBaseModelMeta(_model_construction.ModelMetaclass):
-    def __new__(mcls, name, bases, namespace):
-        cls = super().__new__(mcls, name, bases, namespace)
-
-        # Get all type hints for this class
-        hints = get_type_hints(cls)
-
-        # Identify fields whose type is a subclass of CustomBaseModel
-        for field_name, field_type in hints.items():
-            if isinstance(field_type, type) and issubclass(field_type, BaseModel):
-                # Define an add_<field_name> method dynamically
-                def make_adder(fn, ft):
-                    def adder(self, instance, fn=fn, ft=ft):
-                        setattr(self, fn, instance)
-                        print(f"Added {fn}: {instance}")
-                    adder.__name__ = f"add_{fn}"
-                    return adder
-
-                setattr(cls, f"add_{field_name}", make_adder(field_name, field_type))
-
-        return cls
-    
-
-class CustomBaseModel(BaseModel, metaclass=CustomBaseModelMeta):
-    """Base model providing structured, type-safe manipulation of nested
-    data components.
-
-    This class adds support for:
-    - Adding typed subcomponents (including dict -> model coercion)
-    - Enforcing naming conventions for subcomponent attributes
-    - Safe traversal of nested attributes using dot-paths
-    - Automatic derivation of JSON keys for model types
-
-    It is intended to be extended by models that contain lists of
-    subcomponents and need controlled, validated CRUD-like operations
-    on those nested items.
-    """
-    _identifier: str = "id"
-
-    def add_subcomponent(
-        self,
-        subcomponent: S,
-        subcomponent_name: str | None = None,
-    ) -> T:
-        """
-        Add a new subcomponent to internal data.
-
-        Args:
-            subcomponent: The subcomponent to add (e.g., Door)
-            subcomponent name: Name of the subcomponent attribute (e.g., "door")
-
-        Returns:
-            Updated item with the new subcomponent added.
-        """
-
-        if isinstance(subcomponent, dict):
-            if subcomponent_name is None:
-                raise ValueError("subcomponent_name is required when subcomponent is a dict")
-            # Convert name to class name style: e.g. "door" -> "Door"
-            from comcheck_api.types import core_types
-            class_name = subcomponent_name[0].upper() + subcomponent_name[1:]
-            cls = getattr(core_types, class_name, None)
-            if cls is None:
-                raise ValueError(f"Unknown subcomponent type for name '{class_name}'")
-            subcomponent_instance = cls(**subcomponent)
-            subcomponent_type = cls
-        elif isinstance(subcomponent, CustomBaseModel):
-            subcomponent_name = subcomponent.json_key()
-            subcomponent_type = type(subcomponent)
-            subcomponent_instance = subcomponent
-        else:
-            raise TypeError(
-                f"subcomponent must be a dict or CustomBaseModel instance, "
-                f"got {type(subcomponent).__name__}"
-            )
-            
-        if subcomponent_name not in self.__class__.model_fields:
-            raise AttributeError(
-                f"{self.__class__.__name__} has no subcomponent list '{subcomponent_name}'"
-            )
-
-        current_subcomponents = getattr(self, subcomponent_name)
-
-        if not isinstance(current_subcomponents, list):
-            raise TypeError(
-                f"{self.__class__.__name__}.{subcomponent_name} "
-                f"must be a list, got {type(current_subcomponents).__name__}"
-            )
-
-        subcomponent_manager = DataManager[subcomponent_type](initial_data=current_subcomponents, model_type=subcomponent_type)
-        updated_list = subcomponent_manager.add_new(subcomponent_instance)
-
-        setattr(self, subcomponent_name, updated_list)
-        return copy.deepcopy(self)
-
-    def get_by_path(self, path: str, default: Any = None) -> Any | None:
-        attrs = path.split(".")
-        current = self
-        for attr in attrs:
-            if not hasattr(current, attr):
-                return default
-            current = getattr(current, attr)
-        return current
-
-    @classmethod
-    def json_key(cls) -> str:
-        return cls.__name__[0].lower() + cls.__name__[1:]
-
-
 IdInfo = namedtuple("IdInfo", ["identifier", "id_prefix"])
 
 
@@ -415,7 +306,7 @@ def get_model_info(model_class: Type[BaseModel]) -> IdInfo | None:
         AgWall: IdInfo(identifier="assemblyType", id_prefix="AgWall:Ext Wall"),
         Floor: IdInfo(identifier="assemblyType", id_prefix="Floor:Floor"),
         Skylight: IdInfo(identifier="assemblyType", id_prefix="Skylight:Skylight"),
-        ThermalBridge: IdInfo(identifier="assemblyType", id_prefix=None),
+        ThermalBridge: IdInfo(identifier="id", id_prefix=None),
         WholeBldgUse: IdInfo(identifier="key", id_prefix=None),
     }
     return MODEL_TO_ID_INFO.get(model_class)

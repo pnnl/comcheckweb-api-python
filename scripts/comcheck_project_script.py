@@ -56,7 +56,6 @@ def test_get_project_and_project_list_python():
     """Test getting project list and first project details."""
     try:
         projects = client.list_projects()
-        print('hello', projects)
         if projects and (project_id:=projects[0].get("_id")):
             print(project_id)
             project = client.get_project(project_id)
