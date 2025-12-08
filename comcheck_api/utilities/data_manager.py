@@ -183,7 +183,6 @@ class DataManager(Generic[T]):
         Args:
             parent: The parent item (e.g., BgWall)
             subcomponent: The subcomponent to add (e.g., Door)
-            manager: Manager of the subcomponent
 
         Returns:
             Updated parent with the new subcomponent added.
@@ -307,12 +306,18 @@ class CustomBaseModelMeta(_model_construction.ModelMetaclass):
     
 
 class CustomBaseModel(BaseModel, metaclass=CustomBaseModelMeta):
-    """Generic data manager for storing and validating typed data items.
+    """Base model providing structured, type-safe manipulation of nested
+    data components.
 
-    This class provides CRUD operations on a collection of items with:
-    - JSON schema validation against a schema reference
-    - Unique identifier enforcement
-    - Type-safe operations
+    This class adds support for:
+    - Adding typed subcomponents (including dict -> model coercion)
+    - Enforcing naming conventions for subcomponent attributes
+    - Safe traversal of nested attributes using dot-paths
+    - Automatic derivation of JSON keys for model types
+
+    It is intended to be extended by models that contain lists of
+    subcomponents and need controlled, validated CRUD-like operations
+    on those nested items.
     """
     _identifier: str = "id"
 
@@ -326,7 +331,7 @@ class CustomBaseModel(BaseModel, metaclass=CustomBaseModelMeta):
 
         Args:
             subcomponent: The subcomponent to add (e.g., Door)
-            subcomponent name: Manager of the subcomponent
+            subcomponent name: Name of the subcomponent attribute (e.g., "door")
 
         Returns:
             Updated item with the new subcomponent added.
@@ -342,14 +347,18 @@ class CustomBaseModel(BaseModel, metaclass=CustomBaseModelMeta):
             if cls is None:
                 raise ValueError(f"Unknown subcomponent type for name '{class_name}'")
             subcomponent_instance = cls(**subcomponent)
-        else:
+            subcomponent_type = cls
+        elif isinstance(subcomponent, CustomBaseModel):
             subcomponent_name = subcomponent.json_key()
             subcomponent_type = type(subcomponent)
             subcomponent_instance = subcomponent
+        else:
+            raise TypeError(
+                f"subcomponent must be a dict or CustomBaseModel instance, "
+                f"got {type(subcomponent).__name__}"
+            )
             
-        current_subcomponents: List[S] = getattr(type(self), subcomponent_name, [])
-
-        if not hasattr(self, subcomponent_name):
+        if subcomponent_name not in self.__class__.model_fields:
             raise AttributeError(
                 f"{self.__class__.__name__} has no subcomponent list '{subcomponent_name}'"
             )
@@ -366,27 +375,7 @@ class CustomBaseModel(BaseModel, metaclass=CustomBaseModelMeta):
         updated_list = subcomponent_manager.add_new(subcomponent_instance)
 
         setattr(self, subcomponent_name, updated_list)
-
         return copy.deepcopy(self)
-
-    def modify(self, updates: T) -> T:
-        """Modify an existing item by its identifier.
-
-        If the identifier changes, ensures no duplicates exist in the data array.
-
-        Args:
-            id_value: The current identifier value.
-            updates: Partial updates to apply to the item.
-
-        Returns:
-            The updated item.
-
-        Raises:
-            ValueError: If the item is not found or if the updated identifier
-                already exists.
-        """
-        updated_item = self.model_copy(update=updates.model_dump(mode="json"))
-        return updated_item
 
     def get_by_path(self, path: str, default: Any = None) -> Any | None:
         attrs = path.split(".")
