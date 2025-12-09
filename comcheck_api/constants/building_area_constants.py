@@ -5,7 +5,7 @@ from uuid import uuid4
 from comcheck_api.types.core_types import WholeBldgUse
 
 # Default building area structure with interior lighting space
-DEFAULT_BUILDING_AREA: WholeBldgUse = {
+DEFAULT_BUILDING_AREA: WholeBldgUse = WholeBldgUse(**{
     "key": str(uuid4()),
     "wholeBldgType": "WHOLE_BUILDING_AUTOMOTIVE",  # TODO: wholeBldgType is a list of enum, need to define the enum type
     "areaDescription": "Automotive Facility",
@@ -30,4 +30,4 @@ DEFAULT_BUILDING_AREA: WholeBldgUse = {
         "rcrWorkplaneToLuminaireHeight": 0,
         "fixture": [],
     },  # redundant data, but need it for backend call
-}
+})

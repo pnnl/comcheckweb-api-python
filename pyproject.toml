@@ -22,6 +22,3 @@ packages = ["comcheck_api"]
 members = []
 
 [tool.uv.sources]
-
-[tool.mypy]
-exclude = ["^comcheck_api/types/core_types\\.py$", "^comcheck_api/constants/.*"]

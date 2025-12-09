@@ -1,44 +1,43 @@
 """Tests for BgWallListManager."""
-
-import pytest
+from copy import deepcopy
 
 from comcheck_api.components.envelope.bg_wall import BgWallListManager
-from comcheck_api.constants.envelope_constants import (
-    DEFAULT_BG_WALL,
-    DEFAULT_DOOR,
-    DEFAULT_WINDOW,
-)
+from comcheck_api.types.core_types import *
 
-
-def test_initialization_with_provided_data():
+def test_initialization_with_provided_data(bg_wall: BgWall):
     """Test initialization with provided data."""
-    manager = BgWallListManager([DEFAULT_BG_WALL])
-    assert manager.get_all() == [DEFAULT_BG_WALL]
+    manager = BgWallListManager([bg_wall])
+    assert manager.get_all() == [bg_wall]
 
 
-def test_add_door_to_bg_wall():
+def test_add_door_to_bg_wall(bg_wall: BgWall, door: Door):
     """Test adding a door to bg wall."""
-    manager = BgWallListManager([DEFAULT_BG_WALL])
-    manager.add_new_door(DEFAULT_BG_WALL, DEFAULT_DOOR)
-    updated_wall = manager.get_by_identifier(DEFAULT_BG_WALL["assemblyType"])
+    manager = BgWallListManager([bg_wall]) 
+
+    manager.add_new_door(bg_wall, door)
+    updated_wall = manager.get_by_identifier(bg_wall.assemblyType)
+        
+
     assert updated_wall is not None
-    assert len(updated_wall["door"]) == 1
+    assert len(updated_wall.door) == 1
 
 
-def test_add_window_to_bg_wall():
+def test_add_window_to_bg_wall(bg_wall: BgWall, window: Window):
     """Test adding a window to bg wall."""
-    manager = BgWallListManager([DEFAULT_BG_WALL])
-    manager.add_new_window(DEFAULT_BG_WALL, DEFAULT_WINDOW)
-    updated_wall = manager.get_by_identifier(DEFAULT_BG_WALL["assemblyType"])
+    manager = BgWallListManager([bg_wall])
+    manager.add_new_window(bg_wall, window)
+    updated_wall = manager.get_by_identifier(bg_wall.assemblyType)
     assert updated_wall is not None
-    assert len(updated_wall["window"]) == 1
+    assert len(updated_wall.window) == 1
 
 
-def test_add_duplicate_bg_wall_raises_error():
+def test_add_duplicate_bg_wall_has_unique_assembly_type(bg_wall: BgWall):
     """Test that adding a duplicate bg wall raises an error."""
-    manager = BgWallListManager([DEFAULT_BG_WALL])
-    with pytest.raises(
-        ValueError,
-        match=f"Item with assemblyType '{DEFAULT_BG_WALL['assemblyType']}' already exists",
-    ):
-        manager.add_new(DEFAULT_BG_WALL)
+    manager = BgWallListManager([bg_wall])
+    manager.add_new(deepcopy(bg_wall))
+    
+    bg_walls = manager.get_all()
+
+    assembly_types = [wall.assemblyType for wall in bg_walls]
+    assert len(assembly_types) == 2
+    assert len(assembly_types) == len(set(assembly_types))

@@ -25,19 +25,17 @@ def client():
 
 def test_fetch_project_list(client: COMcheckClient):
     """Test fetching the project list."""
-    response = client.list_projects()
-    project_list = response.get("data", [])
+    project_list = client.list_projects()
     assert isinstance(project_list, list)
 
 
 def test_fetch_single_project(client: COMcheckClient):
     """Test fetching a single project if any exist."""
-    response = client.list_projects()
-    project_list = response.get("data", [])
+    project_list = client.list_projects()
 
     if project_list and project_list[0].get("_id"):
         project = client.get_project(project_list[0]["_id"])
-        assert "data" in project
+        assert project is not None
     else:
         # If no projects exist, just pass the test
         assert True
