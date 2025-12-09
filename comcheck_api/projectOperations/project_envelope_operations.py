@@ -51,7 +51,6 @@ def add_roof_to_project(
 
     updated_project = project.model_copy(deep=True)
 
-    updated_project.envelope.add_subcomponent(new_roof)
     new_roof.bldgUseKey = building_area_key
     updated_project.envelope.add_subcomponent(new_roof)
 
@@ -179,6 +178,9 @@ def add_skylight_to_project(
 
     _require_building_area(project, building_area_key)
 
+    # Set the building area key on the new skylight
+    new_skylight.bldgUseKey = building_area_key
+
     if updated_project.projectType != "ALTERATION":
         if roof is None:
             raise ValueError("Roof must be specified for non-alteration projects.")
@@ -191,20 +193,28 @@ def add_skylight_to_project(
         roofs = updated_project.get_by_path("envelope.roof")
         if isinstance(roofs, list):
             roof_index = next(
-                (i for i, r in enumerate(roofs) if getattr(r, "assemblyType") == getattr(roof, "assemblyType")),
+                (
+                    i
+                    for i, r in enumerate(roofs)
+                    if getattr(r, "assemblyType") == getattr(roof, "assemblyType")
+                ),
                 -1,
             )
             if roof_index == -1:
                 raise ValueError("Specified roof not found in project.")
 
             roof_manager = RoofListManager(roofs)
-            updated_roof = roof_manager.add_new_skylight(roofs[roof_index], new_skylight)
+            updated_roof = roof_manager.add_new_skylight(
+                roofs[roof_index], new_skylight
+            )
             updated_project.envelope.roof[roof_index] = updated_roof
         else:
             raise ValueError("Envelope roof list not found or invalid in project.")
     else:
         # Alteration projects: orphaned skylights
-        skylight_to_add = new_skylight.model_copy(update={"bldgUseKey": building_area_key})
+        skylight_to_add = new_skylight.model_copy(
+            update={"bldgUseKey": building_area_key}
+        )
 
         envelope = getattr(updated_project, "envelope", None)
         if envelope is None:
@@ -215,7 +225,6 @@ def add_skylight_to_project(
         updated_project.envelope.skylight = updated_skylight_list
 
     return updated_project
-
 
 
 def add_window_to_project(
@@ -241,6 +250,7 @@ def add_window_to_project(
     updated_project = project.model_copy(deep=True)
 
     _require_building_area(project, building_area_key)
+    new_window.bldgUseKey = building_area_key
 
     if updated_project.projectType != "ALTERATION":
         if not wall:
@@ -264,9 +274,7 @@ def add_window_to_project(
                 -1,
             )
             if ag_wall_index != -1:
-                ag_wall_manager = AgWallListManager(
-                    updated_project.envelope.agWall
-                )
+                ag_wall_manager = AgWallListManager(updated_project.envelope.agWall)
                 updated_ag_wall = ag_wall_manager.add_new_window(
                     updated_project.envelope.agWall[ag_wall_index], new_window
                 )
@@ -295,7 +303,9 @@ def add_window_to_project(
         raise ValueError("Specified wall not found in project.")
     else:
         # Alteration projects: orphaned windows
-        window_to_add: Window = new_window.model_copy(update={"bldgUseKey": building_area_key})
+        window_to_add: Window = new_window.model_copy(
+            update={"bldgUseKey": building_area_key}
+        )
         if not getattr(updated_project, "envelope"):
             raise ValueError("Envelope not found in project.")
         window_manager = WindowListManager(
@@ -330,6 +340,7 @@ def add_door_to_project(
     updated_project = project.model_copy(deep=True)
 
     _require_building_area(project, building_area_key)
+    new_door.bldgUseKey = building_area_key
 
     if updated_project.projectType != "ALTERATION":
 
@@ -389,13 +400,10 @@ def add_door_to_project(
         if not getattr(updated_project, "envelope"):
             raise ValueError("Envelope not found in project.")
 
-        door_manager = DoorListManager(
-            updated_project.get_by_path("envelope.door", [])
-        )
+        door_manager = DoorListManager(updated_project.get_by_path("envelope.door", []))
         updated_project.envelope.door = door_manager.add_new(door_to_add)
 
         return updated_project
-
 
 
 # TODO: verify when thermal bridges are needed
@@ -403,9 +411,15 @@ def add_thermal_bridge_to_project(
     project: ComBuilding,
     building_area_key: str,
     ag_wall: AgWall,
-    thermal_bridge_type: Union[ThermalBridgeTypeOptions, str] = ThermalBridgeTypeOptions.THERMAL_BRIDGE_OTHER,
-    thermal_bridge_category: Union[ThermalBridgeCategoryOptions, str] = ThermalBridgeCategoryOptions.THERMAL_BRIDGE_UNCATEGORIZED,
-    thermal_bridge_compliance_type: Union[ThermalBridgeComplianceTypeOptions, str] = ThermalBridgeComplianceTypeOptions.THERMAL_BRIDGE_NON_PRESCRIPTIVE,
+    thermal_bridge_type: Union[
+        ThermalBridgeTypeOptions, str
+    ] = ThermalBridgeTypeOptions.THERMAL_BRIDGE_OTHER,
+    thermal_bridge_category: Union[
+        ThermalBridgeCategoryOptions, str
+    ] = ThermalBridgeCategoryOptions.THERMAL_BRIDGE_UNCATEGORIZED,
+    thermal_bridge_compliance_type: Union[
+        ThermalBridgeComplianceTypeOptions, str
+    ] = ThermalBridgeComplianceTypeOptions.THERMAL_BRIDGE_NON_PRESCRIPTIVE,
     psi_factor: float = 0.0,
     chi_factor: float = 0.0,
     thermal_bridge_length: float = 0.0,

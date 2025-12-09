@@ -8,6 +8,7 @@ from comcheck_api.types.core_types import ComBuilding
 
 Mode = Literal["python", "json"]
 
+
 class COMcheckClient:
     """COMcheck Client class for simplified project operations."""
 
@@ -56,7 +57,7 @@ class COMcheckClient:
         project_id: str,
         mode: Literal["python"] = "python",
     ) -> Optional["ComBuilding"]: ...
-    
+
     @overload
     def get_project(
         self,
@@ -71,6 +72,13 @@ class COMcheckClient:
     ) -> Optional[Union["ComBuilding", Dict[str, Any]]]:
         resp = self._service.get_project(project_id)
         data = resp.get("data")
+        for building_area in data["lighting"]["wholeBldgUse"]:
+            building_area["interiorLightingSpace"] = {
+                **DEFAULT_BUILDING_AREA.interiorLightingSpace.model_dump(
+                    mode="json", exclude_unset=True
+                )
+            }
+
         if data is None:
             return None
         if mode == "python":
@@ -83,7 +91,7 @@ class COMcheckClient:
         Returns:
             API response data as dictionary
         """
-        return self._service.get_project_list().get('data', {})
+        return self._service.get_project_list().get("data", {})
 
     def update_project(
         self, project_id: str, project_data: ComBuilding
@@ -105,7 +113,7 @@ class COMcheckClient:
 
         if not old_project:
             raise ValueError(f"Project with ID {project_id} not found.")
-        
+
         project_data_json = project_data.model_dump(mode="json", exclude_unset=True)
 
         # Preserve user project reference
@@ -113,15 +121,62 @@ class COMcheckClient:
         project_data_json["userProject"] = user_project
 
         # Preserve IDs from existing project
-        for section in ["envelope", "lighting", "hvac", "control", "project", "location", "renewable"]:
+        for section in [
+            "envelope",
+            "lighting",
+            "hvac",
+            "control",
+            "project",
+            "location",
+            "renewable",
+        ]:
             project_data_json[section]["id"] = old_project[section]["id"]
         project_data_json["id"] = old_project["id"]
 
         # Ensure each building area has interiorLightingSpace initialized
         for building_area in project_data_json["lighting"]["wholeBldgUse"]:
             building_area["interiorLightingSpace"] = {
-                **DEFAULT_BUILDING_AREA.interiorLightingSpace.model_dump(mode="json", exclude_unset=True)
+                **DEFAULT_BUILDING_AREA.interiorLightingSpace.model_dump(
+                    mode="json", exclude_unset=True
+                )
             }
+
+        # TODO: need to verify if other componets also need to remove None IDs (auto-generated through pydantic )
+        # Remove None IDs from envelope components
+        if "envelope" in project_data_json:
+            envelope = project_data_json["envelope"]
+            for component_type in [
+                "roof",
+                "agWall",
+                "bgWall",
+                "floor",
+                "skylight",
+                "window",
+                "door",
+            ]:
+                if component_type in envelope and isinstance(
+                    envelope[component_type], list
+                ):
+                    for component in envelope[component_type]:
+                        if isinstance(component, dict) and component.get("id") is None:
+                            component.pop("id", None)
+                        # Also remove None IDs from nested components (skylights in roofs, windows/doors in walls)
+                        if component_type == "roof" and "skylight" in component:
+                            for skylight in component.get("skylight", []):
+                                if (
+                                    isinstance(skylight, dict)
+                                    and skylight.get("id") is None
+                                ):
+                                    skylight.pop("id", None)
+                        elif component_type in ["agWall", "bgWall"]:
+                            for nested_type in ["window", "door", "thermalBridge"]:
+                                if nested_type in component:
+                                    for nested in component.get(nested_type, []):
+                                        if (
+                                            isinstance(nested, dict)
+                                            and nested.get("id") is None
+                                        ):
+                                            nested.pop("id", None)
 
         return self._service.update_project(project_id, project_data_json)
 
