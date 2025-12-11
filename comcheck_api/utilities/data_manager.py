@@ -39,12 +39,12 @@ class DataManager(Generic[T]):
         schema_path: Path to the JSON schema file (defaults to comCheck.schema.json).
     """
 
-    model_type: Type[T] | None = None
+    model_type: Type[BaseModel] | None = None
 
     def __init__(
         self,
         initial_data: list[T] | None = [],
-        model_type: Type[T] | None = None,
+        model_type: Type[BaseModel] | None = None,
         schema_path: str | Path = "../schemas/comCheck.schema.json",
     ):
         """Initialize the data manager."""
@@ -55,21 +55,21 @@ class DataManager(Generic[T]):
         self._initialize_schema(schema_path)
         self._initialize_data(initial_data)
 
-    def _initialize_metadata(self, model_type: T | None = None) -> None:
-        self._model_class = model_type or self.__class__.model_type
-        if self._model_class is None:
+    def _initialize_metadata(self, model_type: BaseModel | None = None) -> None:
+        self.model_type = model_type or self.__class__.model_type
+        if self.model_type is None:
             raise ValueError(
                 f"{self.__class__.__name__} requires a model_type "
                 "either as a class variable or via initialization."
             )
 
-        id_info = get_model_info(self._model_class)
+        id_info = get_model_info(self.model_type)
         if id_info:
             self._identifier = id_info.identifier
             self._id_prefix = id_info.id_prefix
         else:
             raise ValueError(
-                f"No ID info found for model class {self._model_class.__name__}"
+                f"No ID info found for model class {self.model_type.__name__}"
             )
 
     def _initialize_schema(self, schema_path: str | Path) -> None:
@@ -84,33 +84,25 @@ class DataManager(Generic[T]):
         for item in initial_data:
             self.add_new(item)
 
-    def _validate_item(self, item: T) -> None:
+    def _validate_item(self, item: T) -> T:
         """Validate an item against the JSON schema reference.
 
         Args:
             item: The item to validate.
 
+        Returns:
+            A model instance.
+
         Raises:
             ValidationError: If validation fails.
         """
-        schema_reference = self._model_class.__name__
-        if not self._schema or not schema_reference:
-            return
-
-        # Build a validation schema that references the definition
-        validation_schema = {
-            **self._schema,
-            "$ref": f"#/definitions/{schema_reference}",
-        }
-
-        # Convert typed object to dict if needed
-        item_dict = item if isinstance(item, dict) else item.__dict__
-
-        try:
-            validate(instance=item_dict, schema=validation_schema)
-        except ValidationError as e:
-            raise ValidationError(f"Validation failed: {e.message}") from e
-
+        if isinstance(item, self.model_type):
+            model_instance = item
+        else:
+            model_instance = self.model_type.model_validate(item)
+        
+        return model_instance
+    
     def _get_identifier_value(self, item: T) -> Any:
         """Extract the identifier value from an item.
 
@@ -122,7 +114,7 @@ class DataManager(Generic[T]):
         """
         return getattr(item, self._identifier, None)
 
-    def add_new(self, item: T) -> list[T]:
+    def add_new(self, item: T | dict[str, Any]) -> list[T]:
         """Add a new item to the data array.
 
         Args:
@@ -136,10 +128,12 @@ class DataManager(Generic[T]):
                 same identifier already exists.
             ValidationError: If schema validation fails.
         """
-        if item:
-            self.generate_identifier(item)
+        model_instance = self._validate_item(item)
 
-            self._data.append(copy.deepcopy(item))
+        if item:
+            self.generate_identifier(model_instance)
+
+            self._data.append(copy.deepcopy(model_instance))
 
         return self.get_all()
 
