@@ -347,6 +347,48 @@ def test_update_project_with_fixture_schedule(test_project_id: str):
         return
 
 
+# Test update component functions
+def test_update_building_area_in_project(test_project_id: str):
+    """Test updating a building area in the project."""
+    try:
+        test_project = client.get_project(test_project_id)
+
+        if not test_project:
+            print("No test project data found.")
+            return
+
+        whole_bldg_use: List[WholeBldgUse] = (
+            test_project.get_by_path("lighting.wholeBldgUse") or []
+        )
+        if not whole_bldg_use:
+            print(
+                "No building areas found in test project, cannot update building area."
+            )
+            return
+        building_area_key = whole_bldg_use[0].key
+        updates = {
+            "wholeBldgType": WholeBuildingTypeOptions.WHOLE_BUILDING_COURT_HOUSE,
+            "areaDescription": "Updated building area description",
+            "floorArea": 2500,
+        }
+
+        updated_project = (
+            project_building_area_operations.update_building_area_in_project(
+                test_project, building_area_key, updates
+            )
+        )
+
+        if project_id := getattr(updated_project, "id"):
+            update_resp = client.update_project(project_id, updated_project)
+            return update_resp
+        else:
+            print("No id found on updated project, skipping updateProject API call.")
+            return
+    except Exception as err:
+        print(f"Error in test_update_building_area_in_project: {err}")
+        return
+
+
 # Main Test Execution
 def main():
     """Main test execution function."""
@@ -392,6 +434,14 @@ def main():
         #     thermal_bridge_project, "testProjectJson/thermalBridgeAddedProject.json"
         # )
         # # test_update_project_with_fixture_schedule(test_project["id"])
+
+        updated_building_area_project = test_update_building_area_in_project(
+            test_project.id
+        )
+        export_to_json(
+            updated_building_area_project,
+            "testProjectJson/buildingAreaUpdatedProject.json",
+        )
 
 
 if __name__ == "__main__":

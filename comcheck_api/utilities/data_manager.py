@@ -38,6 +38,7 @@ class DataManager(Generic[T]):
         initial_data: Initial list of items to populate the manager.
         schema_path: Path to the JSON schema file (defaults to comCheck.schema.json).
     """
+
     model_type: Type[T] | None = None
 
     def __init__(
@@ -61,14 +62,15 @@ class DataManager(Generic[T]):
                 f"{self.__class__.__name__} requires a model_type "
                 "either as a class variable or via initialization."
             )
-        
+
         id_info = get_model_info(self._model_class)
         if id_info:
             self._identifier = id_info.identifier
             self._id_prefix = id_info.id_prefix
         else:
-            raise ValueError(f"No ID info found for model class {self._model_class.__name__}")
-
+            raise ValueError(
+                f"No ID info found for model class {self._model_class.__name__}"
+            )
 
     def _initialize_schema(self, schema_path: str | Path) -> None:
         """Load schema if provided"""
@@ -193,7 +195,9 @@ class DataManager(Generic[T]):
 
         current_subcomponents: List[S] = getattr(parent, subcomponent_name, [])
 
-        subcomponent_manager = DataManager[subcomponent_type](initial_data=current_subcomponents, model_type=subcomponent_type)
+        subcomponent_manager = DataManager[subcomponent_type](
+            initial_data=current_subcomponents, model_type=subcomponent_type
+        )
 
         parent.__dict__[subcomponent_name] = subcomponent_manager.add_new(subcomponent)
         updated = self.modify_one(self._get_identifier_value(parent), parent)
@@ -236,14 +240,14 @@ class DataManager(Generic[T]):
         ]
         return len(self._data) != initial_length
 
-    def modify_one(self, id_value: Any, updates: T) -> T:
+    def modify_one(self, id_value: Any, updates: T | dict[str, Any]) -> T:
         """Modify an existing item by its identifier.
 
         If the identifier changes, ensures no duplicates exist in the data array.
 
         Args:
             id_value: The current identifier value.
-            updates: Partial updates to apply to the item.
+            updates: Partial updates (dict) or full model object to apply to the item.
 
         Returns:
             The updated item.
@@ -261,8 +265,15 @@ class DataManager(Generic[T]):
         if item_index is None:
             raise ValueError(f"Item with {self._identifier} '{id_value}' not found")
 
+        # Convert updates to dict if it's a model object
+        updates_dict = (
+            updates.model_dump(mode="json", exclude_unset=True)
+            if isinstance(updates, BaseModel)
+            else updates
+        )
+
         # If identifier is changing, validate its uniqueness
-        new_identifier: T = getattr(updates, self._identifier)  # type: ignore[index]
+        new_identifier = updates_dict.get(self._identifier)
         if new_identifier and new_identifier != id_value:
             if any(
                 self._get_identifier_value(existing) == new_identifier
@@ -273,8 +284,26 @@ class DataManager(Generic[T]):
                 )
 
         original = self._data[item_index]
-        merged = {**original.model_dump(mode="json"), **updates.model_dump(mode="json")}
-        updated_item = type(original)(**merged)
+
+        # Validate that all keys in updates_dict are valid fields
+        model_fields = type(original).model_fields
+        invalid_fields = set(updates_dict.keys()) - set(model_fields.keys())
+        if invalid_fields:
+            raise ValueError(f"Invalid fields in updates: {invalid_fields}")
+
+        # Validate partial updates by attempting to construct with merged data
+        # This will raise Pydantic ValidationError if types don't align
+        # Get only the model fields to avoid serializing dynamically added methods
+        original_dict = original.model_dump(
+            mode="python", by_alias=False, exclude_unset=True
+        )
+        merged = {**original_dict, **updates_dict}
+        try:
+            updated_item = type(original).model_validate(merged)
+        except Exception as e:
+            raise ValueError(
+                f"Validation failed for updates to {self._identifier} '{id_value}': {str(e)}"
+            ) from e
 
         self._data[item_index] = copy.deepcopy(updated_item)  # Protect internal state
         return copy.deepcopy(
