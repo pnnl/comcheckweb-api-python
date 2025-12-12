@@ -58,7 +58,7 @@ def add_roof_to_project(
 
 
 def update_roof_in_project(
-    project: ComBuilding, roof_assembly_type: str, updates: Roof
+    project: ComBuilding, roof_assembly_type: str, updates: dict[str, Any] | Roof
 ) -> ComBuilding:
     """Update a roof in the project's envelope.
 
@@ -72,7 +72,10 @@ def update_roof_in_project(
     """
     updated_project = project.model_copy(deep=True)
 
-    updated_project.envelope.update_subcomponent(updates=updates, subcomponent_id=roof_assembly_type, subcomponent_name="roof")
+    manager = RoofListManager(updated_project.envelope.roof)
+    manager.modify_one(roof_assembly_type, updates)
+
+    updated_project.envelope.roof = manager.get_all()
 
     return updated_project
 

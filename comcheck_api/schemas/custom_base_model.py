@@ -79,34 +79,6 @@ class CustomBaseModel(BaseModel, metaclass=CustomBaseModelMeta):
         setattr(self, subcomponent_name, updated_list)
         return copy.deepcopy(self)
     
-    def update_subcomponent(
-        self,
-        updates: S,
-        subcomponent_id: str,
-        subcomponent_name: str | None = None,
-    ) -> T:
-        """
-        Update an existing subcomponent within a subcomponent list.
-
-        Args:
-            updates: The new data for the subcomponent, either as a dict
-                or a CustomBaseModel instance.
-            subcomponent_id: The identifier of the subcomponent to update.
-            subcomponent name: Name of the subcomponent attribute (e.g., "door")
-
-        Returns:
-            Item with the subcomponent updated.
-        """
-
-        subcomponent_type, subcomponent_name = self._get_normalized_subcomponent_info(subcomponent=updates, subcomponent_name=subcomponent_name)
-        
-        current_subcomponents = self._get_subcomponent_list(subcomponent_name)
-        subcomponent_manager = DataManager[subcomponent_type](initial_data=current_subcomponents, model_type=subcomponent_type)
-        
-        subcomponent_manager.modify_one(id_value=subcomponent_id, updates=updates)
-
-        setattr(self, subcomponent_name, subcomponent_manager.get_all())
-        return copy.deepcopy(self)
     
     def _get_normalized_subcomponent_info(self, subcomponent: S, subcomponent_name: str | None):
         """
