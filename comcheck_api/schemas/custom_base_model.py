@@ -66,30 +66,49 @@ class CustomBaseModel(BaseModel, metaclass=CustomBaseModelMeta):
             subcomponent name: Name of the subcomponent attribute (e.g., "door")
 
         Returns:
-            Updated item with the new subcomponent added.
+            Item with the new subcomponent added.
         """
 
+        subcomponent_type, subcomponent_name = self._get_normalized_subcomponent_info(subcomponent=subcomponent, subcomponent_name=subcomponent_name)
+
+        current_subcomponents = self._get_subcomponent_list(subcomponent_name)
+        subcomponent_manager = DataManager[subcomponent_type](initial_data=current_subcomponents, model_type=subcomponent_type)
+
+        updated_list = subcomponent_manager.add_new(subcomponent)
+
+        setattr(self, subcomponent_name, updated_list)
+        return copy.deepcopy(self)
+    
+    
+    def _get_normalized_subcomponent_info(self, subcomponent: S, subcomponent_name: str | None):
+        """
+        Returns:
+            (subcomponent_type, resolved_subcomponent_name)
+        """
         if isinstance(subcomponent, dict):
             if subcomponent_name is None:
                 raise ValueError("subcomponent_name is required when subcomponent is a dict")
-            # Convert name to class name style: e.g. "door" -> "Door"
+
+            # Convert "door" -> "Door"
             from comcheck_api.types import core_types
             class_name = subcomponent_name[0].upper() + subcomponent_name[1:]
             cls = getattr(core_types, class_name, None)
             if cls is None:
                 raise ValueError(f"Unknown subcomponent type for name '{class_name}'")
-            subcomponent_instance = cls(**subcomponent)
-            subcomponent_type = cls
+
+            return cls, subcomponent_name
+
         elif isinstance(subcomponent, CustomBaseModel):
             subcomponent_name = subcomponent.json_key()
-            subcomponent_type = type(subcomponent)
-            subcomponent_instance = subcomponent
+            return type(subcomponent), subcomponent_name
+
         else:
             raise TypeError(
                 f"subcomponent must be a dict or CustomBaseModel instance, "
                 f"got {type(subcomponent).__name__}"
             )
-            
+        
+    def _get_subcomponent_list(self, subcomponent_name: str):
         if subcomponent_name not in self.__class__.model_fields:
             raise AttributeError(
                 f"{self.__class__.__name__} has no subcomponent list '{subcomponent_name}'"
@@ -103,11 +122,7 @@ class CustomBaseModel(BaseModel, metaclass=CustomBaseModelMeta):
                 f"must be a list, got {type(current_subcomponents).__name__}"
             )
 
-        subcomponent_manager = DataManager[subcomponent_type](initial_data=current_subcomponents, model_type=subcomponent_type)
-        updated_list = subcomponent_manager.add_new(subcomponent_instance)
-
-        setattr(self, subcomponent_name, updated_list)
-        return copy.deepcopy(self)
+        return current_subcomponents
 
     def get_by_path(self, path: str, default: Any = None) -> Any | None:
         attrs = path.split(".")

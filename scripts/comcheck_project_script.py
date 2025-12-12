@@ -388,6 +388,45 @@ def test_update_building_area_in_project(test_project_id: str):
         print(f"Error in test_update_building_area_in_project: {err}")
         return
 
+def test_update_roof_in_project(test_project_id: str):
+    """Test updating a roof in the project."""
+    try:
+        test_project = client.get_project(test_project_id)
+
+        if not test_project:
+            print("No test project data found.")
+            return
+
+        roofs = (
+            test_project.get_by_path("envelope.roof") or []
+        )
+
+        if not roofs:
+            print(
+                "No roofs found in test project, cannot update roof."
+            )
+            return
+        roof_assembly_type= roofs[0].assemblyType
+        updates = {
+            "description": "Updated roof description",
+        }
+
+        updated_project = (
+            project_envelope_operations.update_roof_in_project(
+                test_project, roof_assembly_type, updates
+            )
+        )
+
+        if project_id := getattr(updated_project, "id"):
+            update_resp = client.update_project(project_id, updated_project)
+            return update_resp
+        else:
+            print("No id found on updated project, skipping updateProject API call.")
+            return
+    except Exception as err:
+        print(f"Error in test_update_building_area_in_project: {err}")
+        return
+
 
 # Main Test Execution
 def main():
@@ -421,6 +460,9 @@ def main():
 
         roof_project = test_update_project_with_add_roof(test_project.id)
         export_to_json(roof_project, "testProjectJson/roofAddedProject.json")
+
+        roof_project = test_update_roof_in_project(test_project.id)
+        export_to_json(roof_project, "testProjectJson/roofUpdatedProject.json")
 
         skylight_project = test_update_project_with_add_skylight(test_project.id)
         export_to_json(skylight_project, "testProjectJson/skylightAddedProject.json")
