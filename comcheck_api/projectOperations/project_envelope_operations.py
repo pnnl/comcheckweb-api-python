@@ -57,6 +57,26 @@ def add_roof_to_project(
     return updated_project
 
 
+def update_roof_in_project(
+    project: ComBuilding, roof_assembly_type: str, updates: Roof
+) -> ComBuilding:
+    """Update a roof in the project's envelope.
+
+    Args:
+        project: The project object to modify
+        roof_assembly_type: The assemblyType of the roof to update in project.envelope.roof list
+        updates: Partial updates (dict) or full Roof object to apply
+
+    Returns:
+        Updated project object with the roof added
+    """
+    updated_project = project.model_copy(deep=True)
+
+    updated_project.envelope.update_subcomponent(updates=updates, subcomponent_id=roof_assembly_type, subcomponent_name="roof")
+
+    return updated_project
+
+
 def add_ag_wall_to_project(
     project: ComBuilding, building_area_key: str, new_ag_wall: AgWall
 ) -> ComBuilding:
