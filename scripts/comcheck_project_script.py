@@ -17,7 +17,9 @@ from comcheck_api.projectOperations import (
 from comcheck_api.utilities.common import export_to_json
 from comcheck_api.get_project_default import (
     get_default_ag_wall_template,
+    get_default_bg_wall_template,
     get_default_building_area_template,
+    get_default_floor_template,
     get_default_project_template,
     get_default_roof_template,
     get_default_skylight_template,
@@ -139,6 +141,110 @@ def test_update_project_with_add_roof(test_project_id: str):
             return
     except Exception as err:
         print(f"Error in test_update_project_with_add_roof: {err}")
+        return
+    
+def test_update_project_with_add_floor(test_project_id: str):
+    """Test adding a floor to project."""
+    try:
+        default_floor = get_default_floor_template()
+        response_project = client.get_project(test_project_id)
+
+        if not response_project:
+            print("No test project data found.")
+            return
+
+        response_project.get_by_path("lighting.wholeBldgUse")
+
+        whole_bldg_use = response_project.get_by_path("lighting.wholeBldgUse", [])
+        building_area_key = (
+            getattr(whole_bldg_use[0], "key") if whole_bldg_use else None
+        )
+
+        if not building_area_key:
+            print("No building area key found in whole building use, cannot add floor.")
+            return
+
+        updated_project = project_envelope_operations.add_floor_to_project(
+            response_project, building_area_key, default_floor
+        )
+        if project_id := getattr(updated_project, "id"):
+            update_resp = client.update_project(project_id, updated_project)
+            return update_resp
+        else:
+            print("No id found on updated project, skipping updateProject API call.")
+            return
+    except Exception as err:
+        print(f"Error in test_update_project_with_add_floor: {err}")
+        return
+
+
+def test_update_project_with_add_ag_wall(test_project_id: str):
+    """Test adding an agWall to project."""
+    try:
+        default_ag_wall = get_default_ag_wall_template()
+        response_project = client.get_project(test_project_id)
+
+        if not response_project:
+            print("No test project data found.")
+            return
+
+        response_project.get_by_path("lighting.wholeBldgUse")
+
+        whole_bldg_use = response_project.get_by_path("lighting.wholeBldgUse", [])
+        building_area_key = (
+            getattr(whole_bldg_use[0], "key") if whole_bldg_use else None
+        )
+
+        if not building_area_key:
+            print("No building area key found in whole building use, cannot add agWall.")
+            return
+
+        updated_project = project_envelope_operations.add_ag_wall_to_project(
+            response_project, building_area_key, default_ag_wall
+        )
+        if project_id := getattr(updated_project, "id"):
+            update_resp = client.update_project(project_id, updated_project)
+            return update_resp
+        else:
+            print("No id found on updated project, skipping updateProject API call.")
+            return
+    except Exception as err:
+        print(f"Error in test_update_project_with_add_ag_wall: {err}")
+        return
+
+
+def test_update_project_with_add_bg_wall(test_project_id: str):
+    """Test adding a bgWall to project."""
+    try:
+        default_bg_wall = get_default_bg_wall_template()
+        response_project = client.get_project(test_project_id)
+
+        if not response_project:
+            print("No test project data found.")
+            return
+
+        response_project.get_by_path("lighting.wholeBldgUse")
+
+        whole_bldg_use = response_project.get_by_path("lighting.wholeBldgUse", [])
+        building_area_key = (
+            getattr(whole_bldg_use[0], "key") if whole_bldg_use else None
+        )
+
+        if not building_area_key:
+            print("No building area key found in whole building use, cannot add bgWall.")
+            return
+
+        updated_project = project_envelope_operations.add_bg_wall_to_project(
+            response_project, building_area_key, default_bg_wall
+        )
+        if project_id := getattr(updated_project, "id"):
+            update_resp = client.update_project(project_id, updated_project)
+            return update_resp
+        else:
+            print("No id found on updated project, skipping updateProject API call.")
+            return
+    except Exception as err:
+        print(f"Error in test_update_project_with_add_bg_wall: {err}")
         return
 
 
@@ -278,7 +384,6 @@ def test_update_project_with_add_thermal_bridge(test_project_id: str):
             # Set the bldgUseKey on the agWall
             default_ag_wall.bldgUseKey = building_area_key
 
-            test_project.add_subcomponent(default_ag_wall)
             test_project = project_envelope_operations.add_ag_wall_to_project(
                 test_project, building_area_key, default_ag_wall
             )
@@ -397,7 +502,7 @@ def test_update_roof_in_project(test_project_id: str):
             print("No test project data found.")
             return
 
-        roofs = (
+        roofs: List[Roof] = (
             test_project.get_by_path("envelope.roof") or []
         )
 
@@ -406,7 +511,7 @@ def test_update_roof_in_project(test_project_id: str):
                 "No roofs found in test project, cannot update roof."
             )
             return
-        roof_assembly_type= roofs[0].assemblyType
+        roof_assembly_type = roofs[0].assemblyType
         updates = {
             "description": "Updated roof description",
         }
@@ -426,6 +531,127 @@ def test_update_roof_in_project(test_project_id: str):
     except Exception as err:
         print(f"Error in test_update_building_area_in_project: {err}")
         return
+    
+def test_update_floor_in_project(test_project_id: str):
+    """Test updating a floor in the project."""
+    try:
+        test_project = client.get_project(test_project_id)
+
+        if not test_project:
+            print("No test project data found.")
+            return
+
+        floors: List[Floor] = (
+            test_project.get_by_path("envelope.floor") or []
+        )
+
+        if not floors:
+            print(
+                "No floors found in test project, cannot update floor."
+            )
+            return
+
+        floor_assembly_type = floors[0].assemblyType
+        updates = {
+            "description": "Updated floor description",
+        }
+
+        updated_project = (
+            project_envelope_operations.update_floor_in_project(
+                test_project, floor_assembly_type, updates
+            )
+        )
+
+        if project_id := getattr(updated_project, "id"):
+            update_resp = client.update_project(project_id, updated_project)
+            return update_resp
+        else:
+            print("No id found on updated project, skipping updateProject API call.")
+            return
+    except Exception as err:
+        print(f"Error in test_update_floor_in_project: {err}")
+        return
+
+def test_update_ag_wall_in_project(test_project_id: str):
+    """Test updating an agWall in the project."""
+    try:
+        test_project = client.get_project(test_project_id)
+
+        if not test_project:
+            print("No test project data found.")
+            return
+
+        ag_walls: List[AgWall] = (
+            test_project.get_by_path("envelope.agWall") or []
+        )
+
+        if not ag_walls:
+            print(
+                "No agWalls found in test project, cannot update agWall."
+            )
+            return
+
+        ag_wall_assembly_type = ag_walls[0].assemblyType
+        updates = {
+            "description": "Updated agWall description",
+        }
+
+        updated_project = (
+            project_envelope_operations.update_ag_wall_in_project(
+                test_project, ag_wall_assembly_type, updates
+            )
+        )
+
+        if project_id := getattr(updated_project, "id"):
+            update_resp = client.update_project(project_id, updated_project)
+            return update_resp
+        else:
+            print("No id found on updated project, skipping updateProject API call.")
+            return
+    except Exception as err:
+        print(f"Error in test_update_ag_wall_in_project: {err}")
+        return
+    
+def test_update_bg_wall_in_project(test_project_id: str):
+    """Test updating a bgWall in the project."""
+    try:
+        test_project = client.get_project(test_project_id)
+
+        if not test_project:
+            print("No test project data found.")
+            return
+
+        bg_walls: List[BgWall] = (
+            test_project.get_by_path("envelope.bgWall") or []
+        )
+
+        if not bg_walls:
+            print(
+                "No bgWalls found in test project, cannot update bgWall."
+            )
+            return
+
+        bg_wall_assembly_type = bg_walls[0].assemblyType
+        updates = {
+            "description": "Updated bgWall description",
+        }
+
+        updated_project = (
+            project_envelope_operations.update_bg_wall_in_project(
+                test_project, bg_wall_assembly_type, updates
+            )
+        )
+
+        if project_id := getattr(updated_project, "id"):
+            update_resp = client.update_project(project_id, updated_project)
+            return update_resp
+        else:
+            print("No id found on updated project, skipping updateProject API call.")
+            return
+    except Exception as err:
+        print(f"Error in test_update_bg_wall_in_project: {err}")
+        return
+
 
 
 # Main Test Execution
@@ -463,6 +689,24 @@ def main():
 
         roof_project = test_update_roof_in_project(test_project.id)
         export_to_json(roof_project, "testProjectJson/roofUpdatedProject.json")
+
+        add_ag_wall = test_update_project_with_add_ag_wall(test_project.id)
+        export_to_json(add_ag_wall, "testProjectJson/agWallAddedProject.json")
+
+        update_ag_wall = test_update_ag_wall_in_project(test_project.id)
+        export_to_json(update_ag_wall, "testProjectJson/agWallUpdatedProject.json")
+
+        add_bg_wall = test_update_project_with_add_bg_wall(test_project.id)
+        export_to_json(add_bg_wall, "testProjectJson/bgWallAddedProject.json")
+
+        update_bg_wall = test_update_bg_wall_in_project(test_project.id)
+        export_to_json(update_bg_wall, "testProjectJson/bgWallUpdatedProject.json")
+
+        add_floor = test_update_project_with_add_floor(test_project.id)
+        export_to_json(add_floor, "testProjectJson/floorAddedProject.json")
+
+        update_floor = test_update_floor_in_project(test_project.id)
+        export_to_json(update_floor, "testProjectJson/floorUpdatedProject.json")
 
         skylight_project = test_update_project_with_add_skylight(test_project.id)
         export_to_json(skylight_project, "testProjectJson/skylightAddedProject.json")
