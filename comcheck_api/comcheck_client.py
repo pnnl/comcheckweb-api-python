@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Literal, Optional, Union, overload
 
 from comcheck_api.api.api_services import COMCheckApiService
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
-from comcheck_api.types.api_types import SimulationResultInfo, StatusInfo
 from comcheck_api.types.core_types import ComBuilding
 
 Mode = Literal["python", "json"]
@@ -185,6 +184,7 @@ class COMcheckClient:
         return self._service.update_project(project_id, project_data_json)
 
     def start_run_simulation(self, project: ComBuilding) -> str:
+        # TODO: change props to ennergy code, envelope?
         """Start a simulation run for a given project ID.
 
         Args:
@@ -193,9 +193,10 @@ class COMcheckClient:
             Simulation session ID
         """
         project_data = project.model_dump(mode="json", exclude_unset=True)
-        return self._service.start_run_simulation(project_data).data.sessionId
+        run_result = self._service.start_run_simulation(project_data)
+        return run_result.data["sessionId"]
 
-    def get_simulation_status(self, sessionId: str) -> StatusInfo:
+    def get_simulation_status(self, sessionId: str) -> Dict[str, Any]:
         """Get the status of a simulation run by session ID.
 
         Args:
@@ -206,7 +207,7 @@ class COMcheckClient:
         """
         return self._service.get_simulation_status(sessionId).data
 
-    def get_simulation_result(self, sessionId: str) -> SimulationResultInfo:
+    def get_simulation_result(self, sessionId: str) -> Dict[str, Any]:
         """Get the result of a simulation run by session ID.
 
         Args:
