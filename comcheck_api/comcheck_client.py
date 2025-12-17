@@ -188,7 +188,7 @@ class COMcheckClient:
         args = EndpointCallArgs(
             endpoint_name="assemblies_u_values",
             path_params={"code_version": code_version},
-            payload=payload,
+            payload=payload.model_dump(mode="json"),
         )
         return self._service.call_endpoint(args)
 
