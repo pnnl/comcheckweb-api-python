@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Literal, Optional, Union, overload
 
 from comcheck_api.api.api_services import COMCheckApiService
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
+from comcheck_api.types.api_types import AssembliesUValuesArgs, EndpointCallArgs
 from comcheck_api.types.core_types import ComBuilding
 
 Mode = Literal["python", "json"]
@@ -179,6 +180,17 @@ class COMcheckClient:
                                             nested.pop("id", None)
 
         return self._service.update_project(project_id, project_data_json)
+    
+    def get_assemblies_u_values(
+        self, code_version: str, payload: AssembliesUValuesArgs
+    ) -> Dict[str, Any]:
+        """Convenience method for retrieving U values for assemblies"""
+        args = EndpointCallArgs(
+            endpoint_name="assemblies_u_values",
+            path_params={"code_version": code_version},
+            payload=payload,
+        )
+        return self._service.call_endpoint(args)
 
     def close(self) -> None:
         """Close the API service connection."""

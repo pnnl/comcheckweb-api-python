@@ -1,6 +1,12 @@
 """AgWall (exterior wall) manager for COMcheck projects."""
 
-from typing import Union
+from typing import Dict, cast, Union
+from comcheck_api.api.api_services import COMCheckApiService
+from comcheck_api.constants.envelope_constants import DEFAULT_THERMAL_BRIDGE
+from comcheck_api.types.api_types import (
+    AgWallAssembliesUValuesArgs,
+    AssembliesUValuesArgs,
+)
 from comcheck_api.types.core_types import (
     AgWall,
     Door,
@@ -15,7 +21,17 @@ from comcheck_api.utilities.data_manager import DataManager
 
 class ThermalBridgeListManager(DataManager[ThermalBridge]):
     """Manager for ThermalBridge assemblies."""
-    model_type = ThermalBridge
+
+    def __init__(self, initial_thermal_bridges: list[ThermalBridge]):
+        """Initialize the ThermalBridge list manager.
+        Args:
+            initial_thermal_bridges: Initial list of ThermalBridge items.
+        """
+        super().__init__(
+            initial_data=initial_thermal_bridges,
+            identifier="id",
+            schema_reference="ThermalBridge",
+        )
 
 
 class AgWallListManager(DataManager[AgWall]):
@@ -85,3 +101,22 @@ class AgWallListManager(DataManager[AgWall]):
             The updated AgWall.
         """
         return self.add_subcomponent(ag_wall, window)
+    
+    def get_u_values(self, code_version) -> Dict:
+        """Add a new window to an AgWall.
+
+        Args:
+            ag_wall: The AgWall to add the window to.
+            window: The window configuration to add.
+
+        Returns:
+            The updated AgWall.
+        """
+        client = COMCheckApiService()
+        client.get_assemblies_u_values(code_version)
+
+        payload = AssembliesUValuesArgs(
+            agWall=[AgWallAssembliesUValuesArgs(**data) for data in self._data]
+        ).model_dump(mode="json")
+
+        return client.get_assemblies_u_values(code_version, payload=payload)
