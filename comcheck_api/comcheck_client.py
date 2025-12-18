@@ -194,8 +194,9 @@ class COMcheckClient:
         Returns:
             Simulation session ID
         """
-        print("Updating project:", project_id)
-        self.update_project(str(project_id), project) if project_id else None
+        if project_id:
+            print("Updating project:", project_id)
+            self.update_project(str(project_id), project)
 
         project_data = project.model_dump(mode="json", exclude_unset=True)
         run_result = self._service.start_run_simulation(project_data)
