@@ -201,27 +201,27 @@ class COMcheckClient:
         run_result = self._service.start_run_simulation(project_data)
         return run_result.data["sessionId"]
 
-    def get_simulation_status(self, sessionId: str) -> Dict[str, Any]:
+    def get_simulation_status(self, session_id: str) -> Dict[str, Any]:
         """Get the status of a simulation run by session ID.
 
         Args:
-            sessionId: The simulation session ID
+            session_id: The simulation session ID
 
         Returns:
             Simulation status information
         """
-        return self._service.get_simulation_status(sessionId).data
+        return self._service.get_simulation_status(session_id).data
 
-    def get_simulation_result(self, sessionId: str) -> Dict[str, Any]:
+    def get_simulation_result(self, session_id: str) -> Dict[str, Any]:
         """Get the result of a simulation run by session ID.
 
         Args:
-            sessionId: The simulation session ID
+            session_id: The simulation session ID
 
         Returns:
             Simulation result information
         """
-        return self._service.get_simulation_result(sessionId).data
+        return self._service.get_simulation_result(session_id).data
 
     def close(self) -> None:
         """Close the API service connection."""

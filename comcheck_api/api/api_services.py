@@ -172,11 +172,11 @@ class COMCheckApiService:
             self._handle_api_error(error)
             raise
 
-    def get_simulation_status(self, sessionId: str) -> SimulationStatusResponse:
+    def get_simulation_status(self, session_id: str) -> SimulationStatusResponse:
         """Get status of a simulation.
 
         Args:
-            sessionId: The session ID of the simulation
+            session_id: The session ID of the simulation
 
         Returns:
             SimulationStatusResponse with status information
@@ -188,7 +188,7 @@ class COMCheckApiService:
         try:
             client = self._get_client()
             response = client.get(
-                f"/compliance/get-status-simulation?sessionId={sessionId}"
+                f"/compliance/get-status-simulation?sessionId={session_id}"
             )
             response.raise_for_status()
             return SimulationStatusResponse.model_construct(**response.json())
@@ -196,11 +196,11 @@ class COMCheckApiService:
             self._handle_api_error(error)
             raise
 
-    def get_simulation_result(self, sessionId: str) -> SimulationResultResponse:
+    def get_simulation_result(self, session_id: str) -> SimulationResultResponse:
         """Get result of a simulation.
 
         Args:
-            sessionId: The session ID of the simulation
+            session_id: The session ID of the simulation
 
         Returns:
             SimulationResultResponse with simulation results
@@ -212,7 +212,7 @@ class COMCheckApiService:
         try:
             client = self._get_client()
             response = client.get(
-                f"/compliance/get-result-simulation?sessionId={sessionId}"
+                f"/compliance/get-result-simulation?sessionId={session_id}"
             )
             response.raise_for_status()
             return SimulationResultResponse.model_construct(**response.json())

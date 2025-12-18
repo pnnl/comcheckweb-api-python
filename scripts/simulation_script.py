@@ -69,16 +69,16 @@ def test_run_simulation_with_id():
     return simulation_session_id
 
 
-def test_get_simulation_status(sessionId: str):
+def test_get_simulation_status(session_id: str):
     """Test getting simulation status."""
-    status_info = client.get_simulation_status(sessionId)
+    status_info = client.get_simulation_status(session_id)
     print("Simulation status:", status_info)
     return status_info
 
 
-def test_get_simulation_result(sessionId: str):
+def test_get_simulation_result(session_id: str):
     """Test getting simulation result."""
-    result_info = client.get_simulation_result(sessionId)
+    result_info = client.get_simulation_result(session_id)
     print("Simulation result:", result_info)
     return result_info
 
