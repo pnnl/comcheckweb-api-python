@@ -1,6 +1,6 @@
 from comcheck_api.types.core_types import ComBuilding
 
-DUMMY_PROJECT = ComBuilding(
+PROJECT_TEMPLATE = ComBuilding(
     **{
         "control": {
             "code": "CEZ_IECC2018",

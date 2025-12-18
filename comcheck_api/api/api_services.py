@@ -1,8 +1,18 @@
 """COMCheck API service module for making HTTP requests to the COMCheck API."""
 
+"""Note: Service layer accepts raw data types (dicts) as inputs to stay simple and 
+HTTP-library-friendly, but returns validated Pydantic models to provide type safety 
+and catch API schema mismatches at the boundary."""
+
 from typing import Any, Dict, Optional
 
 import httpx
+
+from comcheck_api.types.api_types import (
+    RunSimulationResponse,
+    SimulationStatusResponse,
+    SimulationResultResponse,
+)
 
 
 class COMCheckApiService:
@@ -132,6 +142,80 @@ class COMCheckApiService:
             response = client.put(f"/project/{project_id}", json=project_data)
             response.raise_for_status()
             return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+            raise
+
+    def start_run_simulation(
+        self, project_data: Dict[str, Any]
+    ) -> RunSimulationResponse:
+        """Start a simulation.
+
+        Args:
+            project_data: The project data to send in the request body
+
+        Returns:
+            RunSimulationResponse with session information
+
+        Raises:
+            httpx.HTTPStatusError: If the API returns an error status
+            httpx.RequestError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post(
+                f"/compliance/start-run-simulation", json=project_data
+            )
+            response.raise_for_status()
+            return RunSimulationResponse.model_construct(**response.json())
+        except Exception as error:
+            self._handle_api_error(error)
+            raise
+
+    def get_simulation_status(self, session_id: str) -> SimulationStatusResponse:
+        """Get status of a simulation.
+
+        Args:
+            session_id: The session ID of the simulation
+
+        Returns:
+            SimulationStatusResponse with status information
+
+        Raises:
+            httpx.HTTPStatusError: If the API returns an error status
+            httpx.RequestError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.get(
+                f"/compliance/get-status-simulation?sessionId={session_id}"
+            )
+            response.raise_for_status()
+            return SimulationStatusResponse.model_construct(**response.json())
+        except Exception as error:
+            self._handle_api_error(error)
+            raise
+
+    def get_simulation_result(self, session_id: str) -> SimulationResultResponse:
+        """Get result of a simulation.
+
+        Args:
+            session_id: The session ID of the simulation
+
+        Returns:
+            SimulationResultResponse with simulation results
+
+        Raises:
+            httpx.HTTPStatusError: If the API returns an error status
+            httpx.RequestError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.get(
+                f"/compliance/get-result-simulation?sessionId={session_id}"
+            )
+            response.raise_for_status()
+            return SimulationResultResponse.model_construct(**response.json())
         except Exception as error:
             self._handle_api_error(error)
             raise
