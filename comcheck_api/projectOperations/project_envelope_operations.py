@@ -80,6 +80,72 @@ def update_roof_in_project(
     return updated_project
 
 
+def update_ag_wall_in_project(
+    project: ComBuilding, ag_wall_assembly_type: str, updates: dict[str, Any] | AgWall
+) -> ComBuilding:
+    """Update an agWall in the project's envelope.
+
+    Args:
+        project: The project object to modify
+        ag_wall_assembly_type: The assemblyType of the agWall to update in project.envelope.agWall list
+        updates: Partial updates (dict) or full AgWall object to apply
+
+    Returns:
+        Updated project object with the agWall updated
+    """
+    updated_project = project.model_copy(deep=True)
+
+    manager = AgWallListManager(updated_project.envelope.agWall)
+    manager.modify_one(ag_wall_assembly_type, updates)
+
+    updated_project.envelope.agWall = manager.get_all()
+
+    return updated_project
+
+def update_bg_wall_in_project(
+    project: ComBuilding, bg_wall_assembly_type: str, updates: dict[str, Any] | BgWall
+) -> ComBuilding:
+    """Update an bgWall in the project's envelope.
+
+    Args:
+        project: The project object to modify
+        bg_wall_assembly_type: The assemblyType of the bgWall to update in project.envelope.bgWall list
+        updates: Partial updates (dict) or full BgWall object to apply
+
+    Returns:
+        Updated project object with the bgWall updated
+    """
+    updated_project = project.model_copy(deep=True)
+
+    manbger = BgWallListManager(updated_project.envelope.bgWall)
+    manbger.modify_one(bg_wall_assembly_type, updates)
+
+    updated_project.envelope.bgWall = manbger.get_all()
+
+    return updated_project
+
+def update_floor_in_project(
+    project: ComBuilding, floor_assembly_type: str, updates: dict[str, Any] | Floor
+) -> ComBuilding:
+    """Update an floor in the project's envelope.
+
+    Args:
+        project: The project object to modify
+        floor_assembly_type: The assemblyType of the floor to update in project.envelope.floor list
+        updates: Partial updates (dict) or full Floor object to apply
+
+    Returns:
+        Updated project object with the floor updated
+    """
+    updated_project = project.model_copy(deep=True)
+
+    manager = FloorListManager(updated_project.envelope.floor)
+    manager.modify_one(floor_assembly_type, updates)
+
+    updated_project.envelope.floor = manager.get_all()
+
+    return updated_project
+
 def add_ag_wall_to_project(
     project: ComBuilding, building_area_key: str, new_ag_wall: AgWall
 ) -> ComBuilding:

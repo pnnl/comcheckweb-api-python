@@ -4,5 +4,5 @@ repos:
     hooks:
       - id: black
         language_version: python3
-        exclude: ^compcheck_api/types/core_types\.py$
+        exclude: ^comcheck_api/types/core_types\.py$
 
