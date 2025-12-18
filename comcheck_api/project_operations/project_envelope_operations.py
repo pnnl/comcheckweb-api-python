@@ -26,8 +26,7 @@ from comcheck_api.types.core_types import (
 )
 from comcheck_api.utilities.data_manager import T
 
-
-# TODO: assemblyType needs to be set properly and uniquely.
+# *********** Roof, agWall, bgWall and floor add/update operations ***********
 
 
 def add_roof_to_project(
@@ -80,72 +79,6 @@ def update_roof_in_project(
     return updated_project
 
 
-def update_ag_wall_in_project(
-    project: ComBuilding, ag_wall_assembly_type: str, updates: dict[str, Any] | AgWall
-) -> ComBuilding:
-    """Update an agWall in the project's envelope.
-
-    Args:
-        project: The project object to modify
-        ag_wall_assembly_type: The assemblyType of the agWall to update in project.envelope.agWall list
-        updates: Partial updates (dict) or full AgWall object to apply
-
-    Returns:
-        Updated project object with the agWall updated
-    """
-    updated_project = project.model_copy(deep=True)
-
-    manager = AgWallListManager(updated_project.envelope.agWall)
-    manager.modify_one(ag_wall_assembly_type, updates)
-
-    updated_project.envelope.agWall = manager.get_all()
-
-    return updated_project
-
-def update_bg_wall_in_project(
-    project: ComBuilding, bg_wall_assembly_type: str, updates: dict[str, Any] | BgWall
-) -> ComBuilding:
-    """Update an bgWall in the project's envelope.
-
-    Args:
-        project: The project object to modify
-        bg_wall_assembly_type: The assemblyType of the bgWall to update in project.envelope.bgWall list
-        updates: Partial updates (dict) or full BgWall object to apply
-
-    Returns:
-        Updated project object with the bgWall updated
-    """
-    updated_project = project.model_copy(deep=True)
-
-    manbger = BgWallListManager(updated_project.envelope.bgWall)
-    manbger.modify_one(bg_wall_assembly_type, updates)
-
-    updated_project.envelope.bgWall = manbger.get_all()
-
-    return updated_project
-
-def update_floor_in_project(
-    project: ComBuilding, floor_assembly_type: str, updates: dict[str, Any] | Floor
-) -> ComBuilding:
-    """Update an floor in the project's envelope.
-
-    Args:
-        project: The project object to modify
-        floor_assembly_type: The assemblyType of the floor to update in project.envelope.floor list
-        updates: Partial updates (dict) or full Floor object to apply
-
-    Returns:
-        Updated project object with the floor updated
-    """
-    updated_project = project.model_copy(deep=True)
-
-    manager = FloorListManager(updated_project.envelope.floor)
-    manager.modify_one(floor_assembly_type, updates)
-
-    updated_project.envelope.floor = manager.get_all()
-
-    return updated_project
-
 def add_ag_wall_to_project(
     project: ComBuilding, building_area_key: str, new_ag_wall: AgWall
 ) -> ComBuilding:
@@ -169,6 +102,29 @@ def add_ag_wall_to_project(
 
     new_ag_wall.bldgUseKey = building_area_key
     updated_project.envelope.add_subcomponent(new_ag_wall)
+
+    return updated_project
+
+
+def update_ag_wall_in_project(
+    project: ComBuilding, ag_wall_assembly_type: str, updates: dict[str, Any] | AgWall
+) -> ComBuilding:
+    """Update an agWall in the project's envelope.
+
+    Args:
+        project: The project object to modify
+        ag_wall_assembly_type: The assemblyType of the agWall to update in project.envelope.agWall list
+        updates: Partial updates (dict) or full AgWall object to apply
+
+    Returns:
+        Updated project object with the agWall updated
+    """
+    updated_project = project.model_copy(deep=True)
+
+    manager = AgWallListManager(updated_project.envelope.agWall)
+    manager.modify_one(ag_wall_assembly_type, updates)
+
+    updated_project.envelope.agWall = manager.get_all()
 
     return updated_project
 
@@ -199,6 +155,29 @@ def add_bg_wall_to_project(
     return updated_project
 
 
+def update_bg_wall_in_project(
+    project: ComBuilding, bg_wall_assembly_type: str, updates: dict[str, Any] | BgWall
+) -> ComBuilding:
+    """Update an bgWall in the project's envelope.
+
+    Args:
+        project: The project object to modify
+        bg_wall_assembly_type: The assemblyType of the bgWall to update in project.envelope.bgWall list
+        updates: Partial updates (dict) or full BgWall object to apply
+
+    Returns:
+        Updated project object with the bgWall updated
+    """
+    updated_project = project.model_copy(deep=True)
+
+    manbger = BgWallListManager(updated_project.envelope.bgWall)
+    manbger.modify_one(bg_wall_assembly_type, updates)
+
+    updated_project.envelope.bgWall = manbger.get_all()
+
+    return updated_project
+
+
 def add_floor_to_project(
     project: ComBuilding, building_area_key: str, new_floor: Floor
 ) -> ComBuilding:
@@ -225,19 +204,27 @@ def add_floor_to_project(
     return updated_project
 
 
-def _require_building_area(project: ComBuilding, building_area_key: str) -> None:
-    """
-    Ensure that project.lighting.wholeBldgUse exists and contains the given key.
-    """
-    whole_use = project.get_by_path("lighting.wholeBldgUse")
+def update_floor_in_project(
+    project: ComBuilding, floor_assembly_type: str, updates: dict[str, Any] | Floor
+) -> ComBuilding:
+    """Update an floor in the project's envelope.
 
-    if not isinstance(whole_use, list):
-        raise ValueError("No building area (wholeBldgUse) found in project.")
+    Args:
+        project: The project object to modify
+        floor_assembly_type: The assemblyType of the floor to update in project.envelope.floor list
+        updates: Partial updates (dict) or full Floor object to apply
 
-    if not any(getattr(area, "key", None) == building_area_key for area in whole_use):
-        raise ValueError(
-            f"Building area key '{building_area_key}' not found in lighting.wholeBldgUse."
-        )
+    Returns:
+        Updated project object with the floor updated
+    """
+    updated_project = project.model_copy(deep=True)
+
+    manager = FloorListManager(updated_project.envelope.floor)
+    manager.modify_one(floor_assembly_type, updates)
+
+    updated_project.envelope.floor = manager.get_all()
+
+    return updated_project
 
 
 # *********** Assemblies or Components attached to wall or roof ***********
@@ -312,6 +299,50 @@ def add_skylight_to_project(
         skylight_manager = SkylightListManager(getattr(envelope, "skylight", []))
         updated_skylight_list = skylight_manager.add_new(skylight_to_add)
         updated_project.envelope.skylight = updated_skylight_list
+
+    return updated_project
+
+
+def update_skylight_in_project(
+    project: ComBuilding,
+    skylight_assembly_type: str,
+    updates: dict[str, Any] | Skylight,
+) -> ComBuilding:
+    """Update a skylight in the project's envelope.
+
+    Skylights can exist in two locations:
+    1. Orphaned skylights in envelope.skylight (ALTERATION projects)
+    2. Skylights nested in roof list
+
+    Args:
+        project: The project object to modify
+        skylight_assembly_type: The assemblyType of the skylight to update
+        updates: Partial updates (dict) or full Skylight object to apply
+
+    Returns:
+        Updated project object with the skylight updated
+
+    Raises:
+        ValueError: If the skylight is not found in any location
+    """
+    updated_project = project.model_copy(deep=True)
+
+    # Find where the skylight is located
+    location_type, roof_index, _ = _find_component_location(
+        project, "skylight", skylight_assembly_type
+    )
+
+    # Update skylight based on its location
+    if location_type == "orphaned":
+        manager = SkylightListManager(updated_project.envelope.skylight)
+        manager.modify_one(skylight_assembly_type, updates)
+        updated_project.envelope.skylight = manager.get_all()
+    elif location_type == "roof":
+        manager = SkylightListManager(
+            updated_project.envelope.roof[roof_index].skylight
+        )
+        manager.modify_one(skylight_assembly_type, updates)
+        updated_project.envelope.roof[roof_index].skylight = manager.get_all()
 
     return updated_project
 
@@ -405,6 +436,51 @@ def add_window_to_project(
     return updated_project
 
 
+def update_window_in_project(
+    project: ComBuilding, window_assembly_type: str, updates: dict[str, Any] | Window
+) -> ComBuilding:
+    """Update a window in the project's envelope.
+
+    Windows can exist in three locations:
+    1. Orphaned windows in envelope.window (ALTERATION projects)
+    2. Windows nested in agWall list
+    3. Windows nested in bgWall list
+
+    Args:
+        project: The project object to modify
+        window_assembly_type: The assemblyType of the window to update
+        updates: Partial updates (dict) or full Window object to apply
+
+    Returns:
+        Updated project object with the window updated
+
+    Raises:
+        ValueError: If the window is not found in any location
+    """
+    updated_project = project.model_copy(deep=True)
+
+    # Find where the window is located
+    location_type, wall_index, _ = _find_component_location(
+        project, "window", window_assembly_type
+    )
+
+    # Update window based on its location
+    if location_type == "orphaned":
+        manager = WindowListManager(updated_project.envelope.window)
+        manager.modify_one(window_assembly_type, updates)
+        updated_project.envelope.window = manager.get_all()
+    elif location_type == "agWall":
+        manager = WindowListManager(updated_project.envelope.agWall[wall_index].window)
+        manager.modify_one(window_assembly_type, updates)
+        updated_project.envelope.agWall[wall_index].window = manager.get_all()
+    elif location_type == "bgWall":
+        manager = WindowListManager(updated_project.envelope.bgWall[wall_index].window)
+        manager.modify_one(window_assembly_type, updates)
+        updated_project.envelope.bgWall[wall_index].window = manager.get_all()
+
+    return updated_project
+
+
 def add_door_to_project(
     project: ComBuilding,
     building_area_key: str,
@@ -493,6 +569,51 @@ def add_door_to_project(
         updated_project.envelope.door = door_manager.add_new(door_to_add)
 
         return updated_project
+
+
+def update_door_in_project(
+    project: ComBuilding, door_assembly_type: str, updates: dict[str, Any] | Door
+) -> ComBuilding:
+    """Update a door in the project's envelope.
+
+    Doors can exist in three locations:
+    1. Orphaned doors in envelope.door (ALTERATION projects)
+    2. Doors nested in agWall list
+    3. Doors nested in bgWall list
+
+    Args:
+        project: The project object to modify
+        door_assembly_type: The assemblyType of the door to update
+        updates: Partial updates (dict) or full Door object to apply
+
+    Returns:
+        Updated project object with the door updated
+
+    Raises:
+        ValueError: If the door is not found in any location
+    """
+    updated_project = project.model_copy(deep=True)
+
+    # Find where the door is located
+    location_type, wall_index, _ = _find_component_location(
+        project, "door", door_assembly_type
+    )
+
+    # Update door based on its location
+    if location_type == "orphaned":
+        manager = DoorListManager(updated_project.envelope.door)
+        manager.modify_one(door_assembly_type, updates)
+        updated_project.envelope.door = manager.get_all()
+    elif location_type == "agWall":
+        manager = DoorListManager(updated_project.envelope.agWall[wall_index].door)
+        manager.modify_one(door_assembly_type, updates)
+        updated_project.envelope.agWall[wall_index].door = manager.get_all()
+    elif location_type == "bgWall":
+        manager = DoorListManager(updated_project.envelope.bgWall[wall_index].door)
+        manager.modify_one(door_assembly_type, updates)
+        updated_project.envelope.bgWall[wall_index].door = manager.get_all()
+
+    return updated_project
 
 
 # TODO: verify when thermal bridges are needed
@@ -592,3 +713,114 @@ def add_thermal_bridge_to_project(
     updated_project.envelope = envelope
 
     return updated_project
+
+
+# *********** Helper Functions ***********
+
+
+def _require_building_area(project: ComBuilding, building_area_key: str) -> None:
+    """
+    Ensure that project.lighting.wholeBldgUse exists and contains the given key.
+    """
+    whole_use = project.get_by_path("lighting.wholeBldgUse")
+
+    if not isinstance(whole_use, list):
+        raise ValueError("No building area (wholeBldgUse) found in project.")
+
+    if not any(getattr(area, "key", None) == building_area_key for area in whole_use):
+        raise ValueError(
+            f"Building area key '{building_area_key}' not found in lighting.wholeBldgUse."
+        )
+
+
+def _find_component_location(
+    project: ComBuilding, component_type: str, assembly_type: str
+) -> tuple[str, int | None, int | None]:
+    """Find the location of a window, door, or skylight component.
+
+    Components can exist in different locations:
+    - Windows/Doors: orphaned (envelope.window/door) or nested in agWall/bgWall
+    - Skylights: orphaned (envelope.skylight) or nested in roof
+
+    Args:
+        project: The project to search in
+        component_type: Either "window", "door", or "skylight"
+        assembly_type: The assemblyType to search for
+
+    Returns:
+        Tuple of (location_type, parent_index, component_index) where:
+        - location_type is "orphaned", "agWall", "bgWall", or "roof"
+        - parent_index is the index in agWall/bgWall/roof list (None for orphaned)
+        - component_index is the index in the component list
+
+    Raises:
+        ValueError: If component is not found anywhere
+    """
+    # Check orphaned components first
+    orphaned_list = getattr(project.envelope, component_type, [])
+    if orphaned_list:
+        component_index = next(
+            (
+                i
+                for i, c in enumerate(orphaned_list)
+                if getattr(c, "assemblyType", None) == assembly_type
+            ),
+            -1,
+        )
+        if component_index != -1:
+            return ("orphaned", None, component_index)
+
+    # For windows/doors: check agWall and bgWall components
+    if component_type in ("window", "door"):
+        # Check agWall components
+        for ag_wall_index, ag_wall in enumerate(project.envelope.agWall):
+            wall_components = getattr(ag_wall, component_type, [])
+            if wall_components:
+                component_index = next(
+                    (
+                        i
+                        for i, c in enumerate(wall_components)
+                        if getattr(c, "assemblyType", None) == assembly_type
+                    ),
+                    -1,
+                )
+                if component_index != -1:
+                    return ("agWall", ag_wall_index, component_index)
+
+        # Check bgWall components
+        for bg_wall_index, bg_wall in enumerate(project.envelope.bgWall):
+            wall_components = getattr(bg_wall, component_type, [])
+            if wall_components:
+                component_index = next(
+                    (
+                        i
+                        for i, c in enumerate(wall_components)
+                        if getattr(c, "assemblyType", None) == assembly_type
+                    ),
+                    -1,
+                )
+                if component_index != -1:
+                    return ("bgWall", bg_wall_index, component_index)
+
+    # For skylights: check roof components
+    elif component_type == "skylight":
+        for roof_index, roof in enumerate(project.envelope.roof or []):
+            roof_skylights = getattr(roof, "skylight", [])
+            if roof_skylights:
+                skylight_index = next(
+                    (
+                        i
+                        for i, s in enumerate(roof_skylights)
+                        if getattr(s, "assemblyType", None) == assembly_type
+                    ),
+                    -1,
+                )
+                if skylight_index != -1:
+                    return ("roof", roof_index, skylight_index)
+
+    raise ValueError(
+        f"{component_type.capitalize()} with assemblyType '{assembly_type}' not found in project"
+    )
+
+
+# *********** End of Project Envelope Operations ***********

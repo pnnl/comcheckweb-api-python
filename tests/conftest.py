@@ -8,9 +8,10 @@ import pytest
 from comcheck_api.utilities.id_registry import reset_registry
 from comcheck_api.constants.envelope_constants import *
 
-# Add compcheck_api directory to Python path
-compcheck_api_path = Path(__file__).parent.parent / "comcheck_api"
-sys.path.insert(0, str(compcheck_api_path))
+# Add comcheck_api directory to Python path
+comcheck_api_path = Path(__file__).parent.parent / "comcheck_api"
+sys.path.insert(0, str(comcheck_api_path))
+
 
 @pytest.fixture(autouse=True)
 def reset_id_registry_before_test(request):

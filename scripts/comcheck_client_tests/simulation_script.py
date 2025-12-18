@@ -1,4 +1,4 @@
-"""Script to test simulations."""
+"""Tests for COMcheckClient simulation functions: run_simulation, get_simulation_status, get_simulation_result."""
 
 import copy
 import os
@@ -6,7 +6,7 @@ import sys
 
 from scripts.script_test_data import TEST_BUILDING_AREA, TEST_PROJECT_ENVELOPE
 
-# Add compcheck_api to path for imports
+# Add comcheck_api to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from dotenv import load_dotenv

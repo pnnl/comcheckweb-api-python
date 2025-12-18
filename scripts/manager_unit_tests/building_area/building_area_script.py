@@ -3,8 +3,8 @@
 import os
 import sys
 
-# Add compcheck_api to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
+# Add comcheck_api to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 
 from comcheck_api.components.building_area import BuildingAreaListManager
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
