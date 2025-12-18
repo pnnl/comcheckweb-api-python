@@ -183,15 +183,20 @@ class COMcheckClient:
 
         return self._service.update_project(project_id, project_data_json)
 
-    def start_run_simulation(self, project: ComBuilding) -> str:
-        # TODO: change props to ennergy code, envelope?
-        """Start a simulation run for a given project ID.
+    def start_run_simulation(
+        self, project: ComBuilding, project_id: Optional[int] = None
+    ) -> str:
+        """Start a simulation run for a given project.
 
         Args:
             project: The project data to run the simulation
+            project_id: Optional project ID, if not provided, project won't be saved
         Returns:
             Simulation session ID
         """
+        print("Updating project:", project_id)
+        self.update_project(str(project_id), project) if project_id else None
+
         project_data = project.model_dump(mode="json", exclude_unset=True)
         run_result = self._service.start_run_simulation(project_data)
         return run_result.data["sessionId"]
