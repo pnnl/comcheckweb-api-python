@@ -27,12 +27,10 @@ client.set_api_key(api_key)
 def test_get_project_and_project_list_json():
     """Test getting project list and first project details as JSON."""
     try:
-        response = client.list_projects(mode="json")
-        project_list = response.get("data", [])
-
-        if project_list and (project_list[0].get("_id") or project_list[0].get("id")):
-            project_id = project_list[0].get("_id") or project_list[0].get("id")
-            project = client.get_project(project_id)
+        projects = client.list_projects()
+        if projects and (project_id := projects[0].get("_id")):
+            print(f"Testing with project ID: {project_id}")
+            project = client.get_project(project_id, mode="json")
             return project
         return None
     except Exception as err:

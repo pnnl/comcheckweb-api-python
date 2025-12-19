@@ -319,7 +319,7 @@ def test_update_bg_wall(test_project_id: str):
 # ========== Nested Component Operations (Skylight, Window, Door, Thermal Bridge) ==========
 
 
-def test_add_skylight(test_project_id: str):
+def test_add_nested_skylight(test_project_id: str):
     """Test adding a skylight to project."""
     try:
         test_project = client.get_project(test_project_id)
@@ -358,6 +358,36 @@ def test_add_skylight(test_project_id: str):
         return
 
 
+def test_add_orphaned_skylight(test_project_id: str):
+    """Test adding an orphaned skylight to project (alteration project)."""
+    try:
+        test_project = client.get_project(test_project_id)
+
+        if not test_project:
+            print("No test project data found.")
+            return
+
+        default_skylight = get_default_skylight_template()
+        whole_bldg_use: List[WholeBldgUse] = test_project.get_by_path(
+            "lighting.wholeBldgUse", []
+        )
+
+        updated_project = project_envelope_operations.add_skylight_to_project(
+            test_project,
+            whole_bldg_use[0].key,
+            default_skylight,
+        )
+        if project_id := getattr(updated_project, "id"):
+            update_resp = client.update_project(project_id, updated_project)
+            return update_resp
+        else:
+            print("No id found on updated project, skipping updateProject API call.")
+            return
+    except Exception as err:
+        print(f"Error in test_add_orphaned_skylight: {err}")
+        return
+
+
 def test_update_orphaned_skylight(test_project_id: str):
     """Test updating an orphaned skylight.
 
@@ -371,12 +401,17 @@ def test_update_orphaned_skylight(test_project_id: str):
             return
 
         # Update project to ALTERATION to have orphaned skylights
-        test_project.projectType = "ALTERATION"
+        test_project.projectType = ProjectTypeOptions.ALTERATION
         test_project = client.update_project(test_project_id, test_project)
         print("  Project type updated to ALTERATION")
 
+        # TODO: need to wait project update complete before moving forward (update function to async?)
+        export_to_json(test_project, "testProjectJson/orphanedSkylightProject.json")
+
+        # pull the project again to ensure we have the latest data
+        updated_project = client.get_project(test_project_id)
         # Check for orphaned skylights
-        orphaned_skylights = test_project.get_by_path("envelope.skylight", [])
+        orphaned_skylights = updated_project.envelope.skylight
 
         if not orphaned_skylights:
             print("No orphaned skylights found, cannot update orphaned skylight.")
@@ -391,7 +426,7 @@ def test_update_orphaned_skylight(test_project_id: str):
         }
 
         updated_project = project_envelope_operations.update_skylight_in_project(
-            test_project, skylight_assembly_type, updates
+            updated_project, skylight_assembly_type, updates
         )
 
         if project_id := getattr(updated_project, "id"):
@@ -555,7 +590,7 @@ def test_add_thermal_bridge(test_project_id: str):
             building_area_key,
             ag_wall,
             # Demo values for options (enums)
-            thermal_bridge_type=ThermalBridgeTypeOptions.THERMAL_BRDIGE_VERTICAL_FENESTRATION,
+            thermal_bridge_type=ThermalBridgeTypeOptions.THERMAL_BRIDGE_OTHER,
         )
 
         if project_id := getattr(updated_project, "id", None):
@@ -654,12 +689,13 @@ def main():
     print("NESTED COMPONENT OPERATIONS (Skylight, Window, Door, Thermal Bridge)")
     print("-" * 80)
 
-    print("\n9. Adding skylight...")
-    skylight_project = test_add_skylight(project_id)
-    if skylight_project:
-        export_to_json(skylight_project, "testProjectJson/skylightAddedProject.json")
-        print("   ✓ Skylight added")
-
+    print("\n9. Adding nested skylight...")
+    nested_skylight_project = test_add_nested_skylight(project_id)
+    if nested_skylight_project:
+        export_to_json(
+            nested_skylight_project, "testProjectJson/nestedSkylightAddedProject.json"
+        )
+        print("   ✓ Nested skylight added")
     print("\n10. Updating nested skylight...")
     updated_nested_skylight_project = test_update_nested_skylight(project_id)
     if updated_nested_skylight_project:
@@ -669,7 +705,16 @@ def main():
         )
         print("   ✓ Nested skylight updated")
 
-    print("\n11. Updating orphaned skylight...")
+    print("\n11. Adding orphaned skylight...")
+    orphaned_skylight_project = test_add_orphaned_skylight(project_id)
+    if orphaned_skylight_project:
+        export_to_json(
+            orphaned_skylight_project,
+            "testProjectJson/orphanedSkylightAddedProject.json",
+        )
+        print("   ✓ Orphaned skylight added")
+
+    print("\n12. Updating orphaned skylight...")
     updated_orphaned_skylight_project = test_update_orphaned_skylight(project_id)
     if updated_orphaned_skylight_project:
         export_to_json(
@@ -678,13 +723,13 @@ def main():
         )
         print("   ✓ Orphaned skylight updated")
 
-    print("\n12. Adding window...")
+    print("\n13. Adding window...")
     window_project = test_add_window(project_id)
     if window_project:
         export_to_json(window_project, "testProjectJson/windowAddedProject.json")
         print("   ✓ Window added")
 
-    print("\n13. Adding thermal bridge...")
+    print("\n14. Adding thermal bridge...")
     thermal_bridge_project = test_add_thermal_bridge(project_id)
     if thermal_bridge_project:
         export_to_json(

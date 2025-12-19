@@ -96,6 +96,7 @@ class COMcheckClient:
         """
         return self._service.get_project_list().get("data", {})
 
+    # TODO: return of update_project should be ComBuilding
     def update_project(
         self, project_id: str, project_data: ComBuilding
     ) -> Dict[str, Any]:
@@ -181,7 +182,8 @@ class COMcheckClient:
                                         ):
                                             nested.pop("id", None)
 
-        return self._service.update_project(project_id, project_data_json)
+        data = self._service.update_project(project_id, project_data_json).get("data")
+        return data
 
     def start_run_simulation(
         self, project: ComBuilding, project_id: Optional[int] = None

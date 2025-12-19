@@ -16,6 +16,7 @@ from comcheck_api.types.core_types import (
     ComBuilding,
     Door,
     Floor,
+    ProjectTypeOptions,
     Roof,
     Skylight,
     ThermalBridgeCategoryOptions,
@@ -633,6 +634,7 @@ def add_thermal_bridge_to_project(
     psi_factor: float = 0.0,
     chi_factor: float = 0.0,
     thermal_bridge_length: float = 0.0,
+    number_of_points: int = 0,
 ) -> ComBuilding:
     """Add a new thermal bridge to an AgWall in the envelope.
 
@@ -648,6 +650,7 @@ def add_thermal_bridge_to_project(
         psi_factor: Psi factor (defaults to 0.0)
         chi_factor: Chi factor (defaults to 0.0)
         thermal_bridge_length: Length of thermal bridge (defaults to 0.0)
+        number_of_points: Number of points for thermal bridge (defaults to 0)
 
     Returns:
         Updated project object with the thermal bridge added to the specified AgWall
@@ -701,6 +704,7 @@ def add_thermal_bridge_to_project(
         psi_factor,
         chi_factor,
         thermal_bridge_length,
+        number_of_points,
     )
 
     # Replace the agWall in the list
