@@ -1,6 +1,6 @@
 # Scripts Directory
 
-This directory contains various scripts for testing the COMcheck API client and its operations.
+This directory contains various scripts for testing the COMcheck API client and its operations for developers.
 
 ## Directory Structure
 
@@ -61,7 +61,7 @@ python scripts/comcheck_client_tests/user_function_script.py
 ---
 
 ### 2. Project Operations Tests (`project_operations_tests/`)
-Integration tests for project operations, organized by domain.
+Integration tests for project operations.
 
 #### Building Area Operations (`project_operations_tests/building_area_operations_script.py`)
 Tests for building area operations.
@@ -144,28 +144,7 @@ python scripts/manager_unit_tests/envelope/roof_script.py
 
 ---
 
-## Environment Setup
-
-Before running any scripts, ensure you have:
-
-1. **Python Environment**: Activate the virtual environment
-   ```bash
-   source .venv/bin/activate
-   ```
-
-2. **API Key**: Set your COMcheck API key in `.env` file
-   ```
-   COM_API_KEY=your_api_key_here
-   ```
-
-3. **Dependencies**: Install required packages
-   ```bash
-   pip install -r requirements.txt
-   ```
-
----
-
-## Test Data
+## Test Output
 
 All test scripts that make API calls export their results to the `testProjectJson/` directory. This allows you to:
 - Inspect the project state after each operation
@@ -178,12 +157,11 @@ All test scripts that make API calls export their results to the `testProjectJso
 ## Best Practices
 
 1. **Run client tests first** (`comcheck_client_tests/`) to verify your API connection and credentials
-2. **Use manager unit tests** (`manager_unit_tests/`) to verify component logic without API overhead
-3. **Use project operations tests** (`project_operations_tests/`) for end-to-end integration testing:
+2. **Use project operations tests** (`project_operations_tests/`) for end-to-end integration testing:
    - Run `building_area_operations_script.py` to test building area operations
    - Run `envelope_operations_script.py` to test envelope operations
-4. **Check test output** in `testProjectJson/` to debug issues
-5. **Keep test data updated** by re-running tests after API changes
+3. **Check test output** in `testProjectJson/` to debug issues
+4. **Keep test data updated** by re-running tests after API changes
 
 ---
 
@@ -196,9 +174,3 @@ All test scripts that make API calls export their results to the `testProjectJso
 
 **"No projects found"**
 - Solution: Ensure you have at least one project in your COMcheck account
-
-**Import errors**
-- Solution: Verify you're running scripts from the project root or that `sys.path.insert()` is working correctly
-
-**Module not found errors**
-- Solution: Make sure the virtual environment is activated and dependencies are installed
