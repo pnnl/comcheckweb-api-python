@@ -613,6 +613,9 @@ def main():
     print("Envelope Operations Integration Tests")
     print("=" * 80)
 
+    # Track failed tests
+    failed_tests = []
+
     # Get test project
     projects = client.list_projects()
     if not projects or not (project_id := projects[0].get("_id")):
@@ -635,18 +638,24 @@ def main():
     if roof_project:
         export_to_json(roof_project, "testProjectJson/roofAddedProject.json")
         print("   ✓ Roof added")
+    else:
+        failed_tests.append("Adding roof")
 
     print("\n2. Updating roof...")
     updated_roof_project = test_update_roof(project_id)
     if updated_roof_project:
         export_to_json(updated_roof_project, "testProjectJson/roofUpdatedProject.json")
         print("   ✓ Roof updated")
+    else:
+        failed_tests.append("Updating roof")
 
     print("\n3. Adding floor...")
     floor_project = test_add_floor(project_id)
     if floor_project:
         export_to_json(floor_project, "testProjectJson/floorAddedProject.json")
         print("   ✓ Floor added")
+    else:
+        failed_tests.append("Adding floor")
 
     print("\n4. Updating floor...")
     updated_floor_project = test_update_floor(project_id)
@@ -655,12 +664,16 @@ def main():
             updated_floor_project, "testProjectJson/floorUpdatedProject.json"
         )
         print("   ✓ Floor updated")
+    else:
+        failed_tests.append("Updating floor")
 
     print("\n5. Adding agWall...")
     ag_wall_project = test_add_ag_wall(project_id)
     if ag_wall_project:
         export_to_json(ag_wall_project, "testProjectJson/agWallAddedProject.json")
         print("   ✓ AgWall added")
+    else:
+        failed_tests.append("Adding agWall")
 
     print("\n6. Updating agWall...")
     updated_ag_wall_project = test_update_ag_wall(project_id)
@@ -669,12 +682,16 @@ def main():
             updated_ag_wall_project, "testProjectJson/agWallUpdatedProject.json"
         )
         print("   ✓ AgWall updated")
+    else:
+        failed_tests.append("Updating agWall")
 
     print("\n7. Adding bgWall...")
     bg_wall_project = test_add_bg_wall(project_id)
     if bg_wall_project:
         export_to_json(bg_wall_project, "testProjectJson/bgWallAddedProject.json")
         print("   ✓ BgWall added")
+    else:
+        failed_tests.append("Adding bgWall")
 
     print("\n8. Updating bgWall...")
     updated_bg_wall_project = test_update_bg_wall(project_id)
@@ -683,6 +700,8 @@ def main():
             updated_bg_wall_project, "testProjectJson/bgWallUpdatedProject.json"
         )
         print("   ✓ BgWall updated")
+    else:
+        failed_tests.append("Updating bgWall")
 
     # Nested Component Tests
     print("\n" + "-" * 80)
@@ -696,6 +715,8 @@ def main():
             nested_skylight_project, "testProjectJson/nestedSkylightAddedProject.json"
         )
         print("   ✓ Nested skylight added")
+    else:
+        failed_tests.append("Adding nested skylight")
     print("\n10. Updating nested skylight...")
     updated_nested_skylight_project = test_update_nested_skylight(project_id)
     if updated_nested_skylight_project:
@@ -704,6 +725,8 @@ def main():
             "testProjectJson/nestedSkylightUpdatedProject.json",
         )
         print("   ✓ Nested skylight updated")
+    else:
+        failed_tests.append("Updating nested skylight")
 
     print("\n11. Adding orphaned skylight...")
     orphaned_skylight_project = test_add_orphaned_skylight(project_id)
@@ -713,6 +736,8 @@ def main():
             "testProjectJson/orphanedSkylightAddedProject.json",
         )
         print("   ✓ Orphaned skylight added")
+    else:
+        failed_tests.append("Adding orphaned skylight")
 
     print("\n12. Updating orphaned skylight...")
     updated_orphaned_skylight_project = test_update_orphaned_skylight(project_id)
@@ -722,12 +747,16 @@ def main():
             "testProjectJson/orphanedSkylightUpdatedProject.json",
         )
         print("   ✓ Orphaned skylight updated")
+    else:
+        failed_tests.append("Updating orphaned skylight")
 
     print("\n13. Adding window...")
     window_project = test_add_window(project_id)
     if window_project:
         export_to_json(window_project, "testProjectJson/windowAddedProject.json")
         print("   ✓ Window added")
+    else:
+        failed_tests.append("Adding window")
 
     print("\n14. Adding thermal bridge...")
     thermal_bridge_project = test_add_thermal_bridge(project_id)
@@ -736,9 +765,19 @@ def main():
             thermal_bridge_project, "testProjectJson/thermalBridgeAddedProject.json"
         )
         print("   ✓ Thermal bridge added")
+    else:
+        failed_tests.append("Adding thermal bridge")
 
     print("\n" + "=" * 80)
     print("Envelope Tests Complete")
+
+    # Print summary of failed tests
+    if failed_tests:
+        print(f"\n✗ {len(failed_tests)} test(s) failed:")
+        for test_name in failed_tests:
+            print(f"  - {test_name}")
+    else:
+        print("\n✓ All tests passed!")
     print("=" * 80)
 
 
