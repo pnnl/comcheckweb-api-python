@@ -1221,7 +1221,7 @@
                 },
                 "propProjectionFactor": {
                     "description": "Proposed window projection factor",
-                    "type": "number",
+                    "type": ["number", "null"],
                     "minimum": 0.0,
                     "default": 0.0
                 },
@@ -1460,7 +1460,7 @@
                 },
                 "propProjectionFactor": {
                     "description": "Proposed window projection factor",
-                    "type": "number",
+                    "type": ["number", "null"],
                     "minimum": 0.0,
                     "default": 0.0
                 },
@@ -1725,7 +1725,7 @@
                 },
                 "propProjectionFactor": {
                     "description": "Proposed window projection factor",
-                    "type": "number",
+                    "type": ["number", "null"],
                     "minimum": 0.0,
                     "default": 0.0
                 },

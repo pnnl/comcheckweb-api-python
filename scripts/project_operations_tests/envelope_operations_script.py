@@ -485,7 +485,8 @@ def test_update_nested_skylight(test_project_id: str):
         return
 
 
-def test_add_window(test_project_id: str):
+# window and door are similar, so only testing window here. Orphaned window tests are not included since test would be similar to orphaned skylight tests.
+def test_add_nested_window(test_project_id: str):
     """Test adding a window to project."""
     try:
         test_project = client.get_project(test_project_id)
@@ -539,6 +540,47 @@ def test_add_window(test_project_id: str):
             return
     except Exception as err:
         print(f"Error in test_add_window: {err}")
+        return
+
+
+def test_update_nested_window(test_project_id: str):
+    """Test updating a window in the project."""
+    try:
+        test_project = client.get_project(test_project_id)
+
+        if not test_project:
+            print("No test project data found.")
+            return
+        agWallList = test_project.get_by_path("envelope.agWall", [])
+        if not agWallList:
+            print("No agWalls found in test project, cannot update nested window.")
+            return
+        windows: List[Window] = agWallList[0].get_by_path("window") or []
+
+        if not windows:
+            print(
+                "No nested windows found in test project, cannot update nested window."
+            )
+            return
+
+        window_assembly_type = windows[0].assemblyType
+        print(f"  Found nested window: {window_assembly_type}")
+        updates = {
+            "description": "Updated nested window description",
+        }
+
+        updated_project = project_envelope_operations.update_window_in_project(
+            test_project, window_assembly_type, updates
+        )
+
+        if project_id := getattr(updated_project, "id"):
+            update_resp = client.update_project(project_id, updated_project)
+            return update_resp
+        else:
+            print("No id found on updated project, skipping updateProject API call.")
+            return
+    except Exception as err:
+        print(f"Error in test_update_window: {err}")
         return
 
 
@@ -607,8 +649,13 @@ def test_add_thermal_bridge(test_project_id: str):
 # ========== Main Test Runner ==========
 
 
-def main():
-    """Main test execution function - runs envelope integration tests."""
+def main(test_number: int = None):
+    """Main test execution function - runs envelope integration tests.
+
+    Args:
+        test_number: Optional test number to run. If provided, only that test will run.
+                     If None, all tests will run.
+    """
     print("=" * 80)
     print("Envelope Operations Integration Tests")
     print("=" * 80)
@@ -628,145 +675,134 @@ def main():
     print(f"\n✓ Using project ID: {project_id}")
     print(f"  Exported initial state to: testProjectJson/initialProject.json\n")
 
-    # Envelope Assembly Tests
-    print("-" * 80)
-    print("ENVELOPE ASSEMBLY OPERATIONS (Roof, Floor, Walls)")
-    print("-" * 80)
-
-    print("\n1. Adding roof...")
-    roof_project = test_add_roof(project_id)
-    if roof_project:
-        export_to_json(roof_project, "testProjectJson/roofAddedProject.json")
-        print("   ✓ Roof added")
-    else:
-        failed_tests.append("Adding roof")
-
-    print("\n2. Updating roof...")
-    updated_roof_project = test_update_roof(project_id)
-    if updated_roof_project:
-        export_to_json(updated_roof_project, "testProjectJson/roofUpdatedProject.json")
-        print("   ✓ Roof updated")
-    else:
-        failed_tests.append("Updating roof")
-
-    print("\n3. Adding floor...")
-    floor_project = test_add_floor(project_id)
-    if floor_project:
-        export_to_json(floor_project, "testProjectJson/floorAddedProject.json")
-        print("   ✓ Floor added")
-    else:
-        failed_tests.append("Adding floor")
-
-    print("\n4. Updating floor...")
-    updated_floor_project = test_update_floor(project_id)
-    if updated_floor_project:
-        export_to_json(
-            updated_floor_project, "testProjectJson/floorUpdatedProject.json"
-        )
-        print("   ✓ Floor updated")
-    else:
-        failed_tests.append("Updating floor")
-
-    print("\n5. Adding agWall...")
-    ag_wall_project = test_add_ag_wall(project_id)
-    if ag_wall_project:
-        export_to_json(ag_wall_project, "testProjectJson/agWallAddedProject.json")
-        print("   ✓ AgWall added")
-    else:
-        failed_tests.append("Adding agWall")
-
-    print("\n6. Updating agWall...")
-    updated_ag_wall_project = test_update_ag_wall(project_id)
-    if updated_ag_wall_project:
-        export_to_json(
-            updated_ag_wall_project, "testProjectJson/agWallUpdatedProject.json"
-        )
-        print("   ✓ AgWall updated")
-    else:
-        failed_tests.append("Updating agWall")
-
-    print("\n7. Adding bgWall...")
-    bg_wall_project = test_add_bg_wall(project_id)
-    if bg_wall_project:
-        export_to_json(bg_wall_project, "testProjectJson/bgWallAddedProject.json")
-        print("   ✓ BgWall added")
-    else:
-        failed_tests.append("Adding bgWall")
-
-    print("\n8. Updating bgWall...")
-    updated_bg_wall_project = test_update_bg_wall(project_id)
-    if updated_bg_wall_project:
-        export_to_json(
-            updated_bg_wall_project, "testProjectJson/bgWallUpdatedProject.json"
-        )
-        print("   ✓ BgWall updated")
-    else:
-        failed_tests.append("Updating bgWall")
-
-    # Nested Component Tests
-    print("\n" + "-" * 80)
-    print("NESTED COMPONENT OPERATIONS (Skylight, Window, Door, Thermal Bridge)")
-    print("-" * 80)
-
-    print("\n9. Adding nested skylight...")
-    nested_skylight_project = test_add_nested_skylight(project_id)
-    if nested_skylight_project:
-        export_to_json(
-            nested_skylight_project, "testProjectJson/nestedSkylightAddedProject.json"
-        )
-        print("   ✓ Nested skylight added")
-    else:
-        failed_tests.append("Adding nested skylight")
-    print("\n10. Updating nested skylight...")
-    updated_nested_skylight_project = test_update_nested_skylight(project_id)
-    if updated_nested_skylight_project:
-        export_to_json(
-            updated_nested_skylight_project,
+    # Define all tests
+    tests = {
+        1: (
+            "Adding roof",
+            lambda: test_add_roof(project_id),
+            "testProjectJson/roofAddedProject.json",
+            "Roof added",
+        ),
+        2: (
+            "Updating roof",
+            lambda: test_update_roof(project_id),
+            "testProjectJson/roofUpdatedProject.json",
+            "Roof updated",
+        ),
+        3: (
+            "Adding floor",
+            lambda: test_add_floor(project_id),
+            "testProjectJson/floorAddedProject.json",
+            "Floor added",
+        ),
+        4: (
+            "Updating floor",
+            lambda: test_update_floor(project_id),
+            "testProjectJson/floorUpdatedProject.json",
+            "Floor updated",
+        ),
+        5: (
+            "Adding agWall",
+            lambda: test_add_ag_wall(project_id),
+            "testProjectJson/agWallAddedProject.json",
+            "AgWall added",
+        ),
+        6: (
+            "Updating agWall",
+            lambda: test_update_ag_wall(project_id),
+            "testProjectJson/agWallUpdatedProject.json",
+            "AgWall updated",
+        ),
+        7: (
+            "Adding bgWall",
+            lambda: test_add_bg_wall(project_id),
+            "testProjectJson/bgWallAddedProject.json",
+            "BgWall added",
+        ),
+        8: (
+            "Updating bgWall",
+            lambda: test_update_bg_wall(project_id),
+            "testProjectJson/bgWallUpdatedProject.json",
+            "BgWall updated",
+        ),
+        9: (
+            "Adding nested skylight",
+            lambda: test_add_nested_skylight(project_id),
+            "testProjectJson/nestedSkylightAddedProject.json",
+            "Nested skylight added",
+        ),
+        10: (
+            "Updating nested skylight",
+            lambda: test_update_nested_skylight(project_id),
             "testProjectJson/nestedSkylightUpdatedProject.json",
-        )
-        print("   ✓ Nested skylight updated")
-    else:
-        failed_tests.append("Updating nested skylight")
-
-    print("\n11. Adding orphaned skylight...")
-    orphaned_skylight_project = test_add_orphaned_skylight(project_id)
-    if orphaned_skylight_project:
-        export_to_json(
-            orphaned_skylight_project,
+            "Nested skylight updated",
+        ),
+        11: (
+            "Adding orphaned skylight",
+            lambda: test_add_orphaned_skylight(project_id),
             "testProjectJson/orphanedSkylightAddedProject.json",
-        )
-        print("   ✓ Orphaned skylight added")
-    else:
-        failed_tests.append("Adding orphaned skylight")
-
-    print("\n12. Updating orphaned skylight...")
-    updated_orphaned_skylight_project = test_update_orphaned_skylight(project_id)
-    if updated_orphaned_skylight_project:
-        export_to_json(
-            updated_orphaned_skylight_project,
+            "Orphaned skylight added",
+        ),
+        12: (
+            "Updating orphaned skylight",
+            lambda: test_update_orphaned_skylight(project_id),
             "testProjectJson/orphanedSkylightUpdatedProject.json",
-        )
-        print("   ✓ Orphaned skylight updated")
-    else:
-        failed_tests.append("Updating orphaned skylight")
+            "Orphaned skylight updated",
+        ),
+        13: (
+            "Adding nested window",
+            lambda: test_add_nested_window(project_id),
+            "testProjectJson/windowAddedProject.json",
+            "Nested window added",
+        ),
+        14: (
+            "Updating nested window",
+            lambda: test_update_nested_window(project_id),
+            "testProjectJson/windowUpdatedProject.json",
+            "Nested window updated",
+        ),
+        15: (
+            "Adding thermal bridge",
+            lambda: test_add_thermal_bridge(project_id),
+            "testProjectJson/thermalBridgeAddedProject.json",
+            "Thermal bridge added",
+        ),
+    }
 
-    print("\n13. Adding window...")
-    window_project = test_add_window(project_id)
-    if window_project:
-        export_to_json(window_project, "testProjectJson/windowAddedProject.json")
-        print("   ✓ Window added")
+    # Determine which tests to run
+    if test_number is not None:
+        if test_number not in tests:
+            print(f"✗ Invalid test number: {test_number}")
+            print(f"Valid test numbers are 1-{len(tests)}")
+            return
+        tests_to_run = {test_number: tests[test_number]}
+        print(f"\nRunning single test: #{test_number}")
     else:
-        failed_tests.append("Adding window")
+        tests_to_run = tests
 
-    print("\n14. Adding thermal bridge...")
-    thermal_bridge_project = test_add_thermal_bridge(project_id)
-    if thermal_bridge_project:
-        export_to_json(
-            thermal_bridge_project, "testProjectJson/thermalBridgeAddedProject.json"
-        )
-        print("   ✓ Thermal bridge added")
-    else:
-        failed_tests.append("Adding thermal bridge")
+    # Print section headers
+    if test_number is None:
+        print("-" * 80)
+        print("ENVELOPE ASSEMBLY OPERATIONS (Roof, Floor, Walls)")
+        print("-" * 80)
+
+    # Run tests
+    for num, (test_name, test_func, output_file, success_msg) in tests_to_run.items():
+        # Print section header for nested components
+        if test_number is None and num == 9:
+            print("\n" + "-" * 80)
+            print(
+                "NESTED COMPONENT OPERATIONS (Skylight, Window, Door, Thermal Bridge)"
+            )
+            print("-" * 80)
+
+        print(f"\n{num}. {test_name}...")
+        result = test_func()
+        if result:
+            export_to_json(result, output_file)
+            print(f"   ✓ {success_msg}")
+        else:
+            failed_tests.append(test_name)
 
     print("\n" + "=" * 80)
     print("Envelope Tests Complete")
@@ -782,4 +818,16 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    # Check if test number is provided as command line argument
+    test_num = None
+    if len(sys.argv) > 1:
+        try:
+            test_num = int(sys.argv[1])
+        except ValueError:
+            print(f"Error: '{sys.argv[1]}' is not a valid test number")
+            sys.exit(1)
+
+    # if test_num is provided, run only that test; otherwise run all tests
+    main(test_num)

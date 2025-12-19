@@ -258,7 +258,7 @@ def add_skylight_to_project(
     # Set the building area key on the new skylight
     new_skylight.bldgUseKey = building_area_key
 
-    if updated_project.projectType != "ALTERATION":
+    if updated_project.projectType != ProjectTypeOptions.ALTERATION:
         if roof is None:
             raise ValueError("Roof must be specified for non-alteration projects.")
 
