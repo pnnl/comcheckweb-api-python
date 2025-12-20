@@ -81,38 +81,91 @@ python scripts/project_operations_tests/building_area_operations_script.py
 - `testProjectJson/buildingAreaUpdatedProject.json`
 
 #### Envelope Operations (`project_operations_tests/envelope_operations_script.py`)
-Tests for all envelope operations including assemblies and nested components.
+Comprehensive integration tests for all envelope operations including assemblies and nested components. This script tests the complete workflow of adding and updating envelope components in a COMcheck project.
 
-**What it tests:**
+**Test Coverage:**
 
-**Envelope Assembly Operations:**
-- `add_roof_to_project()` / `update_roof_in_project()` - Roof operations
-- `add_floor_to_project()` / `update_floor_in_project()` - Floor operations
-- `add_ag_wall_to_project()` / `update_ag_wall_in_project()` - Above-grade wall operations
-- `add_bg_wall_to_project()` / `update_bg_wall_in_project()` - Below-grade wall operations
+**Envelope Assembly Operations (Tests 1-8):**
+1. `add_roof_to_project()` - Add roof assemblies
+2. `update_roof_in_project()` - Update existing roofs
+3. `add_floor_to_project()` - Add floor assemblies  
+4. `update_floor_in_project()` - Update existing floors
+5. `add_ag_wall_to_project()` - Add above-grade wall assemblies
+6. `update_ag_wall_in_project()` - Update existing above-grade walls
+7. `add_bg_wall_to_project()` - Add below-grade wall assemblies
+8. `update_bg_wall_in_project()` - Update existing below-grade walls
 
-**Nested Component Operations:**
-- `add_skylight_to_project()` / `update_skylight_in_project()` - Skylight operations (on roofs)
-- `add_window_to_project()` / `update_window_in_project()` - Window operations (on walls)
-- `add_door_to_project()` / `update_door_in_project()` - Door operations (on walls)
-- `add_thermal_bridge_to_project()` - Adding thermal bridges to walls
+**Nested Component Operations (Tests 9-15):**
+9. `add_skylight_to_project()` - Add nested skylights to roofs
+10. `update_skylight_in_project()` - Update nested skylights in roofs
+11. `add_skylight_to_project()` - Add orphaned skylights (ALTERATION projects)
+12. `update_skylight_in_project()` - Update orphaned skylights (converts project to ALTERATION)
+13. `add_window_to_project()` - Add nested windows to walls
+14. `update_window_in_project()` - Update nested windows in walls
+15. `add_thermal_bridge_to_project()` - Add thermal bridges to above-grade walls
+
+**Key Features:**
+
+- **Location-Aware Updates**: Update operations automatically detect whether components are orphaned (ALTERATION projects) or nested in parent assemblies
+- **Orphaned vs Nested Components**: 
+  - Orphaned: Components stored directly in `envelope.component[]` (ALTERATION projects only)
+  - Nested: Components stored in parent assemblies (e.g., `roof.skylight[]`, `agWall.window[]`)
+- **Failed Test Tracking**: Displays summary of any failed tests at the end
+- **Selective Test Execution**: Run individual tests or all tests at once
 
 **Usage:**
 ```bash
+# Run all tests (1-15)
 python scripts/project_operations_tests/envelope_operations_script.py
+
+# Run a specific test by number
+python scripts/project_operations_tests/envelope_operations_script.py 5   # Run test #5 (Adding agWall)
+python scripts/project_operations_tests/envelope_operations_script.py 14  # Run test #14 (Updating nested window)
 ```
 
-**Output:**
-Creates multiple JSON files in `testProjectJson/` directory showing project state after each operation:
-- `initialProject.json`
+**Example Output:**
+```
+================================================================================
+Envelope Operations Integration Tests
+================================================================================
+
+✓ Using project ID: 507f1f77bcf86cd799439011
+  Exported initial state to: testProjectJson/initialProject.json
+
+Running single test: #14
+
+14. Updating nested window...
+  Found nested window in agWall: METAL_BUILDING_WALL
+   ✓ Nested window updated
+
+================================================================================
+Envelope Tests Complete
+
+✓ All tests passed!
+================================================================================
+```
+
+**Output Files:**
+Creates JSON snapshots in `testProjectJson/` directory showing project state after each operation:
+
+**Assembly Operations:**
+- `initialProject.json` - Starting project state
 - `roofAddedProject.json`, `roofUpdatedProject.json`
 - `floorAddedProject.json`, `floorUpdatedProject.json`
 - `agWallAddedProject.json`, `agWallUpdatedProject.json`
 - `bgWallAddedProject.json`, `bgWallUpdatedProject.json`
-- `skylightAddedProject.json`, `skylightUpdatedProject.json`
+
+**Nested Component Operations:**
+- `nestedSkylightAddedProject.json`, `nestedSkylightUpdatedProject.json`
+- `orphanedSkylightAddedProject.json`, `orphanedSkylightUpdatedProject.json`
 - `windowAddedProject.json`, `windowUpdatedProject.json`
-- `doorAddedProject.json`, `doorUpdatedProject.json`
 - `thermalBridgeAddedProject.json`
+
+**Important Notes:**
+
+- **Test Order Matters**: Tests build on each other. Running test #14 requires components added in previous tests (e.g., walls and windows must exist)
+- **ALTERATION Projects**: Tests 11-12 demonstrate orphaned component handling by temporarily converting the project to ALTERATION type
+- **Location Detection**: Update operations use the `_find_component_location()` helper to automatically locate components whether they're orphaned or nested
 
 ---
 
