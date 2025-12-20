@@ -15,6 +15,7 @@ from comcheck_api.utilities.data_manager import DataManager
 
 class ThermalBridgeListManager(DataManager[ThermalBridge]):
     """Manager for ThermalBridge assemblies."""
+
     model_type = ThermalBridge
 
 
@@ -24,17 +25,25 @@ class AgWallListManager(DataManager[AgWall]):
     This manager handles AgWall assemblies and their nested components
     (thermal bridges, doors, windows).
     """
+
     model_type = AgWall
 
     def add_new_thermal_bridge(
         self,
         ag_wall: AgWall,
-        thermal_bridge_type: Union[ThermalBridgeTypeOptions, str] = ThermalBridgeTypeOptions.THERMAL_BRIDGE_OTHER,
-        thermal_bridge_category: Union[ThermalBridgeCategoryOptions, str] = ThermalBridgeCategoryOptions.THERMAL_BRIDGE_UNCATEGORIZED,
-        thermal_bridge_compliance_type: Union[ThermalBridgeComplianceTypeOptions, str] = ThermalBridgeComplianceTypeOptions.THERMAL_BRIDGE_NON_PRESCRIPTIVE,
+        thermal_bridge_type: Union[
+            ThermalBridgeTypeOptions, str
+        ] = ThermalBridgeTypeOptions.THERMAL_BRIDGE_OTHER,
+        thermal_bridge_category: Union[
+            ThermalBridgeCategoryOptions, str
+        ] = ThermalBridgeCategoryOptions.THERMAL_BRIDGE_UNCATEGORIZED,
+        thermal_bridge_compliance_type: Union[
+            ThermalBridgeComplianceTypeOptions, str
+        ] = ThermalBridgeComplianceTypeOptions.THERMAL_BRIDGE_NON_PRESCRIPTIVE,
         psi_factor: float = 0.0,
         chi_factor: float = 0.0,
         thermal_bridge_length: float = 0.0,
+        number_of_points: int = 0,
     ) -> AgWall:
         """Add a new thermal bridge to an AgWall.
 
@@ -46,6 +55,7 @@ class AgWallListManager(DataManager[AgWall]):
             psi_factor: Linear thermal transmittance (Psi factor).
             chi_factor: Point thermal transmittance (Chi factor).
             thermal_bridge_length: Length of the thermal bridge.
+            number_of_points: Number of points for the thermal bridge.
 
         Returns:
             The updated AgWall.
@@ -57,7 +67,8 @@ class AgWallListManager(DataManager[AgWall]):
             thermalBridgeComplianceType=thermal_bridge_compliance_type,
             psiFactor=psi_factor,
             chiFactor=chi_factor,
-            thermalBridgeLength=thermal_bridge_length
+            thermalBridgeLength=thermal_bridge_length,
+            numberOfPoints=number_of_points,
         )
 
         return self.add_subcomponent(ag_wall, initialize_thermal_bridge)

@@ -1221,7 +1221,7 @@
                 },
                 "propProjectionFactor": {
                     "description": "Proposed window projection factor",
-                    "type": "number",
+                    "type": ["number", "null"],
                     "minimum": 0.0,
                     "default": 0.0
                 },
@@ -1460,7 +1460,7 @@
                 },
                 "propProjectionFactor": {
                     "description": "Proposed window projection factor",
-                    "type": "number",
+                    "type": ["number", "null"],
                     "minimum": 0.0,
                     "default": 0.0
                 },
@@ -1725,7 +1725,7 @@
                 },
                 "propProjectionFactor": {
                     "description": "Proposed window projection factor",
-                    "type": "number",
+                    "type": ["number", "null"],
                     "minimum": 0.0,
                     "default": 0.0
                 },
@@ -5074,7 +5074,7 @@
                 "THERMAL_BRIDGE_CLADDING_SUPPORT",
                 "THERMAL_BRIDGE_WALL_TO_VERTICAL_FENESTRATION_INTERSECTION",
                 "THERMAL_BRIDGE_BALCONY_FLOOR_DECKS",
-                "THERMAL_BRDIGE_VERTICAL_FENESTRATION",
+                "THERMAL_BRIDGE_VERTICAL_FENESTRATION",
                 "THERMAL_BRIDGE_STRUCTURE_BEAMS_COLUMNS_CARBON_STEEL",
                 "THERMAL_BRIDGE_STRUCTURE_BEAMS_COLUMNS_CONCRETE",
                 "THERMAL_BRIDGE_BRIDGE_SHELF_ANGLE",

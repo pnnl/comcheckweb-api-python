@@ -1,3 +1,5 @@
+"""Test data for scripts."""
+
 from comcheck_api.types.core_types import Envelope, WholeBldgUse
 
 TEST_PROJECT_ENVELOPE = Envelope(
