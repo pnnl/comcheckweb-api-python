@@ -1,35 +1,34 @@
 """COMCheck API service module for making HTTP requests to the COMCheck API."""
 
 import os
-from typing import Any, Callable, Dict, Literal, Optional
-from urllib.parse import urlencode
+from typing import Any, Dict, Literal, Optional
 import logging
+import httpx
 
 from comcheck_api.types.api_types import (
     AssembliesUValuesArgs,
     EndpointCallArgs,
-)
-import httpx
-import requests
-
-from comcheck_api.types.api_types import (
     RunSimulationResponse,
     SimulationStatusResponse,
     SimulationResultResponse,
 )
 
+logger = logging.getLogger(__name__)
+
+TimeoutLike = httpx.Timeout | float | None
 
 class COMCheckApiService:
     """COMCheck API service class for interacting with the COM API."""
 
-    BASE_URL: str = "https://becp-dev.pnl.gov/ahj/COM"  # COM API base URL
+    BASE_URL: str = "https://becp-dev.pnl.gov/ahj/COM"  # COM API base URL'
+    DEFAULT_TIMEOUT: float = 30.0
 
-    def __init__(self, api_key: str = None) -> None:
+    def __init__(self, api_key: str = None,  timeout: TimeoutLike = None) -> None:
         """Initialize COMCheck API service.
 
         Args:
             api_key: API key for authentication
-
+            timeout: HTTP client timeout configuration
         Raises:
             ValueError: If API key is not provided
         """
@@ -40,14 +39,26 @@ class COMCheckApiService:
                 "COM_API_KEY is not set. Please provide it as a constructor parameter "
                 "or set it in your environment variables."
             )
+        self.timeout = timeout if isinstance(timeout, httpx.Timeout) else httpx.Timeout(timeout or self.DEFAULT_TIMEOUT)
         self.api_key = api_key
         self._client: Optional[httpx.Client] = None
-        self.session = requests.Session()
 
         self._define_endpoints()
 
     def _define_endpoints(self):
         self.endpoints = {
+            "get_project": AHJEndpoint(
+                "/project/{project_id}",
+                "GET"
+            ),
+            "update_project": AHJEndpoint(
+                "/project/{project_id}",
+                "PUT"
+            ),
+            "get_project_list": AHJEndpoint(
+                "/projects",
+                "GET"
+            ),
             "allowed_wattage": AHJEndpoint(
                 "/{code_version}/activity-use/allowed-wattage",
             ),
@@ -63,6 +74,17 @@ class COMCheckApiService:
             "assemblies_u_values": AHJEndpoint(
                 "/{code_version}/assemblies/uvalues",
             ),
+            "run_simulation": AHJEndpoint(
+                "/compliance/start-run-simulation",
+            ),
+            "get_simulation_status": AHJEndpoint(
+                "/compliance/get-status-simulation",
+                "GET",
+            ),
+            "get_simulation_result": AHJEndpoint(
+                "/compliance/get-result-simulation",
+                "GET",
+            ),
         }
 
     def _get_client(self) -> httpx.Client:
@@ -75,9 +97,15 @@ class COMCheckApiService:
             self._client = httpx.Client(
                 base_url=self.BASE_URL,
                 headers=self._prepare_headers(),
-                timeout=30.0,
+                timeout=self.timeout,
             )
         return self._client
+    
+    def close(self) -> None:
+        """Close the HTTP client connection."""
+        if self._client is not None:
+            self._client.close()
+            self._client = None
 
     def _prepare_headers(self) -> Dict[str, str]:
         """Prepare headers for API requests.
@@ -98,15 +126,15 @@ class COMCheckApiService:
             error: The error object to handle
         """
         if isinstance(error, httpx.HTTPStatusError):
-            print(f"HTTP error occurred: {error}")
-            print(f"Status: {error.response.status_code}")
-            print(f"Response data: {error.response.text}")
-            print(f"Response headers: {error.response.headers}")
+            logger.error(f"HTTP error occurred: {error}")
+            logger.error(f"Status: {error.response.status_code}")
+            logger.error(f"Response data: {error.response.text}")
+            logger.error(f"Response headers: {error.response.headers}")
         elif isinstance(error, httpx.RequestError):
-            print(f"Request error occurred: {error}")
-            print(f"Request: {error.request}")
+            logger.error(f"Request error occurred: {error}")
+            logger.error(f"Request: {error.request}")
         else:
-            print(f"Unexpected error: {error}")
+            logger.error(f"Unexpected error: {error}")
 
     def call_endpoint(
         self,
@@ -116,33 +144,22 @@ class COMCheckApiService:
         Generic method to call any configured endpoint.
 
         Args:
-            endpoint_name: Key from self.endpoints
-            path_params: Path parameters for URL template (e.g., {"code_version": "2021"})
-            query_params: Query parameters for URL template (e.g., {"code_version": "2021"})
-            payload: Direct payload dict
+            args: EndpointCallArgs containing endpoint name, path params, query params, and payload
         """
-        if not self.api_key:
-            return self._handle_api_error("Missing AHJ_API_KEY")
-
         if args.endpoint_name not in self.endpoints:
-            print(args.endpoint_name, self.endpoints)
-            return self._handle_api_error(f"Unknown endpoint: {args.endpoint_name}")
+            error = ValueError(f"Unknown endpoint: {args.endpoint_name}")
+            self._handle_api_error(error)
+            raise error
 
         endpoint = self.endpoints[args.endpoint_name]
+
         try:
             path = endpoint.path_template.format(**(args.path_params or {}))
-            url = f"{self.BASE_URL}{path}"
+        except KeyError as exc:
+            missing = exc.args[0]
+            raise ValueError(f"Missing required path parameter: {missing}") from exc
 
-            if args.query_params:
-                query_string = urlencode(args.query_params)
-                url = f"{url}?{query_string}"
-
-        except KeyError as e:
-            return self._handle_api_error("Missing path parameter")
-
-        headers = self._prepare_headers()
-
-        logging.info(
+        logger.info(
             "Calling %s %s | payload=%s | query=%s",
             endpoint.method,
             path,
@@ -150,14 +167,40 @@ class COMCheckApiService:
             args.query_params,
         )
 
-        try:
-            resp = self.session.request(
-                endpoint.method, url, headers=headers, json=args.payload
-            )
-        except Exception as e:
-            return self._handle_api_error(e)
+        json_payload = args.payload
+        if hasattr(json_payload, "model_dump"):
+            json_payload = json_payload.model_dump(mode="json")
 
-        return resp
+        return self._request(
+            endpoint.method,
+            path,
+            json=json_payload,
+            params=args.query_params,
+        )
+
+    def _request(
+        self,
+        method: str,
+        url: str,
+        *,
+        json: Optional[Dict[str, Any]] = None,
+        params: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        client = self._get_client()
+
+        try:
+            response = client.request(
+                method,
+                url,
+                json=json,
+                params=params,
+            )
+            response.raise_for_status()
+        except Exception as error:
+            self._handle_api_error(error)
+            raise
+
+        return response.json()
 
     def get_project(self, project_id: str) -> Dict[str, Any]:
         """Get a single project by ID.
@@ -172,14 +215,11 @@ class COMCheckApiService:
             httpx.HTTPStatusError: If the API returns an error status
             httpx.RequestError: If the request fails
         """
-        try:
-            client = self._get_client()
-            response = client.get(f"/project/{project_id}")
-            response.raise_for_status()
-            return response.json()
-        except Exception as error:
-            self._handle_api_error(error)
-            raise
+        args = EndpointCallArgs(
+            endpoint_name="get_project",
+            path_params={"project_id": project_id},
+        )
+        return self.call_endpoint(args)
 
     def get_project_list(self) -> Dict[str, Any]:
         """Get a list of all projects.
@@ -191,14 +231,10 @@ class COMCheckApiService:
             httpx.HTTPStatusError: If the API returns an error status
             httpx.RequestError: If the request fails
         """
-        try:
-            client = self._get_client()
-            response = client.get("/projects")
-            response.raise_for_status()
-            return response.json()
-        except Exception as error:
-            self._handle_api_error(error)
-            raise
+        args = EndpointCallArgs(
+            endpoint_name="get_project_list",
+        )
+        return self.call_endpoint(args)
 
     def update_project(
         self, project_id: str, project_data: Dict[str, Any]
@@ -216,14 +252,12 @@ class COMCheckApiService:
             httpx.HTTPStatusError: If the API returns an error status
             httpx.RequestError: If the request fails
         """
-        try:
-            client = self._get_client()
-            response = client.put(f"/project/{project_id}", json=project_data)
-            response.raise_for_status()
-            return response.json()
-        except Exception as error:
-            self._handle_api_error(error)
-            raise
+        args = EndpointCallArgs(
+            endpoint_name="update_project",
+            path_params={"project_id": project_id},
+            payload=project_data,
+        )
+        return self.call_endpoint(args)
 
     def get_assemblies_u_values(
         self, code_version: str, payload: AssembliesUValuesArgs
@@ -251,16 +285,11 @@ class COMCheckApiService:
             httpx.HTTPStatusError: If the API returns an error status
             httpx.RequestError: If the request fails
         """
-        try:
-            client = self._get_client()
-            response = client.post(
-                f"/compliance/start-run-simulation", json=project_data
-            )
-            response.raise_for_status()
-            return RunSimulationResponse.model_construct(**response.json())
-        except Exception as error:
-            self._handle_api_error(error)
-            raise
+        args = EndpointCallArgs(
+            endpoint_name="run_simulation",
+            payload=project_data,
+        )
+        return RunSimulationResponse(**self.call_endpoint(args))
 
     def get_simulation_status(self, session_id: str) -> SimulationStatusResponse:
         """Get status of a simulation.
@@ -275,16 +304,11 @@ class COMCheckApiService:
             httpx.HTTPStatusError: If the API returns an error status
             httpx.RequestError: If the request fails
         """
-        try:
-            client = self._get_client()
-            response = client.get(
-                f"/compliance/get-status-simulation?sessionId={session_id}"
-            )
-            response.raise_for_status()
-            return SimulationStatusResponse.model_construct(**response.json())
-        except Exception as error:
-            self._handle_api_error(error)
-            raise
+        args = EndpointCallArgs(    
+            endpoint_name="get_simulation_status",
+            path_params={"session_id": session_id},
+        )
+        return SimulationStatusResponse(**self.call_endpoint(args))
 
     def get_simulation_result(self, session_id: str) -> SimulationResultResponse:
         """Get result of a simulation.
@@ -299,22 +323,11 @@ class COMCheckApiService:
             httpx.HTTPStatusError: If the API returns an error status
             httpx.RequestError: If the request fails
         """
-        try:
-            client = self._get_client()
-            response = client.get(
-                f"/compliance/get-result-simulation?sessionId={session_id}"
-            )
-            response.raise_for_status()
-            return SimulationResultResponse.model_construct(**response.json())
-        except Exception as error:
-            self._handle_api_error(error)
-            raise
-
-    def close(self) -> None:
-        """Close the HTTP client connection."""
-        if self._client is not None:
-            self._client.close()
-            self._client = None
+        args = EndpointCallArgs(
+            endpoint_name="get_simulation_result",
+            path_params={"session_id": session_id},
+        )
+        return SimulationResultResponse(**self.call_endpoint(args))
 
     def __enter__(self) -> "COMCheckApiService":
         """Context manager entry."""
@@ -332,11 +345,7 @@ class AHJEndpoint:
         self,
         path_template: str,
         method: Literal["GET", "POST", "PUT", "DELETE"] = "POST",
-        response_parser: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
     ):
         self.path_template = path_template
         self.method = method
-        self.response_parser = response_parser or self._default_parser
 
-    def _default_parser(self, response_body: Dict[str, Any]) -> Dict[str, Any]:
-        return response_body.get("data", response_body)

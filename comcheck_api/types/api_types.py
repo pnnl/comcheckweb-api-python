@@ -8,7 +8,7 @@ class EndpointCallArgs(BaseModel):
     endpoint_name: str
     path_params: Dict[str, Any] | None = None
     query_params: Dict[str, Any] | None = None
-    payload: Dict[str, Any] | None = None
+    payload: BaseModel | Dict[str, Any] | None = None
 
 
 class ApiResponse(BaseModel):

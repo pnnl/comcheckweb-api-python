@@ -3,15 +3,17 @@
 """Note: Client layer provides user-friendly methods that accept Pydantic models as inputs
 and return either Pydantic models, primitives, or raw dicts depending on the operation."""
 
+import logging
 from typing import Any, Dict, List, Literal, Optional, Union, overload
 
 from comcheck_api.api.api_services import COMCheckApiService
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
-from comcheck_api.types.api_types import AssembliesUValuesArgs, EndpointCallArgs
+from comcheck_api.types.api_types import AssembliesUValuesArgs
 from comcheck_api.types.core_types import ComBuilding
 
 Mode = Literal["python", "json"]
 
+logger = logging.getLogger(__name__)
 
 class COMcheckClient:
     """COMcheck Client class for simplified project operations."""
@@ -190,12 +192,9 @@ class COMcheckClient:
         self, code_version: str, payload: AssembliesUValuesArgs
     ) -> Dict[str, Any]:
         """Convenience method for retrieving U values for assemblies"""
-        args = EndpointCallArgs(
-            endpoint_name="assemblies_u_values",
-            path_params={"code_version": code_version},
-            payload=payload.model_dump(mode="json"),
+        return self._service.get_assemblies_u_values(
+            code_version=code_version, payload=payload,
         )
-        return self._service.call_endpoint(args)
 
     def start_run_simulation(
         self, project: ComBuilding, project_id: Optional[int] = None
@@ -205,16 +204,20 @@ class COMcheckClient:
         Args:
             project: The project data to run the simulation
             project_id: Optional project ID, if not provided, project won't be saved
-        Returns:
-            Simulation session ID
+        Returns: Simulation session ID
         """
-        if project_id:
+        if project_id is not None:
             print("Updating project:", project_id)
             self.update_project(str(project_id), project)
 
         project_data = project.model_dump(mode="json", exclude_unset=True)
         run_result = self._service.start_run_simulation(project_data)
-        return run_result.data["sessionId"]
+
+        session_id = getattr(run_result.data, "sessionId", None)
+        if session_id is None:
+            raise RuntimeError("No session ID returned.")
+        
+        return session_id
 
     def get_simulation_status(self, session_id: str) -> Dict[str, Any]:
         """Get the status of a simulation run by session ID.
@@ -225,7 +228,8 @@ class COMcheckClient:
         Returns:
             Simulation status information
         """
-        return self._service.get_simulation_status(session_id).data
+        response = self._service.get_simulation_status(session_id)
+        return response.data
 
     def get_simulation_result(self, session_id: str) -> Dict[str, Any]:
         """Get the result of a simulation run by session ID.
@@ -236,7 +240,8 @@ class COMcheckClient:
         Returns:
             Simulation result information
         """
-        return self._service.get_simulation_result(session_id).data
+        response = self._service.get_simulation_result(session_id)
+        return response.data
 
     def close(self) -> None:
         """Close the API service connection."""
