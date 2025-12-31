@@ -2,7 +2,7 @@
 
 Example:
     from comcheckweb.comcheck_client import COMcheckClient
-    from comcheckweb.projectOperations import (
+    from comcheckweb.project_operations import (
         project_building_area_operations,
         project_envelope_operations,
     )
@@ -21,7 +21,7 @@ from .comcheck_client import COMcheckClient
 from . import get_project_default
 
 # Project Operations
-from .projectOperations import (
+from .project_operations import (
     project_building_area_operations,
     project_envelope_operations,
 )

@@ -1,5 +1,8 @@
 """COMcheck Client module for simplified API interactions."""
 
+"""Note: Client layer provides user-friendly methods that accept Pydantic models as inputs
+and return either Pydantic models, primitives, or raw dicts depending on the operation."""
+
 from typing import Any, Dict, List, Literal, Optional, Union, overload
 
 from comcheck_api.api.api_services import COMCheckApiService
@@ -94,6 +97,7 @@ class COMcheckClient:
         """
         return self._service.get_project_list().get("data", {})
 
+    # TODO: return of update_project should be ComBuilding
     def update_project(
         self, project_id: str, project_data: ComBuilding
     ) -> Dict[str, Any]:
@@ -179,7 +183,8 @@ class COMcheckClient:
                                         ):
                                             nested.pop("id", None)
 
-        return self._service.update_project(project_id, project_data_json)
+        data = self._service.update_project(project_id, project_data_json).get("data")
+        return data
     
     def get_assemblies_u_values(
         self, code_version: str, payload: AssembliesUValuesArgs
@@ -191,6 +196,47 @@ class COMcheckClient:
             payload=payload.model_dump(mode="json"),
         )
         return self._service.call_endpoint(args)
+
+    def start_run_simulation(
+        self, project: ComBuilding, project_id: Optional[int] = None
+    ) -> str:
+        """Start a simulation run for a given project.
+
+        Args:
+            project: The project data to run the simulation
+            project_id: Optional project ID, if not provided, project won't be saved
+        Returns:
+            Simulation session ID
+        """
+        if project_id:
+            print("Updating project:", project_id)
+            self.update_project(str(project_id), project)
+
+        project_data = project.model_dump(mode="json", exclude_unset=True)
+        run_result = self._service.start_run_simulation(project_data)
+        return run_result.data["sessionId"]
+
+    def get_simulation_status(self, session_id: str) -> Dict[str, Any]:
+        """Get the status of a simulation run by session ID.
+
+        Args:
+            session_id: The simulation session ID
+
+        Returns:
+            Simulation status information
+        """
+        return self._service.get_simulation_status(session_id).data
+
+    def get_simulation_result(self, session_id: str) -> Dict[str, Any]:
+        """Get the result of a simulation run by session ID.
+
+        Args:
+            session_id: The simulation session ID
+
+        Returns:
+            Simulation result information
+        """
+        return self._service.get_simulation_result(session_id).data
 
     def close(self) -> None:
         """Close the API service connection."""

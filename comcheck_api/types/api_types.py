@@ -1,5 +1,4 @@
-from enum import Enum
-from typing import Any, List, NotRequired, Dict, TypedDict
+from typing import Any, List, Dict
 
 from comcheck_api.types.core_types import *
 from pydantic import BaseModel
@@ -12,11 +11,42 @@ class EndpointCallArgs(BaseModel):
     payload: Dict[str, Any] | None = None
 
 
-class ApiResponse(TypedDict):
+class ApiResponse(BaseModel):
     success: bool
-    message: NotRequired[str | None]
-    data: NotRequired[Any]
-    errors: NotRequired[list[str] | None]
+    message: str | None = None
+    data: Any = None
+    errors: list[str] | None = None
+
+
+class SessionInfo(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    sessionId: str
+
+
+class RunSimulationResponse(ApiResponse):
+    data: SessionInfo | None = None
+
+
+class StatusInfo(BaseModel):
+    sessionId: str
+    status: str
+    message: str | None = None
+
+
+class SimulationStatusResponse(ApiResponse):
+    data: StatusInfo | None = None
+
+
+class SimulationResultInfo(BaseModel):
+    sessionId: str
+    performanceRating: float | None = None
+    energyCreditPerformanceRating: float | None = None
+    proposedBpf: float | None = None
+    baselineBpf: float | None = None
+
+
+class SimulationResultResponse(ApiResponse):
+    data: SimulationResultInfo | None = None
 
 
 class AgWallAssembliesUValuesArgs(CustomBaseModel):

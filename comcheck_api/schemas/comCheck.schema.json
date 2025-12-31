@@ -1221,7 +1221,7 @@
                 },
                 "propProjectionFactor": {
                     "description": "Proposed window projection factor",
-                    "type": "number",
+                    "type": ["number", "null"],
                     "minimum": 0.0,
                     "default": 0.0
                 },
@@ -1343,6 +1343,20 @@
                         { "$ref": "comCheck.schema.json#/definitions/WindowOpenTypeOptions" }
                     ],
                     "default": null
+                },
+                "cavityRValue": {
+                    "descriptions": "Average insulation R-value in the cavity between two studs.",
+                    "type": "number",
+                    "unit": "h-ft2-F/Btu",
+                    "minimum": 0.0,
+                    "default": 0.0
+                },
+                "continuousRValue": {
+                    "description": "Continuous insulation on the door. Can be exterior or interior or both.",
+                    "type": "number",
+                    "unit": "h-ft2-F/Btu",
+                    "minimum": 0.0,
+                    "default": 0.0
                 }
             },
             "required": [
@@ -1446,7 +1460,7 @@
                 },
                 "propProjectionFactor": {
                     "description": "Proposed window projection factor",
-                    "type": "number",
+                    "type": ["number", "null"],
                     "minimum": 0.0,
                     "default": 0.0
                 },
@@ -1711,7 +1725,7 @@
                 },
                 "propProjectionFactor": {
                     "description": "Proposed window projection factor",
-                    "type": "number",
+                    "type": ["number", "null"],
                     "minimum": 0.0,
                     "default": 0.0
                 },
@@ -5060,7 +5074,7 @@
                 "THERMAL_BRIDGE_CLADDING_SUPPORT",
                 "THERMAL_BRIDGE_WALL_TO_VERTICAL_FENESTRATION_INTERSECTION",
                 "THERMAL_BRIDGE_BALCONY_FLOOR_DECKS",
-                "THERMAL_BRDIGE_VERTICAL_FENESTRATION",
+                "THERMAL_BRIDGE_VERTICAL_FENESTRATION",
                 "THERMAL_BRIDGE_STRUCTURE_BEAMS_COLUMNS_CARBON_STEEL",
                 "THERMAL_BRIDGE_STRUCTURE_BEAMS_COLUMNS_CONCRETE",
                 "THERMAL_BRIDGE_BRIDGE_SHELF_ANGLE",
