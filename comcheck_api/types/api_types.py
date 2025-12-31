@@ -21,29 +21,29 @@ class ApiResponse(TypedDict):
 
 class AgWallAssembliesUValuesArgs(CustomBaseModel):
     model_config = ConfigDict(
-        extra='ignore',
+        extra='forbid',
     )
     description: str = "Ext Wall"
     assemblyType: str = "Ext Wall:Ext Wall"
     bldgUseKey: str = "0"
-    wallType: WallTypeOptions = WallTypeOptions.METAL_FRAME_24_AG_WALL.value
-    agWallConstructionDetailsType: AgWallConstructionDetailsTypeOptions = AgWallConstructionDetailsTypeOptions.NONE.value
+    wallType: WallTypeOptions = WallTypeOptions.METAL_FRAME_24_AG_WALL
+    agWallConstructionDetailsType: AgWallConstructionDetailsTypeOptions = AgWallConstructionDetailsTypeOptions.NONE
     agWallExteriorFinishDetailsType: Optional[AgWallExteriorFinishDetailsTypeOptions] = None
     insulationPosition: Optional[str] = None
-    otherWallType: AgWallOtherTypeOptions = AgWallOtherTypeOptions.NONE.value
+    otherWallType: AgWallOtherTypeOptions = AgWallOtherTypeOptions.NONE
     adjacentSpaceType: Optional[AdjacentSpaceTypeOptions] = None
     thermalBridge: list[ThermalBridge] = []
-    thermalBridgeExceptionType: ThermalBridgeExceptionTypeOptions = ThermalBridgeExceptionTypeOptions.THERMAL_BRIDGE_EXCEPTION_NONE.value
+    thermalBridgeExceptionType: ThermalBridgeExceptionTypeOptions = ThermalBridgeExceptionTypeOptions.THERMAL_BRIDGE_EXCEPTION_NONE
     effectiveUFactor: float = 0.0
     allowanceType: Optional[EnvelopeAssemblyAllowanceTypeOptions] = None
     cmuType: Optional[CMUTypeOptions] = None
     concreteDensity: float = 0.0
     concreteThickness: float = 0.0
     constructionType: Optional[ConstructionTypeOptions] = None
-    exemptionType: Optional[EnvelopeAssemblyExemptionOptions] = EnvelopeAssemblyExemptionOptions.ENV_EXEMPTION_NONE.value
-    furringType: Optional[FurringTypeOptions] = FurringTypeOptions.NO_FURRING.value
+    exemptionType: Optional[EnvelopeAssemblyExemptionOptions] = EnvelopeAssemblyExemptionOptions.ENV_EXEMPTION_NONE
+    furringType: Optional[FurringTypeOptions] = FurringTypeOptions.NO_FURRING
     heatCapacity: float = 0.0
-    orientation: OrientationOptions = OrientationOptions.UNSPECIFIED_ORIENTATION.value
+    orientation: OrientationOptions = OrientationOptions.UNSPECIFIED_ORIENTATION
     window: list[Window] = []
     door: list[Door] = []
     cavityRValue: float = 0.0
@@ -54,12 +54,12 @@ class AgWallAssembliesUValuesArgs(CustomBaseModel):
 
 class BgWallAssembliesUValuesArgs(CustomBaseModel):
     model_config = ConfigDict(
-        extra='ignore',
+        extra='forbid',
     )
     description: str = "Basement"
     assemblyType: str = "Basement:Basement"
     bldgUseKey: str = "0"
-    wallType: Optional[BgWallTypeOptions] = BgWallTypeOptions.CMU_LE_8IN_EMPTY_CELLS_BG_WALL.value
+    wallType: Optional[BgWallTypeOptions] = BgWallTypeOptions.CMU_LE_8IN_EMPTY_CELLS_BG_WALL
     wallHeight: float = 0.0
     wallHeightBelowGrade: float = 0.0
     adjacentSpaceType: Optional[AdjacentSpaceTypeOptions] = None
@@ -70,9 +70,9 @@ class BgWallAssembliesUValuesArgs(CustomBaseModel):
     concreteThickness: float = 0.0
     constructionType: Optional[ConstructionTypeOptions] = None
     exemptionType: Optional[EnvelopeAssemblyExemptionOptions] = None
-    furringType: Optional[FurringTypeOptions] = FurringTypeOptions.NO_FURRING.value
+    furringType: Optional[FurringTypeOptions] = FurringTypeOptions.NO_FURRING
     heatCapacity: float = 0.0
-    orientation: OrientationOptions = OrientationOptions.UNSPECIFIED_ORIENTATION.value
+    orientation: OrientationOptions = OrientationOptions.UNSPECIFIED_ORIENTATION
     insulationPosition: Optional[str] = None
     window: list[Window] = []
     door: list[Door] = []
@@ -84,7 +84,7 @@ class BgWallAssembliesUValuesArgs(CustomBaseModel):
 
 class AssembliesUValuesArgs(CustomBaseModel):
     model_config = ConfigDict(
-        extra='ignore',
+        extra='forbid',
     )
     agWall: List[Optional[AgWallAssembliesUValuesArgs]]= []
     bgWall: List[Optional[BgWallAssembliesUValuesArgs]] = []
