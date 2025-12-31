@@ -4,12 +4,13 @@
 and return either Pydantic models, primitives, or raw dicts depending on the operation."""
 
 import logging
-from typing import Any, Dict, List, Literal, Optional, Union, overload
+from typing import Any, Dict, Iterable, List, Literal, Optional, Union, overload
 
 from comcheck_api.api.api_services import COMCheckApiService
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
-from comcheck_api.types.api_types import AssembliesUValuesArgs
-from comcheck_api.types.core_types import ComBuilding
+from comcheck_api.types.api_types import AgWallAssembliesUValuesArgs, AssembliesUValuesArgs, BgWallAssembliesUValuesArgs
+from comcheck_api.types.core_types import AgWall, BgWall, ComBuilding
+from comcheck_api.utilities.model_utilities import find_objects_by_ids
 
 Mode = Literal["python", "json"]
 
@@ -189,9 +190,14 @@ class COMcheckClient:
         return data
     
     def get_assemblies_u_values(
-        self, code_version: str, payload: AssembliesUValuesArgs
+        self, code_version: str, project: ComBuilding, assembly_types: Iterable[str]
     ) -> Dict[str, Any]:
         """Convenience method for retrieving U values for assemblies"""
+        objects = find_objects_by_ids(project, assembly_types, "assemblyType")
+        payload = AssembliesUValuesArgs(
+            agWall = [AgWallAssembliesUValuesArgs(obj) for obj in objects if isinstance(obj, AgWall)],
+            bgWall = [BgWallAssembliesUValuesArgs(obj) for obj in objects if isinstance(obj, BgWall)],
+        )
         return self._service.get_assemblies_u_values(
             code_version=code_version, payload=payload,
         )
