@@ -133,6 +133,15 @@ class CustomBaseModel(BaseModel, metaclass=CustomBaseModelMeta):
             current = getattr(current, attr)
         return current
 
+    def set_by_path(self, path: str, value: Any) -> None:
+        attrs = path.split(".")
+        current = self
+        for attr in attrs[:-1]:
+            if not hasattr(current, attr):
+                raise AttributeError(f"{current!r} has no attribute {attr!r}")
+            current = getattr(current, attr)
+        setattr(current, attrs[-1], value)
+
     @classmethod
     def json_key(cls) -> str:
         return cls.__name__[0].lower() + cls.__name__[1:]

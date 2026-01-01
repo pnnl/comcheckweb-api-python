@@ -1,0 +1,19 @@
+BgWall:
+  minimal:
+    required: ["grossArea", "orientation", "wallType", "cavityRValue", "continuousRValue"]
+    defaults:
+      description: "Default Description"
+      assemblyType: "Basement:Default Basement"
+      window: []
+      door: []
+      propUValue: 0.0
+      concreteThickness: 0.0
+      concreteDensity: 0.0
+      wallHeightBelowGrade: 0.0
+      bldgUseKey: "0"
+      wallHeight: 0.0
+      adjacentSpaceType: null
+      insulationPosition: null
+      heatCapacity: 0.0
+      cmuType: null
+      allowanceType: null
