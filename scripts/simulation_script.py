@@ -86,6 +86,6 @@ def test_get_simulation_result(session_id: str):
 if __name__ == "__main__":
     # session_id = test_run_simulation_without_id()
     # session_id = test_run_simulation_with_id()
-    session_id = "4c4a0076-347d-49ae-80f8-b301dc0bec85"  # Replace with actual session ID from test_run_simulation
+    session_id = "9a93b33d-a1bf-4fb0-89e3-c83686748959"  # Replace with actual session ID from test_run_simulation
     test_get_simulation_status(session_id)
     test_get_simulation_result(session_id)

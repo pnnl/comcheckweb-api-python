@@ -1,27 +1,24 @@
 import os
+import time
 from copy import deepcopy
 from functools import reduce
 from typing import Callable
 
-from dotenv import load_dotenv
-
 from comcheck_api import COMcheckClient
-from comcheck_api.components.envelope import ag_wall
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
+from comcheck_api.constants.common_constants import PROJECT_TEMPLATE
 from comcheck_api.constants.envelope_constants import DEFAULT_AG_WALL, DEFAULT_ROOF, DEFAULT_FLOOR
 from comcheck_api.projectOperations.project_building_area_operations import add_building_area_to_project
 from comcheck_api.projectOperations.project_envelope_operations import add_ag_wall_to_project, add_roof_to_project, \
     add_floor_to_project
-from comcheck_api.types import OrientationOptions, ComBuilding, AssemblyTypeEnum, WallTypeOptions, AgWall, Roof, Floor, \
-    WholeBldgUse, RoofTypeOptions, FloorTypeOptions
+from comcheck_api.types import OrientationOptions, ComBuilding, WallTypeOptions, AgWall, Roof, Floor, \
+    WholeBldgUse, RoofTypeOptions, FloorTypeOptions, EnergyCodeOptions
 
 # Load environment variables
 os.environ["COM_API_KEY"] = "g85IQHH0ds1qWmK68zGfOaBV0jyRcX4bP462DqTb"
-
 api_key = os.getenv("COM_API_KEY")
 #if not api_key:
 #    pytest.fail("COM_API_KEY is not set in environment variables.")
-
 client = COMcheckClient()
 client.set_api_key(api_key)
 
@@ -99,32 +96,40 @@ def create_ag_walls(cavity_r: float=0.0, cont_r:float=0.0, assembly_type: WallTy
     return ag_wall_copy
 
 
-project = get_project("API Test Project")
+# Get an empty project
+# project = get_project("API Test Project")
+project = deepcopy(PROJECT_TEMPLATE)
+project.control.code = EnergyCodeOptions.CEZ_90_1_2022
+project.location.state = "Colorado"
+project.location.city = "Boulder"
 
+# Create a building area
 building_area = deepcopy(DEFAULT_BUILDING_AREA)
 building_area.areaDescription = "Default Building Area"
 building_area.floorArea = 1000
 
+# Create walls
 ag_wall_north = create_ag_walls(20.0, 10.0, orientation=OrientationOptions.NORTH)
 ag_wall_south = create_ag_walls(20.0, 10.0, orientation=OrientationOptions.SOUTH)
 ag_wall_east = create_ag_walls(20.0, 10.0, orientation=OrientationOptions.EAST)
 ag_wall_west = create_ag_walls(20.0, 10.0, orientation=OrientationOptions.WEST)
 
+# Create roofs
 roof = deepcopy(DEFAULT_ROOF)
 roof.description = "Default Roof"
 roof.cavityRValue = 30.0
 roof.continuousRValue = 10.0
 roof.roofType = RoofTypeOptions.ABOVE_DECK_ROOF
 
+# Create floors
 floor = deepcopy(DEFAULT_FLOOR)
 floor.description = "Default Floor"
 floor.cavityRValue = 30.0
 floor.continuousRValue = 10.0
 floor.floorType = FloorTypeOptions.ALL_WOOD_JOIST_TRUSS_FLOOR
 
+# Build up the building.
 bldg_area_key = building_area.key
-
-
 process_project = flow(
     with_new_building_area(building_area),
     with_roof(bldg_area_key, roof),
@@ -134,7 +139,26 @@ process_project = flow(
     with_ag_wall(bldg_area_key, ag_wall_west),
     with_floor(bldg_area_key, floor),
 )
-
 project = process_project(project)
 
-client.update_project(project.id, project)
+
+# Update the building to remote
+# client.update_project(project.id, project)
+
+# Run simulation
+session_id = client.start_run_simulation(project)
+print("Simulation started, session id: ", session_id)
+while True:
+    response = client.get_simulation_status(session_id)
+    status = response["status"]
+    if status == "EVALUATING":
+        print("Simulation status: ", status)
+        time.sleep(8)
+    else:
+        print("Simulation completed with status: ", status, "Message: ", response["message"])
+        break
+results = client.get_simulation_result(session_id)
+
+print(results)
+
+
