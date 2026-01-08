@@ -6,6 +6,8 @@ from comcheck_api.components.building_area import BuildingAreaListManager
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
 from comcheck_api.types.core_types import ComBuilding, WholeBldgUse
 
+from comcheck_api.utilities.project_utilities import _require_building_area
+
 
 def add_building_area_to_project(
     project: ComBuilding, new_building_area: WholeBldgUse
@@ -29,7 +31,7 @@ def add_building_area_to_project(
             DEFAULT_BUILDING_AREA.interiorLightingSpace.model_copy(deep=True)
         )
 
-    updated_project.lighting.add_subcomponent(new_building_area)
+    updated_project.lighting.append_subcomponent(new_building_area)
 
     return updated_project
 
@@ -48,6 +50,8 @@ def update_building_area_in_project(
         Updated project object with the building area updated
 
     """
+    _require_building_area(project, building_area_key)
+
     updated_project = project.model_copy(deep=True)
 
     manager = BuildingAreaListManager(updated_project.lighting.wholeBldgUse)
@@ -55,5 +59,25 @@ def update_building_area_in_project(
 
     # Reassign the modified list back to the project
     updated_project.lighting.wholeBldgUse = manager.get_all()
+
+    return updated_project
+
+def remove_building_area_from_project(
+    project: ComBuilding, building_area_key: str) -> ComBuilding:
+    """Remove an existing building area in the project.
+
+    Args:
+        project: The project object to modify
+        building_area_key: The key of the building area to update
+
+    Returns:
+        Updated project object with the building area removed
+
+    """
+    _require_building_area(project, building_area_key)
+
+    updated_project = project.model_copy(deep=True)
+
+    updated_project.lighting.remove_from_subcomponent_list(subcomponent_id=building_area_key, subcomponent_name="wholeBldgUse")
 
     return updated_project

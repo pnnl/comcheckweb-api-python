@@ -1,15 +1,8 @@
 """Project Envelope Operations."""
 
-import copy
-from typing import Any, Union, cast
+from typing import Any, Union
 
 from comcheck_api.components.envelope.ag_wall import AgWallListManager
-from comcheck_api.components.envelope.bg_wall import BgWallListManager
-from comcheck_api.components.envelope.door import DoorListManager
-from comcheck_api.components.envelope.floor import FloorListManager
-from comcheck_api.components.envelope.roof import RoofListManager
-from comcheck_api.components.envelope.skylight import SkylightListManager
-from comcheck_api.components.envelope.window import WindowListManager
 from comcheck_api.types.core_types import (
     AgWall,
     BgWall,
@@ -23,12 +16,10 @@ from comcheck_api.types.core_types import (
     ThermalBridgeComplianceTypeOptions,
     ThermalBridgeTypeOptions,
     Window,
-    Envelope,
 )
-from comcheck_api.utilities.data_manager import T
+from comcheck_api.utilities.project_utilities import _require_building_area
 
 # *********** Roof, agWall, bgWall and floor add/update operations ***********
-
 
 def add_roof_to_project(
     project: ComBuilding, building_area_key: str, new_roof: Roof
@@ -52,7 +43,7 @@ def add_roof_to_project(
     updated_project = project.model_copy(deep=True)
 
     new_roof.bldgUseKey = building_area_key
-    updated_project.envelope.add_subcomponent(new_roof)
+    updated_project.envelope.append_subcomponent(new_roof)
 
     return updated_project
 
@@ -72,13 +63,30 @@ def update_roof_in_project(
     """
     updated_project = project.model_copy(deep=True)
 
-    manager = RoofListManager(updated_project.envelope.roof)
-    manager.modify_one(roof_assembly_type, updates)
-
-    updated_project.envelope.roof = manager.get_all()
+    updated_project.envelope.update_subcomponent_list(subcomponent_updates=updates, subcomponent_id=roof_assembly_type, subcomponent_name="roof")
 
     return updated_project
 
+def remove_roof_from_project(
+    project: ComBuilding, roof_assembly_type: str
+) -> ComBuilding:
+    """Remove a roof from the envelope in any project object.
+
+    Args:
+        project: The project object to modify
+        roof_assembly_type: The assemblyType of the roof to update in project.envelope.roof list
+
+    Returns:
+        Project object with the roof removed
+
+    Raises:
+        ValueError: If buildingAreaKey is not found in lighting.wholeBldgUse list
+    """
+    updated_project = project.model_copy(deep=True)
+
+    updated_project.envelope.remove_from_subcomponent_list(subcomponent_id=roof_assembly_type, subcomponent_name="roof")
+
+    return updated_project
 
 def add_ag_wall_to_project(
     project: ComBuilding, building_area_key: str, new_ag_wall: AgWall
@@ -102,7 +110,7 @@ def add_ag_wall_to_project(
     updated_project = project.model_copy(deep=True)
 
     new_ag_wall.bldgUseKey = building_area_key
-    updated_project.envelope.add_subcomponent(new_ag_wall)
+    updated_project.envelope.append_subcomponent(new_ag_wall)
 
     return updated_project
 
@@ -122,10 +130,28 @@ def update_ag_wall_in_project(
     """
     updated_project = project.model_copy(deep=True)
 
-    manager = AgWallListManager(updated_project.envelope.agWall)
-    manager.modify_one(ag_wall_assembly_type, updates)
+    updated_project.envelope.update_subcomponent_list(subcomponent_updates=updates, subcomponent_id=ag_wall_assembly_type, subcomponent_name="agWall")
 
-    updated_project.envelope.agWall = manager.get_all()
+    return updated_project
+
+def remove_ag_wall_from_project(
+    project: ComBuilding, ag_wall_assembly_type: str
+) -> ComBuilding:
+    """Remove an agWall from the envelope in any project object.
+
+    Args:
+        project: The project object to modify
+        ag_wall_assembly_type: The assemblyType of the agWall to update in project.envelope.agWall list
+
+    Returns:
+        Project object with the agWall removed
+
+    Raises:
+        ValueError: If buildingAreaKey is not found in lighting.wholeBldgUse list
+    """
+    updated_project = project.model_copy(deep=True)
+
+    updated_project.envelope.remove_from_subcomponent_list(subcomponent_id=ag_wall_assembly_type, subcomponent_name="agWall")
 
     return updated_project
 
@@ -151,7 +177,7 @@ def add_bg_wall_to_project(
     updated_project = project.model_copy(deep=True)
 
     new_bg_wall.bldgUseKey = building_area_key
-    updated_project.envelope.add_subcomponent(new_bg_wall)
+    updated_project.envelope.append_subcomponent(new_bg_wall)
 
     return updated_project
 
@@ -171,12 +197,32 @@ def update_bg_wall_in_project(
     """
     updated_project = project.model_copy(deep=True)
 
-    manbger = BgWallListManager(updated_project.envelope.bgWall)
-    manbger.modify_one(bg_wall_assembly_type, updates)
-
-    updated_project.envelope.bgWall = manbger.get_all()
+    updated_project.envelope.update_subcomponent_list(subcomponent_updates=updates, subcomponent_id=bg_wall_assembly_type, subcomponent_name="bgWall")
 
     return updated_project
+
+
+def remove_bg_wall_from_project(
+    project: ComBuilding, bg_wall_assembly_type: str
+) -> ComBuilding:
+    """Remove an bgWall from the envelope in any project object.
+
+    Args:
+        project: The project object to modify
+        bg_wall_assembly_type: The assemblyType of the bgWall to update in project.envelope.bgWall list
+
+    Returns:
+        Project object with the bgWall removed
+
+    Raises:
+        ValueError: If buildingAreaKey is not found in lighting.wholeBldgUse list
+    """
+    updated_project = project.model_copy(deep=True)
+
+    updated_project.envelope.remove_from_subcomponent_list(subcomponent_id=bg_wall_assembly_type, subcomponent_name="bgWall")
+
+    return updated_project
+
 
 
 def add_floor_to_project(
@@ -200,7 +246,7 @@ def add_floor_to_project(
     updated_project = project.model_copy(deep=True)
 
     new_floor.bldgUseKey = building_area_key
-    updated_project.envelope.add_subcomponent(new_floor)
+    updated_project.envelope.append_subcomponent(new_floor)
 
     return updated_project
 
@@ -220,10 +266,28 @@ def update_floor_in_project(
     """
     updated_project = project.model_copy(deep=True)
 
-    manager = FloorListManager(updated_project.envelope.floor)
-    manager.modify_one(floor_assembly_type, updates)
+    updated_project.envelope.update_subcomponent_list(subcomponent_updates=updates, subcomponent_id=floor_assembly_type, subcomponent_name="floor")
 
-    updated_project.envelope.floor = manager.get_all()
+    return updated_project
+
+def remove_floor_from_project(
+    project: ComBuilding, floor_assembly_type: str
+) -> ComBuilding:
+    """Remove an bgWall from the envelope in any project object.
+
+    Args:
+        project: The project object to modify
+        floor_assembly_type: The assemblyType of the floor to remove in project.envelope.floor list
+
+    Returns:
+        Project object with the floor removed
+
+    Raises:
+        ValueError: If buildingAreaKey is not found in lighting.wholeBldgUse list
+    """
+    updated_project = project.model_copy(deep=True)
+
+    updated_project.envelope.remove_from_subcomponent_list(subcomponent_id=floor_assembly_type, subcomponent_name="floor")
 
     return updated_project
 
@@ -254,55 +318,64 @@ def add_skylight_to_project(
     updated_project = project.model_copy(deep=True)
 
     _require_building_area(project, building_area_key)
+    updated_project.require_attribute("envelope")
 
-    # Set the building area key on the new skylight
-    new_skylight.bldgUseKey = building_area_key
+    skylight_to_add = new_skylight.model_copy(update={"bldgUseKey": building_area_key})
 
     if updated_project.projectType != ProjectTypeOptions.ALTERATION:
+        # Add to existing roof for non-alteration projects
         if roof is None:
             raise ValueError("Roof must be specified for non-alteration projects.")
 
-        if (roof_use_key := getattr(roof, "bldgUseKey", None)) != building_area_key:
+        if (roof_use_key := getattr(roof, "bldgUseKey")) != building_area_key:
             raise ValueError(
                 f"Roof's bldgUseKey '{roof_use_key}' does not match buildingAreaKey '{building_area_key}'."
             )
 
-        roofs = updated_project.get_by_path("envelope.roof")
-        if isinstance(roofs, list):
-            roof_index = next(
-                (
-                    i
-                    for i, r in enumerate(roofs)
-                    if getattr(r, "assemblyType") == getattr(roof, "assemblyType")
-                ),
-                -1,
-            )
-            if roof_index == -1:
-                raise ValueError("Specified roof not found in project.")
-
-            roof_manager = RoofListManager(roofs)
-            updated_roof = roof_manager.add_new_skylight(
-                roofs[roof_index], new_skylight
-            )
-            updated_project.envelope.roof[roof_index] = updated_roof
-        else:
-            raise ValueError("Envelope roof list not found or invalid in project.")
-    else:
-        # Alteration projects: orphaned skylights
-        skylight_to_add = new_skylight.model_copy(
-            update={"bldgUseKey": building_area_key}
+        roof.append_subcomponent(skylight_to_add, "skylight")
+        updated_project.envelope.update_subcomponent_list(
+            subcomponent_updates=roof,
+            subcomponent_id=getattr(roof, "assemblyType"),
+            subcomponent_name=roof.json_key(),
         )
 
-        envelope = getattr(updated_project, "envelope", None)
-        if envelope is None:
-            raise ValueError("Envelope not found in project.")
+        return updated_project
+    else:
+        # Alteration projects: add orphaned skylight directly
+        updated_project.envelope.append_subcomponent(skylight_to_add, "skylight")
+        return updated_project
 
-        skylight_manager = SkylightListManager(getattr(envelope, "skylight", []))
-        updated_skylight_list = skylight_manager.add_new(skylight_to_add)
-        updated_project.envelope.skylight = updated_skylight_list
+def remove_skylight_from_project(
+    project: ComBuilding,
+    skylight_assembly_type: str,
+) -> ComBuilding:
+    """Add a new skylight to a specific roof in the envelope.
+
+    Args:
+        project: ComBuilding,
+        skylight_assembly_type: str
+
+    Returns:
+        Updated project object with the skylight added to the specified roof
+
+    Raises:
+        ValueError: If buildingAreaKey is not found or if roof's bldgUseKey doesn't match buildingAreaKey
+    """
+    updated_project = project.model_copy(deep=True)
+
+    # Find where the skylight is located
+    location_type, roof_index, _ = _find_component_location(
+        project, "skylight", skylight_assembly_type
+    )
+
+    # Update skylight based on its location
+    if location_type == "orphaned":
+        parent_obj = updated_project.envelope
+    elif location_type == "roof":
+        parent_obj = updated_project.envelope.roof[roof_index]
+    parent_obj.remove_from_subcomponent_list(subcomponent_id=skylight_assembly_type, subcomponent_name="skylight")
 
     return updated_project
-
 
 def update_skylight_in_project(
     project: ComBuilding,
@@ -335,15 +408,10 @@ def update_skylight_in_project(
 
     # Update skylight based on its location
     if location_type == "orphaned":
-        manager = SkylightListManager(updated_project.envelope.skylight)
-        manager.modify_one(skylight_assembly_type, updates)
-        updated_project.envelope.skylight = manager.get_all()
+        parent_obj = updated_project.envelope
     elif location_type == "roof":
-        manager = SkylightListManager(
-            updated_project.envelope.roof[roof_index].skylight
-        )
-        manager.modify_one(skylight_assembly_type, updates)
-        updated_project.envelope.roof[roof_index].skylight = manager.get_all()
+        parent_obj = updated_project.envelope.roof[roof_index]
+    parent_obj.update_subcomponent_list(subcomponent_updates=updates, subcomponent_id=skylight_assembly_type, subcomponent_name="skylight")
 
     return updated_project
 
@@ -371,10 +439,12 @@ def add_window_to_project(
     updated_project = project.model_copy(deep=True)
 
     _require_building_area(project, building_area_key)
-    new_window.bldgUseKey = building_area_key
+    updated_project.require_attribute("envelope")
 
-    if updated_project.projectType != "ALTERATION":
-        if not wall:
+    window_to_add = new_window.model_copy(update={"bldgUseKey": building_area_key})
+
+    if updated_project.projectType != ProjectTypeOptions.ALTERATION:
+        if wall is None:
             raise ValueError(
                 "Wall (AgWall or BgWall) must be specified for non-alteration projects."
             )
@@ -384,55 +454,44 @@ def add_window_to_project(
                 f"Wall's bldgUseKey '{wall_use_key}' does not match buildingAreaKey '{building_area_key}'."
             )
 
-        ag_wall = updated_project.get_by_path("envelope.agWall")
-        if isinstance(ag_wall, list):
-            ag_wall_index = next(
-                (
-                    i
-                    for i, w in enumerate(ag_wall)
-                    if getattr(w, "assemblyType") == getattr(wall, "assemblyType")
-                ),
-                -1,
-            )
-            if ag_wall_index != -1:
-                ag_wall_manager = AgWallListManager(updated_project.envelope.agWall)
-                updated_ag_wall = ag_wall_manager.add_new_window(
-                    updated_project.envelope.agWall[ag_wall_index], new_window
-                )
-                updated_project.envelope.agWall[ag_wall_index] = updated_ag_wall
-                return updated_project
-
-        # Try to find in bgWall array
-        bg_wall = updated_project.get_by_path("envelope.bgWall")
-        if isinstance(bg_wall, list):
-            bg_wall_index = next(
-                (
-                    i
-                    for i, w in enumerate(bg_wall)
-                    if getattr(w, "assemblyType") == getattr(wall, "assemblyType")
-                ),
-                -1,
-            )
-            if bg_wall_index != -1:
-                bg_wall_manager = BgWallListManager(updated_project.envelope.bgWall)
-                updated_bg_wall = bg_wall_manager.add_new_window(
-                    updated_project.envelope.bgWall[bg_wall_index], new_window
-                )
-                updated_project.envelope.bgWall[bg_wall_index] = updated_bg_wall
-                return updated_project
-
-        raise ValueError("Specified wall not found in project.")
+        wall.append_subcomponent(window_to_add, "window")
+        updated_project.envelope.update_subcomponent_list(
+            subcomponent_updates=wall,
+            subcomponent_id=getattr(wall, "assemblyType"),
+            subcomponent_name=wall.json_key(),
+        )
+        return updated_project
     else:
         # Alteration projects: orphaned windows
-        window_to_add: Window = new_window.model_copy(
-            update={"bldgUseKey": building_area_key}
-        )
-        if not getattr(updated_project, "envelope"):
-            raise ValueError("Envelope not found in project.")
-        window_manager = WindowListManager(
-            updated_project.get_by_path("envelope.window", [])
-        )
-        updated_project.envelope.window = window_manager.add_new(window_to_add)
+        updated_project.envelope.append_subcomponent(window_to_add, "window")
+        return updated_project
+    
+def remove_window_from_project(
+    project: ComBuilding,
+    window_assembly_type: str,
+) -> ComBuilding:
+    """Remove a window from the project.
+
+    Args:
+        project: ComBuilding,
+        window_assembly_type: str
+
+    Returns:
+        Updated project object with the window removed
+    """
+    updated_project = project.model_copy(deep=True)
+
+    # Find where the window is located
+    location_type, wall_index, _ = _find_component_location(
+        project, "window", window_assembly_type
+    )
+
+    # Update window based on its location
+    if location_type == "orphaned":
+        parent_obj = updated_project.envelope
+    elif location_type in ["agWall", "bgWall"]:
+        parent_obj = updated_project.envelope.get_by_path(f"{location_type}[{wall_index}]")
+    parent_obj.remove_from_subcomponent_list(subcomponent_id=window_assembly_type, subcomponent_name="window")
 
     return updated_project
 
@@ -467,17 +526,10 @@ def update_window_in_project(
 
     # Update window based on its location
     if location_type == "orphaned":
-        manager = WindowListManager(updated_project.envelope.window)
-        manager.modify_one(window_assembly_type, updates)
-        updated_project.envelope.window = manager.get_all()
-    elif location_type == "agWall":
-        manager = WindowListManager(updated_project.envelope.agWall[wall_index].window)
-        manager.modify_one(window_assembly_type, updates)
-        updated_project.envelope.agWall[wall_index].window = manager.get_all()
-    elif location_type == "bgWall":
-        manager = WindowListManager(updated_project.envelope.bgWall[wall_index].window)
-        manager.modify_one(window_assembly_type, updates)
-        updated_project.envelope.bgWall[wall_index].window = manager.get_all()
+        parent_obj = updated_project.envelope
+    elif location_type in ["agWall", "bgWall"]:
+        parent_obj = updated_project.envelope.get_by_path(f"{location_type}[{wall_index}]")
+    parent_obj.update_subcomponent_list(subcomponent_updates=updates, subcomponent_id=window_assembly_type, subcomponent_name="window")
 
     return updated_project
 
@@ -506,10 +558,12 @@ def add_door_to_project(
     updated_project = project.model_copy(deep=True)
 
     _require_building_area(project, building_area_key)
-    new_door.bldgUseKey = building_area_key
+    updated_project.require_attribute("envelope")
 
-    if updated_project.projectType != "ALTERATION":
+    door_to_add = new_door.model_copy(update={"bldgUseKey": building_area_key})
 
+    if updated_project.projectType != ProjectTypeOptions.ALTERATION:
+        # Add to existing wall for non-alteration projects
         if not wall:
             raise ValueError(
                 "Wall (AgWall or BgWall) must be specified for non-alteration projects."
@@ -519,58 +573,43 @@ def add_door_to_project(
             raise ValueError(
                 f"Wall's bldgUseKey '{wall_use_key}' does not match buildingAreaKey '{building_area_key}'."
             )
-
-        # Try AgWall list
-        ag_wall = updated_project.get_by_path("envelope.agWall")
-        if isinstance(ag_wall, list):
-            ag_wall_index = next(
-                (
-                    i
-                    for i, w in enumerate(ag_wall)
-                    if getattr(w, "assemblyType") == getattr(wall, "assemblyType")
-                ),
-                -1,
-            )
-            if ag_wall_index != -1:
-                ag_wall_manager = AgWallListManager(updated_project.envelope.agWall)
-                updated_ag_wall = ag_wall_manager.add_new_door(
-                    updated_project.envelope.agWall[ag_wall_index], new_door
-                )
-                updated_project.envelope.agWall[ag_wall_index] = updated_ag_wall
-                return updated_project
-
-        # Try BgWall list
-        bg_wall = updated_project.get_by_path("envelope.bgWall")
-        if isinstance(bg_wall, list):
-            bg_wall_index = next(
-                (
-                    i
-                    for i, w in enumerate(bg_wall)
-                    if getattr(w, "assemblyType") == getattr(wall, "assemblyType")
-                ),
-                -1,
-            )
-            if bg_wall_index != -1:
-                bg_wall_manager = BgWallListManager(updated_project.envelope.bgWall)
-                updated_bg_wall = bg_wall_manager.add_new_door(
-                    updated_project.envelope.bgWall[bg_wall_index], new_door
-                )
-                updated_project.envelope.bgWall[bg_wall_index] = updated_bg_wall
-                return updated_project
-
-        raise ValueError("Specified wall not found in project.")
-
+        wall.append_subcomponent(door_to_add, "door")
+        updated_project.envelope.update_subcomponent_list(subcomponent_updates=wall, subcomponent_id=getattr(wall, "assemblyType"), subcomponent_name=wall.json_key())
+        return updated_project
     else:
-        door_to_add = new_door.model_copy(update={"bldgUseKey": building_area_key})
-
-        if not getattr(updated_project, "envelope"):
-            raise ValueError("Envelope not found in project.")
-
-        door_manager = DoorListManager(updated_project.get_by_path("envelope.door", []))
-        updated_project.envelope.door = door_manager.add_new(door_to_add)
+        updated_project.envelope.append_subcomponent(door_to_add)
 
         return updated_project
 
+
+def remove_door_from_project(
+    project: ComBuilding,
+    door_assembly_type: str,
+) -> ComBuilding:
+    """Remove a door from the project.
+
+    Args:
+        project: ComBuilding,
+        door_assembly_type: str
+
+    Returns:
+        Updated project object with the door removed
+    """
+    updated_project = project.model_copy(deep=True)
+
+    # Find where the door is located
+    location_type, wall_index, _ = _find_component_location(
+        project, "door", door_assembly_type
+    )
+
+    # Remove door based on its location
+    if location_type == "orphaned":
+        parent_obj = updated_project.envelope
+    elif location_type in ["agWall", "bgWall"]:
+        parent_obj = updated_project.envelope.get_by_path(f"{location_type}[{wall_index}]")
+    parent_obj.remove_from_subcomponent_list(subcomponent_id=door_assembly_type, subcomponent_name="door")
+
+    return updated_project
 
 def update_door_in_project(
     project: ComBuilding, door_assembly_type: str, updates: dict[str, Any] | Door
@@ -602,17 +641,10 @@ def update_door_in_project(
 
     # Update door based on its location
     if location_type == "orphaned":
-        manager = DoorListManager(updated_project.envelope.door)
-        manager.modify_one(door_assembly_type, updates)
-        updated_project.envelope.door = manager.get_all()
-    elif location_type == "agWall":
-        manager = DoorListManager(updated_project.envelope.agWall[wall_index].door)
-        manager.modify_one(door_assembly_type, updates)
-        updated_project.envelope.agWall[wall_index].door = manager.get_all()
-    elif location_type == "bgWall":
-        manager = DoorListManager(updated_project.envelope.bgWall[wall_index].door)
-        manager.modify_one(door_assembly_type, updates)
-        updated_project.envelope.bgWall[wall_index].door = manager.get_all()
+        parent_obj = updated_project.envelope
+    elif location_type in ["agWall", "bgWall"]:
+        parent_obj = updated_project.envelope.get_by_path(f"{location_type}[{wall_index}]")
+    parent_obj.update_subcomponent_list(subcomponent_updates=updates, subcomponent_id=door_assembly_type, subcomponent_name="door")
 
     return updated_project
 
@@ -720,22 +752,6 @@ def add_thermal_bridge_to_project(
 
 
 # *********** Helper Functions ***********
-
-
-def _require_building_area(project: ComBuilding, building_area_key: str) -> None:
-    """
-    Ensure that project.lighting.wholeBldgUse exists and contains the given key.
-    """
-    whole_use = project.get_by_path("lighting.wholeBldgUse")
-
-    if not isinstance(whole_use, list):
-        raise ValueError("No building area (wholeBldgUse) found in project.")
-
-    if not any(getattr(area, "key", None) == building_area_key for area in whole_use):
-        raise ValueError(
-            f"Building area key '{building_area_key}' not found in lighting.wholeBldgUse."
-        )
-
 
 def _find_component_location(
     project: ComBuilding, component_type: str, assembly_type: str
