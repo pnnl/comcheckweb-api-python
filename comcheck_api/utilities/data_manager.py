@@ -9,13 +9,9 @@ from typing import (
     List,
     Type,
     TypeVar,
-    get_type_hints,
 )
 from collections import namedtuple
 
-from pydantic.main import _model_construction
-
-from jsonschema import ValidationError, validate
 from pydantic import BaseModel
 from comcheck_api.utilities.id_registry import (
     register_existing_id,

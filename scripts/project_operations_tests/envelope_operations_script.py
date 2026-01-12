@@ -367,6 +367,11 @@ def test_add_orphaned_skylight(test_project_id: str):
             print("No test project data found.")
             return
 
+        # Update project to ALTERATION to have orphaned skylights
+        test_project.projectType = ProjectTypeOptions.ALTERATION
+        test_project = ComBuilding(**client.update_project(test_project_id, test_project))
+        print("  Project type updated to ALTERATION")
+
         default_skylight = get_default_skylight_template()
         whole_bldg_use: List[WholeBldgUse] = test_project.get_by_path(
             "lighting.wholeBldgUse", []
