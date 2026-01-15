@@ -6,6 +6,7 @@ from comcheck_api.types.core_types import (
     AgWall,
     BgWall,
     Door,
+    Envelope,
     Floor,
     Roof,
     Skylight,
@@ -233,6 +234,15 @@ DEFAULT_BG_WALL: BgWall = BgWall(
     }
 )
 
+DEFAULT_ENVELOPE: Envelope = Envelope(
+    agWall=[],
+    bgWall=[],
+    roof=[],
+    floor=[],
+    door=[],
+    window=[],
+    skylight=[]
+)
 
 # TODO: add values to other assemblies
 DEFAULT_ASSEMBLIES = {
