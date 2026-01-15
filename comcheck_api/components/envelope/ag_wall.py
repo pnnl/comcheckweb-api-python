@@ -10,7 +10,7 @@ from comcheck_api.types.core_types import (
     ThermalBridgeTypeOptions,
     Window,
 )
-from comcheck_api.utilities.data_manager import DataManager
+from comcheck_api.managers.data_manager import DataManager
 
 
 class ThermalBridgeListManager(DataManager[ThermalBridge]):

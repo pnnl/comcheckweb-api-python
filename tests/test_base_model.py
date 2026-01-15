@@ -5,7 +5,7 @@ from pydantic import ValidationError
 import pytest
 
 from comcheck_api.schemas.custom_base_model import CustomBaseModel
-from comcheck_api.utilities.data_manager import DataManager, IdInfo
+from comcheck_api.managers.data_manager import DataManager, IdInfo
 from tests.conftest import SampleParentModel, SampleChildModel, create_sample_child, create_sample_parent
 
 @pytest.fixture

@@ -4,11 +4,11 @@ from copy import deepcopy
 from unittest.mock import patch
 
 from tests.conftest import SampleParentModel, SampleChildModel, create_id, create_sample_parent
-from comcheck_api.utilities.data_manager import DataManager, IdInfo
+from comcheck_api.managers.data_manager import DataManager, IdInfo
 
 @pytest.fixture
 def data_manager():
-    with patch("comcheck_api.utilities.data_manager.get_model_info", return_value=IdInfo(identifier="id", id_prefix="Test:Test")):
+    with patch("comcheck_api.managers.data_manager.get_model_info", return_value=IdInfo(identifier="id", id_prefix="Test:Test")):
         yield DataManager[SampleParentModel](model_type=SampleParentModel)
 
 def test_initialization_with_provided_data(data_manager: DataManager, parent: SampleParentModel):

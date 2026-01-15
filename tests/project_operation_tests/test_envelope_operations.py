@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from comcheck_api.comcheck_client import COMcheckClient
 from comcheck_api.project_operations import project_envelope_operations
-from comcheck_api.get_project_default import (
+from comcheck_api.utilities.get_project_default import (
     get_default_ag_wall_template,
     get_default_bg_wall_template,
     get_default_floor_template,

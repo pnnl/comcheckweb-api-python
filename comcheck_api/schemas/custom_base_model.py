@@ -10,7 +10,7 @@ from pydantic.main import _model_construction
 
 from pydantic import BaseModel
 
-from comcheck_api.utilities.data_manager import DataManager
+from comcheck_api.managers.data_manager import DataManager
 
 T = TypeVar("T")
 S = TypeVar("S")

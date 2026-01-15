@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from comcheck_api.comcheck_client import COMcheckClient
-from comcheck_api.get_project_default import get_default_project_template
+from comcheck_api.utilities.get_project_default import get_default_project_template
 from comcheck_api.utilities.common import export_to_json
 
 load_dotenv()

@@ -3,7 +3,7 @@
 from typing import cast
 
 from comcheck_api.types.core_types import Roof, Skylight
-from comcheck_api.utilities.data_manager import DataManager
+from comcheck_api.managers.data_manager import DataManager
 from comcheck_api.utilities.envelope_utilities import generate_assembly
 
 from .skylight import SkylightListManager

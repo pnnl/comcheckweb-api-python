@@ -3,7 +3,7 @@
 from typing import Any
 
 from comcheck_api.types.core_types import WholeBldgUse
-from comcheck_api.utilities.data_manager import DataManager
+from comcheck_api.managers.data_manager import DataManager
 
 
 class BuildingAreaListManager(DataManager[WholeBldgUse]):

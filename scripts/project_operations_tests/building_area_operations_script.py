@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 from comcheck_api.comcheck_client import COMcheckClient
 from comcheck_api.project_operations import project_building_area_operations
 from comcheck_api.utilities.common import export_to_json
-from comcheck_api.get_project_default import get_default_building_area_template
+from comcheck_api.utilities.get_project_default import get_default_building_area_template
 from comcheck_api.types.core_types import *
 
 load_dotenv()

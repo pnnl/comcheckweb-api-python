@@ -7,7 +7,7 @@ from __future__ import annotations
 from enum import IntEnum, StrEnum
 from typing import Any, Optional, Union
 
-from comcheck_api.schemas.custom_base_model import CustomBaseModel
+from comcheck_api.types.custom_base_model import CustomBaseModel
 from pydantic import ConfigDict, Field, RootModel, confloat, conint
 
 

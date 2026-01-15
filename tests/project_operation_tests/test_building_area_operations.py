@@ -2,7 +2,7 @@ import pytest
 
 from comcheck_api.comcheck_client import COMcheckClient
 from comcheck_api.project_operations import project_building_area_operations
-from comcheck_api.get_project_default import get_default_building_area_template
+from comcheck_api.utilities.get_project_default import get_default_building_area_template
 from comcheck_api.types.core_types import *
 from comcheck_api.utilities.project_utilities import find_component_in_component_list, get_id_from_component
 from tests.project_operation_tests.assertions.components import assert_component_added, assert_component_updated, assert_component_removed

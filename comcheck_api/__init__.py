@@ -18,7 +18,7 @@ Example:
 from .comcheck_client import COMcheckClient
 
 # Project Defaults
-from . import get_project_default
+from .utilities import get_project_default
 
 # Project Operations
 from .project_operations import (
