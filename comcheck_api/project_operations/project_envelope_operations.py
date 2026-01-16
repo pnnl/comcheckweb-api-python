@@ -2,7 +2,7 @@
 
 from typing import Any, Union
 
-from comcheck_api.components.envelope.ag_wall import AgWallListManager
+from comcheck_api.managers.components.envelope.ag_wall import AgWallListManager
 from comcheck_api.types.core_types import (
     AgWall,
     BgWall,
@@ -320,7 +320,7 @@ def add_skylight_to_project(
     _require_building_area(project, building_area_key)
     updated_project.require_attribute("envelope")
 
-    skylight_to_add = new_skylight.model_copy(update={"bldgUseKey": building_area_key})
+    new_skylight.bldgUseKey = building_area_key
 
     if updated_project.projectType != ProjectTypeOptions.ALTERATION:
         # Add to existing roof for non-alteration projects
@@ -332,7 +332,7 @@ def add_skylight_to_project(
                 f"Roof's bldgUseKey '{roof_use_key}' does not match buildingAreaKey '{building_area_key}'."
             )
 
-        roof.append_subcomponent(skylight_to_add, "skylight")
+        roof.append_subcomponent(new_skylight, "skylight")
         updated_project.envelope.update_subcomponent_list(
             subcomponent_updates=roof,
             subcomponent_id=getattr(roof, "assemblyType"),
@@ -342,7 +342,7 @@ def add_skylight_to_project(
         return updated_project
     else:
         # Alteration projects: add orphaned skylight directly
-        updated_project.envelope.append_subcomponent(skylight_to_add, "skylight")
+        updated_project.envelope.append_subcomponent(new_skylight, "skylight")
         return updated_project
 
 def remove_skylight_from_project(
@@ -441,7 +441,7 @@ def add_window_to_project(
     _require_building_area(project, building_area_key)
     updated_project.require_attribute("envelope")
 
-    window_to_add = new_window.model_copy(update={"bldgUseKey": building_area_key})
+    new_window.bldgUseKey = building_area_key
 
     if updated_project.projectType != ProjectTypeOptions.ALTERATION:
         if wall is None:
@@ -454,7 +454,7 @@ def add_window_to_project(
                 f"Wall's bldgUseKey '{wall_use_key}' does not match buildingAreaKey '{building_area_key}'."
             )
 
-        wall.append_subcomponent(window_to_add, "window")
+        wall.append_subcomponent(new_window, "window")
         updated_project.envelope.update_subcomponent_list(
             subcomponent_updates=wall,
             subcomponent_id=getattr(wall, "assemblyType"),
@@ -463,7 +463,7 @@ def add_window_to_project(
         return updated_project
     else:
         # Alteration projects: orphaned windows
-        updated_project.envelope.append_subcomponent(window_to_add, "window")
+        updated_project.envelope.append_subcomponent(new_window, "window")
         return updated_project
     
 def remove_window_from_project(
@@ -560,7 +560,7 @@ def add_door_to_project(
     _require_building_area(project, building_area_key)
     updated_project.require_attribute("envelope")
 
-    door_to_add = new_door.model_copy(update={"bldgUseKey": building_area_key})
+    new_door.bldgUseKey = building_area_key
 
     if updated_project.projectType != ProjectTypeOptions.ALTERATION:
         # Add to existing wall for non-alteration projects
@@ -573,11 +573,11 @@ def add_door_to_project(
             raise ValueError(
                 f"Wall's bldgUseKey '{wall_use_key}' does not match buildingAreaKey '{building_area_key}'."
             )
-        wall.append_subcomponent(door_to_add, "door")
+        wall.append_subcomponent(new_door, "door")
         updated_project.envelope.update_subcomponent_list(subcomponent_updates=wall, subcomponent_id=getattr(wall, "assemblyType"), subcomponent_name=wall.json_key())
         return updated_project
     else:
-        updated_project.envelope.append_subcomponent(door_to_add)
+        updated_project.envelope.append_subcomponent(new_door)
 
         return updated_project
 
@@ -777,8 +777,9 @@ def _find_component_location(
         ValueError: If component is not found anywhere
     """
     # Check orphaned components first
-    orphaned_list = getattr(project.envelope, component_type, [])
-    if orphaned_list:
+    
+    if project.projectType == ProjectTypeOptions.ALTERATION:
+        orphaned_list = getattr(project.envelope, component_type, [])
         component_index = next(
             (
                 i
@@ -789,13 +790,12 @@ def _find_component_location(
         )
         if component_index != -1:
             return ("orphaned", None, component_index)
-
-    # For windows/doors: check agWall and bgWall components
-    if component_type in ("window", "door"):
-        # Check agWall components
-        for ag_wall_index, ag_wall in enumerate(project.envelope.agWall):
-            wall_components = getattr(ag_wall, component_type, [])
-            if wall_components:
+    else:
+        # For windows/doors: check agWall and bgWall components
+        if component_type in ("window", "door"):
+            # Check agWall components
+            for ag_wall_index, ag_wall in enumerate(project.envelope.agWall):
+                wall_components = getattr(ag_wall, component_type, [])
                 component_index = next(
                     (
                         i
@@ -807,10 +807,10 @@ def _find_component_location(
                 if component_index != -1:
                     return ("agWall", ag_wall_index, component_index)
 
-        # Check bgWall components
-        for bg_wall_index, bg_wall in enumerate(project.envelope.bgWall):
-            wall_components = getattr(bg_wall, component_type, [])
-            if wall_components:
+
+            # Check bgWall components
+            for bg_wall_index, bg_wall in enumerate(project.envelope.bgWall):
+                wall_components = getattr(bg_wall, component_type, [])
                 component_index = next(
                     (
                         i
@@ -822,11 +822,11 @@ def _find_component_location(
                 if component_index != -1:
                     return ("bgWall", bg_wall_index, component_index)
 
-    # For skylights: check roof components
-    elif component_type == "skylight":
-        for roof_index, roof in enumerate(project.envelope.roof or []):
-            roof_skylights = getattr(roof, "skylight", [])
-            if roof_skylights:
+
+        # For skylights: check roof components
+        elif component_type == "skylight":
+            for roof_index, roof in enumerate(project.envelope.roof or []):
+                roof_skylights = getattr(roof, "skylight", [])
                 skylight_index = next(
                     (
                         i
