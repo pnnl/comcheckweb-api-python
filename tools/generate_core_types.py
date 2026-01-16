@@ -5,8 +5,8 @@ import sys
 from pathlib import Path
 
 # Input and output paths
-INPUT_SCHEMA = Path(__file__).parent / "comCheck.schema.json"
-OUTPUT_TYPES = Path(__file__).parent.parent / "types" / "core_types.py"
+INPUT_SCHEMA = Path(__file__).parent.parent / "comcheck_api" / "schemas" / "comCheck.schema.json"
+OUTPUT_TYPES = Path(__file__).parent.parent / "comcheck_api" / "types" /  "core_types.py"
 
 # Ensure output directory exists
 OUTPUT_TYPES.parent.mkdir(parents=True, exist_ok=True)
@@ -26,7 +26,7 @@ result = subprocess.run(
         "--output-model-type",
         "pydantic_v2.BaseModel",
         "--base-class",
-        "comcheck_api.schemas.custom_base_model.CustomBaseModel",
+        "comcheck_api.types.custom_base_model.CustomBaseModel",
         "--target-python-version",
         "3.13",
         "--use-standard-collections",
