@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from comcheck_api.components.envelope.roof import RoofListManager
+from comcheck_api.managers.components.envelope.roof import RoofListManager
 from comcheck_api.types.core_types import Roof, Skylight
 
 class TestRoofListManager:
