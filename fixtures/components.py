@@ -1,8 +1,6 @@
-"""Test data for scripts."""
+from comcheck_api.types.core_types import *
 
-from comcheck_api.types.core_types import Envelope, WholeBldgUse
-
-TEST_PROJECT_ENVELOPE = Envelope(
+SAMPLE_PROJECT_ENVELOPE = Envelope(
     **{
         "id": 13943,
         "useVltDetails": True,
@@ -296,7 +294,7 @@ TEST_PROJECT_ENVELOPE = Envelope(
     }
 )
 
-TEST_BUILDING_AREA = [
+SAMPLE_BUILDING_AREA = [
     WholeBldgUse(
         **{
             "id": 45738,
@@ -694,3 +692,78 @@ TEST_BUILDING_AREA = [
         }
     )
 ]
+
+SAMPLE_AG_WALL = AgWall(
+    description="Example Wall",
+    thermalBridge=[],
+    bldgUseKey="AREA1",
+    wallType="WOOD_FRAME_16_AG_WALL",
+    orientation="NORTH",
+    grossArea=1000,
+    cavityRValue=13,
+    continuousRValue=5,
+    propUValue=0.048,
+    window=[],
+    door=[],
+    agWallConstructionDetailsType="NONE",
+    agWallExteriorFinishDetailsType=None,
+    insulationPosition=None,
+    otherWallType="NONE",
+    adjacentSpaceType=None,
+    thermalBridgeExceptionType="THERMAL_BRIDGE_EXCEPTION_NONE",
+    effectiveUFactor=0.05,
+    allowanceType=None,
+    cmuType=None,
+    concreteDensity=0,
+    concreteThickness=0,
+    heatCapacity=0,
+)
+
+
+SAMPLE_ROOF = Roof(
+    description="Example Roof",
+    skylight=[],
+    bldgUseKey="AREA1",
+    roofType="ABOVE_DECK_ROOF",  # must be one of the allowed enum values
+    grossArea=6000,
+    cavityRValue=0,
+    continuousRValue=37,
+    assemblyType="Roof:Default Roof",
+    adjacentSpaceType=None,
+    allowanceType=None,
+    orientation="UNSPECIFIED_ORIENTATION",
+    propUValue=0.26,
+    purlinSpacing=0,
+    roofInsulType=None,
+    highAlbedoRoofReqType="HA_ROOF_EXEMPTION_VEGETATED",
+    solarReflectance=0,
+    solarReflectanceIndex=0,
+    thermalEmittance=0,
+)
+
+SAMPEL_SKYLIGHT = Skylight(
+    bldgUseKey=SAMPLE_ROOF.bldgUseKey,
+    adjacentSpaceType=None,
+    altExemptType=None,
+    assemblyType="Skylight:Skylight",
+    curbType="NO_CURB_SKYLIGHT",
+    description="",
+    frameType="METAL",
+    glazingType="DOUBLE_PANE_LOWE",
+    grossArea=100,
+    orientation="UNSPECIFIED_ORIENTATION",
+    preAltPropShgc=0,
+    productType=None,
+    propProjectionFactor=0,
+    propShgc=0.6,
+    propUValue=0.55,
+    solarType="TINTED",
+    propVt=0,
+    allowanceType=None,
+    exemptionType=None,
+    constructionType=None,
+    glazingMaterialType="GLASS_GLAZING_MAT",
+    perfDataType="PERF_TYPE_DEFAULT",
+    productId=None,
+    isSiteShading=None,
+)
