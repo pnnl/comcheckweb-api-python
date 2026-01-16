@@ -1,4 +1,4 @@
-from comcheck_api.schemas.custom_base_model import CustomBaseModel
+from comcheck_api.types.custom_base_model import CustomBaseModel
 from comcheck_api.types.core_types import ComBuilding
 from comcheck_api.managers.data_manager import get_model_info
 from comcheck_api.utilities.project_utilities import find_component_in_component_list, get_id_from_component

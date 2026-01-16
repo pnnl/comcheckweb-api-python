@@ -5,9 +5,9 @@ and return either Pydantic models, primitives, or raw dicts depending on the ope
 
 from typing import Any, Dict, List, Literal, Optional, Union, overload
 
-from comcheck_api.api.api_services import COMCheckApiService
+from comcheck_api.api import COMCheckApiService
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
-from comcheck_api.types.core_types import ComBuilding
+from comcheck_api.types.core_types import ComBuilding, InteriorLightingSpace
 
 Mode = Literal["python", "json"]
 
@@ -82,11 +82,7 @@ class COMcheckClient:
                 )
             }
 
-        if data is None:
-            return None
-        if mode == "python":
-            return ComBuilding(**data)
-        return data
+        return self._parse_data(data, mode)
 
     def list_projects(self) -> Dict[str, Any]:
         """Get a list of all projects.
@@ -98,7 +94,7 @@ class COMcheckClient:
 
     # TODO: return of update_project should be ComBuilding
     def update_project(
-        self, project_id: str, project_data: ComBuilding
+        self, project_id: str, project_data: ComBuilding, mode: Literal["python", "json"] = "python",
     ) -> Dict[str, Any]:
         """Update a project by ID.
 
@@ -182,7 +178,18 @@ class COMcheckClient:
                                         ):
                                             nested.pop("id", None)
 
-        data = self._service.update_project(project_id, project_data_json).get("data")
+        self._service.update_project(project_id, project_data_json).get("data")
+
+        # It's necessary that we call return get_project instead of what's returned from
+        # the service's update project due to interiorLightingSpace not being updated correctly
+        # when returned from the update call
+        return self.get_project(project_id=project_id, mode=mode)
+    
+    def _parse_data(self, data, mode):
+        if data is None:
+            return None
+        if mode == "python":
+            return ComBuilding(**data)
         return data
 
     def start_run_simulation(

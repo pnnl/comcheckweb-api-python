@@ -1,5 +1,5 @@
 from typing import List
-from comcheck_api.schemas.custom_base_model import CustomBaseModel
+from comcheck_api.types.custom_base_model import CustomBaseModel
 from comcheck_api.types.core_types import ComBuilding
 from comcheck_api.managers.data_manager import DataManager, get_model_info
 
