@@ -1,6 +1,6 @@
 """Tests for FloorListManager."""
 
-from comcheck_api.components.envelope.floor import FloorListManager
+from comcheck_api.managers.components.envelope.floor import FloorListManager
 
 
 def test_initialization_with_provided_data(floor):

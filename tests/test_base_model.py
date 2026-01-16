@@ -4,13 +4,13 @@ from unittest.mock import patch
 from pydantic import ValidationError
 import pytest
 
-from comcheck_api.schemas.custom_base_model import CustomBaseModel
-from comcheck_api.utilities.data_manager import DataManager, IdInfo
+from comcheck_api.types.custom_base_model import CustomBaseModel
+from comcheck_api.managers.data_manager import DataManager, IdInfo
 from tests.conftest import SampleParentModel, SampleChildModel, create_sample_child, create_sample_parent
 
 @pytest.fixture
 def child_data_manager():
-    with patch("comcheck_api.utilities.data_manager.get_model_info", return_value=IdInfo(identifier="id", id_prefix="Child:Child")):
+    with patch("comcheck_api.managers.data_manager.get_model_info", return_value=IdInfo(identifier="id", id_prefix="Child:Child")):
         yield DataManager[SampleChildModel](model_type=SampleChildModel)
 
 def test_append_model_subcomponent_adds_item(parent: SampleParentModel, child: SampleChildModel, child_data_manager: DataManager):

@@ -5,7 +5,7 @@ import os
 import pytest
 from dotenv import load_dotenv
 
-from comcheck_api.comcheck_client import COMcheckClient
+from comcheck_api.client import COMcheckClient
 
 # Load environment variables
 load_dotenv()
