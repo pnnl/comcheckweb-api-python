@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 import pytest
 
-from comcheck_api.schemas.custom_base_model import CustomBaseModel
+from comcheck_api.types.custom_base_model import CustomBaseModel
 from comcheck_api.utilities.id_registry import reset_registry
 
 load_dotenv()
@@ -23,6 +23,14 @@ def reset_id_registry_before_test(request):
     else:
         reset_registry()
         yield
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--integration",
+        action="store_true",
+        default=False,
+        help="Run integration tests (enable apply_and_reload)",
+    )
 
 class SampleChildModel(CustomBaseModel):
     _identifier: str = "id"

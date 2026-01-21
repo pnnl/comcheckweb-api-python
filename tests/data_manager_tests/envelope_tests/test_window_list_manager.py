@@ -1,6 +1,6 @@
 """Tests for WindowListManager."""
 
-from comcheck_api.components.envelope.window import WindowListManager
+from comcheck_api.managers.components.envelope.window import WindowListManager
 
 class TestWindowListManager:
     """Test suite for WindowListManager."""

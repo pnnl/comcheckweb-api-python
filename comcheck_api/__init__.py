@@ -1,13 +1,13 @@
 """COMcheckWeb API package.
 
 Example:
-    from comcheckweb.comcheck_client import COMcheckClient
+    from comcheckweb.client import COMcheckClient
     from comcheckweb.project_operations import (
         project_building_area_operations,
         project_envelope_operations,
     )
     from comcheckweb.utilities import export_to_json
-    from comcheckweb.get_project_default import (
+    from comcheckweb.utilities.get_project_default import (
         get_default_ag_wall_template,
         get_default_building_area_template,
     )
@@ -15,10 +15,10 @@ Example:
 """
 
 # COMcheck API Client
-from .comcheck_client import COMcheckClient
+from .client import COMcheckClient
 
 # Project Defaults
-from . import get_project_default
+from .utilities import get_project_default
 
 # Project Operations
 from .project_operations import (

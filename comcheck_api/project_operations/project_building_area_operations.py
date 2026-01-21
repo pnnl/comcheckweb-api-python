@@ -2,7 +2,6 @@
 
 from typing import Any
 
-from comcheck_api.components.building_area import BuildingAreaListManager
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
 from comcheck_api.types.core_types import ComBuilding, WholeBldgUse
 
@@ -54,11 +53,7 @@ def update_building_area_in_project(
 
     updated_project = project.model_copy(deep=True)
 
-    manager = BuildingAreaListManager(updated_project.lighting.wholeBldgUse)
-    manager.modify_one(building_area_key, updates)
-
-    # Reassign the modified list back to the project
-    updated_project.lighting.wholeBldgUse = manager.get_all()
+    updated_project.lighting.update_subcomponent_list(subcomponent_updates=updates, subcomponent_id=building_area_key, subcomponent_name="wholeBldgUse")
 
     return updated_project
 

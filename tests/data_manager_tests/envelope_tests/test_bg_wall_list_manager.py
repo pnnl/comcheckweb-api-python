@@ -1,7 +1,7 @@
 """Tests for BgWallListManager."""
 from copy import deepcopy
 
-from comcheck_api.components.envelope.bg_wall import BgWallListManager
+from comcheck_api.managers.components.envelope.bg_wall import BgWallListManager
 from comcheck_api.types.core_types import *
 
 def test_initialization_with_provided_data(bg_wall: BgWall):

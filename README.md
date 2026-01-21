@@ -38,19 +38,19 @@ Clone the repository and follow the commands below to set up developer tooling.
 	`uv run pre-commit install`
 
 - Fetch the latest COMcheck schema and regenerate types:
-	`./fetch_comcheck_schema.sh`
+	`./tools/fetch_comcheck_schema.sh`
 
 - Regenerate types from existing schema (without fetching):
-	`uv run comcheck_api/schemas/schema_generate.py`
+	`uv run tools/generate_core_types.py`
 
-- Run a script from `scripts/`:
-	`uv run scripts/<script>`
+- Run a file from `examples/`:
+	`uv run examples/<script>`
 
 - Run tests:
 	`uv run pytest`
 
 - Format the repository with Black:
-	`uv run black comcheck_api tests scripts`
+	`uv run black comcheck_api tests examples`
 
 - Run type checking:
 	`uv run mypy comcheck_api`
