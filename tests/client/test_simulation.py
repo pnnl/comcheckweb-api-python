@@ -5,7 +5,7 @@
 # from comcheck_api.client import COMcheckClient
 # from comcheck_api.constants.common_constants import PROJECT_TEMPLATE
 # from comcheck_api.types.core_types import EnergyCodeOptions
-# from fixtures.components import SAMPLE_BUILDING_AREA, SAMPLE_PROJECT_ENVELOPE
+# from pytest_fixtures.components import SAMPLE_BUILDING_AREA, SAMPLE_PROJECT_ENVELOPE
 
 
 # @pytest.fixture
