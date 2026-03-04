@@ -1,9 +1,9 @@
-from typing import List, Optional
+from typing import List
 from pydantic import Field
 from .core_types import *
 
 class BgWallMinimalMixin:
-	description: Optional[str] = Field(
+	description: str | None = Field(
 		'Default Description',
 		description='The name of the component',
 	)
@@ -43,11 +43,11 @@ class BgWallMinimalMixin:
 		0.0,
 		description='Total height of a below grade wall',
 	)
-	adjacentSpaceType: Optional[AdjacentSpaceTypeOptions] = Field(
+	adjacentSpaceType: AdjacentSpaceTypeOptions | None = Field(
 		None,
 		description='Space type of the adjacent space',
 	)
-	insulationPosition: Optional[str] = Field(
+	insulationPosition: str | None = Field(
 		None,
 		description='Not sure why basement has this data, likely deprecated. Use null',
 	)
@@ -55,11 +55,11 @@ class BgWallMinimalMixin:
 		0.0,
 		description='heat capacity of a mass wall. Used in other mass wall type',
 	)
-	cmuType: Optional[CMUTypeOptions] = Field(
+	cmuType: CMUTypeOptions | None = Field(
 		None,
 		description='CMU type',
 	)
-	allowanceType: Optional[EnvelopeAssemblyAllowanceTypeOptions] = Field(
+	allowanceType: EnvelopeAssemblyAllowanceTypeOptions | None = Field(
 		None,
 		description='allowance type',
 	)
@@ -67,10 +67,10 @@ class BgWallMinimalMixin:
 		...,
 		description='gross area',
 	)
-	orientation: OrientationOptions = Field(
+	orientation: Orientation = Field(
 		...,
 	)
-	wallType: Optional[BgWallTypeOptions] = Field(
+	wallType: BgWallTypeOptions | None = Field(
 		...,
 		description='Below grade wall type',
 	)
@@ -78,7 +78,7 @@ class BgWallMinimalMixin:
 		...,
 		description='Average insulation R-value in the cavity between two studs.',
 	)
-	continuousRValue: Optional[float] = Field(
+	continuousRValue: float | None = Field(
 		...,
 		description='Continuous insulation on the below grade wall. Can be exterior or interior or both.',
 	)

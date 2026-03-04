@@ -1,4 +1,4 @@
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 
 from comcheck_api.types.core_types import *
 from pydantic import BaseModel

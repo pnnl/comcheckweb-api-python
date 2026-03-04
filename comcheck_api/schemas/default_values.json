@@ -1,0 +1,18 @@
+{
+  "BgWall.id": 1,
+  "BgWall.description": "Default Description",
+  "BgWall.assemblyType": "Basement:Default Basement",
+  "BgWall.window": [],
+  "BgWall.door": [],
+  "BgWall.propUValue": 0.0,
+  "BgWall.concreteThickness": 0.0,
+  "BgWall.concreteDensity": 0.0,
+  "BgWall.wallHeightBelowGrade": 0.0,
+  "BgWall.bldgUseKey": "0",
+  "BgWall.wallHeight": 0.0,
+  "BgWall.adjacentSpaceType": null,
+  "BgWall.insulationPosition": null,
+  "BgWall.heatCapacity": 0.0,
+  "BgWall.cmuType": null,
+  "BgWall.allowanceType": null
+}

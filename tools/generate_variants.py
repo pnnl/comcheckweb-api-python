@@ -1,9 +1,10 @@
+import types
 from typing import Annotated, Any, Union, get_args, get_origin
 import typing
 import yaml
 import inspect
 from pathlib import Path
-from comcheck_api.schemas.custom_base_model import CustomBaseModel
+from comcheck_api.types.custom_base_model import CustomBaseModel
 from pydantic import BaseModel
 from comcheck_api.types import core_types
 
@@ -91,30 +92,39 @@ def generate():
 
 
 def format_annotation(ann: Any) -> str:
+    if ann is type(None):
+        return "None"
+    
     origin = get_origin(ann)
 
     # Handle Annotated[T, ...] by collapsing it to T
     if origin is Annotated:
-        # Annotated[T, *meta]
         args = get_args(ann)
         inner = args[0]
         return format_annotation(inner)
 
+    # Handle Python 3.10+ union types (X | Y)
+    if origin is types.UnionType:
+        args = get_args(ann)
+        # Format as T | U | V
+        parts = [format_annotation(a) for a in args]
+        # We don't add "Optional" or "Union" to used_typing here because this is native union syntax
+        return " | ".join(parts)
+
     if origin is not None:
         args = get_args(ann)
 
-        # Optional[T] is Union[T, NoneType]
         if origin is Union:
+            args = get_args(ann)
+            parts = [format_annotation(a) for a in args]
+            # If it's Optional-like, format as T | None
             if len(args) == 2 and type(None) in args:
-                used_typing.add("Optional")
                 other = next(a for a in args if a is not type(None))
-                return f"Optional[{format_annotation(other)}]"
-            used_typing.add("Union")
-            inner = ", ".join(format_annotation(a) for a in args)
-            return f"Union[{inner}]"
+                return f"{format_annotation(other)} | None"
+            # General Union fallback
+            return " | ".join(parts)
 
-        origin_name = origin.__name__  # e.g. list, dict, etc.
-        # Normalize to capitalized typing names if you want (List, Dict)
+        origin_name = origin.__name__
         origin_name = {"list": "List", "dict": "Dict"}.get(origin_name, origin_name)
         used_typing.add(origin_name)
         if args:
@@ -138,6 +148,7 @@ def format_annotation(ann: Any) -> str:
     r = repr(ann)
     if r.startswith("typing."):
         r = r.replace("typing.", "")
+
     return r
 
 if __name__ == "__main__":

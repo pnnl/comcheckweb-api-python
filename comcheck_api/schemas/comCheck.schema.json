@@ -1407,7 +1407,8 @@
                     "description": "The type of the component",
                     "type": "string",
                     "default": "Door",
-                    "$comment": "This shall always be 'Door'"
+                    "$comment": "This shall always be 'Door'",
+                    "x-alias": "Hey"
                 },
                 "adjacentSpaceType": {
                     "description": "Space type of the adjacent space",

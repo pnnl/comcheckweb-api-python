@@ -48,6 +48,10 @@ class CustomBaseModel(BaseModel, metaclass=CustomBaseModelMeta):
     """
     _identifier: str = "id"
 
+    def model_dump(self, **kwargs):
+        kwargs.setdefault("by_alias", True)
+        return super().model_dump(**kwargs)
+
     def append_subcomponent(
         self,
         subcomponent: S | dict,

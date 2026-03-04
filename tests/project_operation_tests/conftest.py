@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 import os
-from typing import Callable
+from typing import Callable, Optional
 import uuid
 
 import pytest

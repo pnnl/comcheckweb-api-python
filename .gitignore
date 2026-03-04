@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.mypy_cache
 
 # C extensions
 *.so
@@ -53,3 +54,4 @@ htmlcov/
 
 .env
 testprojectJson/
+exampleProjectJson/
