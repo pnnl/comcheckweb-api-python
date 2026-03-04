@@ -24,8 +24,18 @@ client = COMcheckClient()
 client.set_api_key(api_key)
 
 
-def test_get_project_and_project_list_json():
-    """Test getting project list and first project details as JSON."""
+def test_list_projects():
+    """Test getting project list."""
+    try:
+        projects = client.list_projects()
+        return projects
+    except Exception as err:
+        print(f"Error in test_list_projects: {err}")
+        return None
+
+
+def test_get_first_project_json():
+    """Test getting first project details as JSON."""
     try:
         projects = client.list_projects()
         if projects and (project_id := projects[0].get("_id")):
@@ -34,12 +44,12 @@ def test_get_project_and_project_list_json():
             return project
         return None
     except Exception as err:
-        print(f"Error in test_get_project_and_project_list_json: {err}")
+        print(f"Error in test_get_first_project_json: {err}")
         return None
 
 
-def test_get_project_and_project_list_python():
-    """Test getting project list and first project details as Python objects."""
+def test_get_first_project_python():
+    """Test getting first project details as Python objects."""
     try:
         projects = client.list_projects()
         if projects and (project_id := projects[0].get("_id")):
@@ -48,7 +58,7 @@ def test_get_project_and_project_list_python():
             return project
         return None
     except Exception as err:
-        print(f"Error in test_get_project_and_project_list_python: {err}")
+        print(f"Error in test_get_first_project_python: {err}")
         return None
 
 
@@ -69,8 +79,18 @@ def main(test_number: int | None = None):
     print("=" * 80)
 
     def run_test_1():
-        print("\n1. Testing list_projects() and get_project() with JSON mode...")
-        project_json = test_get_project_and_project_list_json()
+        print("\n1. Testing list_projects()...")
+        projects = test_list_projects()
+        if projects is not None:
+            print(f"✓ Successfully retrieved project list: {projects}")
+            return True
+        else:
+            print("✗ Failed to retrieve project list")
+            return False
+
+    def run_test_2():
+        print("\n2. Testing get_project() with JSON mode...")
+        project_json = test_get_first_project_json()
         if project_json:
             print("✓ Successfully retrieved project as JSON")
             export_to_json(project_json, "testProjectJson/api_test_project_json.json")
@@ -79,9 +99,9 @@ def main(test_number: int | None = None):
             print("✗ Failed to retrieve project as JSON")
             return False
 
-    def run_test_2():
-        print("\n2. Testing list_projects() and get_project() with Python mode...")
-        project_python = test_get_project_and_project_list_python()
+    def run_test_3():
+        print("\n3. Testing get_project() with Python mode...")
+        project_python = test_get_first_project_python()
         if project_python:
             print("✓ Successfully retrieved project as Python object")
             print(f"   Project name: {getattr(project_python, 'projectName', 'N/A')}")
@@ -91,11 +111,11 @@ def main(test_number: int | None = None):
             print("✗ Failed to retrieve project as Python object")
             return False
 
-    def run_test_3():
-        print("\n3. Testing update_project() with default template...")
+    def run_test_4():
+        print("\n4. Testing update_project() with default template...")
         try:
             projects = client.list_projects()
-            if projects and (project_id := projects[0].get("_id")):
+            if projects and (project_id := projects[2].get("_id")):
                 default_project = test_update_project_with_default_dummy_project(
                     project_id
                 )
@@ -116,9 +136,10 @@ def main(test_number: int | None = None):
             return False
 
     tests = {
-        1: ("List projects JSON mode", run_test_1),
-        2: ("List projects Python mode", run_test_2),
-        3: ("Update project with default template", run_test_3),
+        1: ("List projects", run_test_1),
+        2: ("Get first project (JSON mode)", run_test_2),
+        3: ("Get first project (Python mode)", run_test_3),
+        4: ("Update project with default template", run_test_4),
     }
 
     if test_number is not None:

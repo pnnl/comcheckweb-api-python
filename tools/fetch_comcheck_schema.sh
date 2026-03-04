@@ -27,4 +27,4 @@ echo "Saved $OUT"
 # Generate TypedDict types from the schema
 echo "Generating TypedDict types..."
 cd "$OLDPWD"
-uv run comcheck_api/schemas/generate_core_types.py
+uv run tools/generate_core_types.py
