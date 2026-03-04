@@ -49,6 +49,11 @@
                     "default": false,
                     "$comment": "true: semiheated conditioning, false: not semiheated conditioning."
                 },
+                "isHistoricBuilding": {
+                    "description": "Flag to indicate if the building is historic.",
+                    "type": "boolean",
+                    "default": false
+                },
                 "performanceRating": {
                     "description": "Appendix C compliance index",
                     "type": ["number", "null"],
@@ -3303,7 +3308,14 @@
                 },
                 "compliancePath": {
                     "description": "Compliance path",
-                    "$ref": "comCheck.schema.json#/definitions/CompliancePathOptions"
+                    "anyOf": [
+                        {
+                            "$ref": "comCheck.schema.json#/definitions/CompliancePathOptions"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "efficiencyRequirementException": {
                     "description": "Natural gas boiler efficiency requirement exceptions",

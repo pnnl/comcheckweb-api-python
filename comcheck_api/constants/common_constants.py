@@ -27,7 +27,7 @@ PROJECT_TEMPLATE = ComBuilding(
             "airBarrierComplianceType": "AIR_BARRIER_OPTION_UNKNOWN",
         },
         "project": {
-            "projectTitle": "Demo Project",
+            "projectTitle": "Default Project",
             "projectPermitNumber": "",
             "projectPermitDate": "",
             "projectTaxMap": None,
@@ -86,6 +86,7 @@ PROJECT_TEMPLATE = ComBuilding(
         "isNonresidentialConditioning": True,
         "isResidentialConditioning": False,
         "isSemiheatedConditioning": False,
+        "isHistoricBuilding": False,
         "feetBldgHeight": None,
         "constructionType": "NONE",
         "projectType": "NEW_CONSTRUCTION",

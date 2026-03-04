@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 import os
-from typing import Callable
+from typing import Callable, Optional
 import uuid
 
 import pytest
@@ -9,7 +9,12 @@ from comcheck_api.client import COMcheckClient
 from comcheck_api.utilities.common import export_to_json
 from comcheck_api.types.core_types import *
 from comcheck_api.utilities.project_utilities import get_id_from_component
-from tests.project_operation_tests.assertions.components import assert_component_added, assert_component_removed, assert_component_updated
+from tests.project_operation_tests.assertions.components import (
+    assert_component_added,
+    assert_component_removed,
+    assert_component_updated,
+)
+
 
 @pytest.fixture(scope="session")
 def api_key() -> str:
@@ -37,6 +42,7 @@ def project_id(client: COMcheckClient) -> str:
     export_to_json(test_project_json, "testProjectJson/initialProject.json")
     return project_id
 
+
 @pytest.fixture(scope="session")
 def project(client: COMcheckClient, project_id: str):
     project = client.get_project(project_id)
@@ -56,6 +62,7 @@ def maybe_apply_and_reload(request, monkeypatch):
             lambda client, project: project,
         )
 
+
 @dataclass
 class ComponentOperationConfig:
     name: str
@@ -64,26 +71,33 @@ class ComponentOperationConfig:
     add_component_to_project: Callable[[Any, str, Any], Any]
     update_component_in_project: Callable[[Any, str, dict], Any]
     remove_component_from_project: Callable[[Any, str, dict], Any]
-    updates: dict = field(default_factory=lambda: {"description": f"Description {str(uuid.uuid4())}"})
+    updates: dict = field(
+        default_factory=lambda: {"description": f"Description {str(uuid.uuid4())}"}
+    )
+
 
 def get_building_area_key(project) -> str:
     whole_bldg_use = project.get_by_path("lighting.wholeBldgUse", [])
     assert whole_bldg_use, "No wholeBldgUse found"
     return whole_bldg_use[-1].key
 
+
 def apply_and_reload(client: COMcheckClient, project: ComBuilding) -> ComBuilding:
     project_id = getattr(project, "id", None)
     assert project_id, "No project id found"
     return client.update_project(project_id, project)
 
+
 def get_parent_and_child_list(config: ComponentOperationConfig, project: ComBuilding):
     parent_path, child_name = config.path.rsplit(".", 1)
-    
+
     parent = project.get_by_path(parent_path)
     assert parent, f"No parent assembly at '{parent_path}'"
-    
+
     child_list = parent.get_by_path(child_name)
-    assert isinstance(child_list, list), f"Expected child at '{config.path}' to be a list"
+    assert isinstance(
+        child_list, list
+    ), f"Expected child at '{config.path}' to be a list"
 
     return parent, child_list
 
@@ -156,6 +170,7 @@ def run_flat_assembly_lifecycle(
         component_id=target_id,
         component_name=config.name,
     )
+
 
 def run_nested_assembly_lifecycle(
     *,
