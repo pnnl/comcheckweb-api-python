@@ -102,7 +102,7 @@ def test_update_building_area(test_project_id: str):
 # ========== Main Test Runner ==========
 
 
-def main():
+def main(test_number: int | None = None):
     """Main test execution function - runs building area integration tests."""
     print("=" * 80)
     print("Building Area Operations Integration Tests")
@@ -120,32 +120,73 @@ def main():
     print(f"\n✓ Using project ID: {project_id}")
     print(f"  Exported initial state to: testProjectJson/initialProject.json\n")
 
-    # Building Area Tests
-    print("-" * 80)
-    print("BUILDING AREA OPERATIONS")
-    print("-" * 80)
+    failed_tests = []
 
-    print("\n1. Adding building area...")
-    building_area_project = test_add_building_area(project_id)
-    if building_area_project:
-        export_to_json(
-            building_area_project, "testProjectJson/buildingAreaAddedProject.json"
-        )
-        print("   ✓ Building area added")
-
-    print("\n2. Updating building area...")
-    updated_building_area_project = test_update_building_area(project_id)
-    if updated_building_area_project:
-        export_to_json(
-            updated_building_area_project,
+    tests = {
+        1: (
+            "Adding building area",
+            lambda: test_add_building_area(project_id),
+            "testProjectJson/buildingAreaAddedProject.json",
+            "Building area added",
+        ),
+        2: (
+            "Updating building area",
+            lambda: test_update_building_area(project_id),
             "testProjectJson/buildingAreaUpdatedProject.json",
-        )
-        print("   ✓ Building area updated")
+            "Building area updated",
+        ),
+    }
+
+    # Determine which tests to run
+    if test_number is not None:
+        if test_number not in tests:
+            print(f"✗ Invalid test number: {test_number}")
+            print(f"Valid test numbers are 1-{len(tests)}")
+            return
+        tests_to_run = {test_number: tests[test_number]}
+        print(f"\nRunning single test: #{test_number}")
+    else:
+        tests_to_run = tests
+
+    # Building Area Tests
+    if test_number is None:
+        print("-" * 80)
+        print("BUILDING AREA OPERATIONS")
+        print("-" * 80)
+
+    for num, (test_name, test_func, output_file, success_msg) in tests_to_run.items():
+        print(f"\n{num}. {test_name}...")
+        result = test_func()
+        if result:
+            export_to_json(result, output_file)
+            print(f"   ✓ {success_msg}")
+        else:
+            failed_tests.append(test_name)
 
     print("\n" + "=" * 80)
     print("Building Area Tests Complete")
+
+    # Print summary of failed tests
+    if failed_tests:
+        print(f"\n✗ {len(failed_tests)} test(s) failed:")
+        for test_name in failed_tests:
+            print(f"  - {test_name}")
+    else:
+        print("\n✓ All tests passed!")
     print("=" * 80)
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    # Check if test number is provided as command line argument
+    test_num = None
+    if len(sys.argv) > 1:
+        try:
+            test_num = int(sys.argv[1])
+        except ValueError:
+            print(f"Error: '{sys.argv[1]}' is not a valid test number")
+            sys.exit(1)
+
+    # if test_num is provided, run only that test; otherwise run all tests
+    main(test_num)
