@@ -197,14 +197,9 @@ class COMcheckClient:
         return data
     
     def get_assemblies_u_values(
-        self, code_version: str, project: ComBuilding, assembly_types: Iterable[str]
+        self, code_version: str, payload,
     ) -> Dict[str, Any]:
         """Convenience method for retrieving U values for assemblies"""
-        objects = find_objects_by_ids(project, assembly_types, "assemblyType")
-        payload = AssembliesUValuesArgs(
-            agWall = [AgWallAssembliesUValuesArgs(obj) for obj in objects if isinstance(obj, AgWall)],
-            bgWall = [BgWallAssembliesUValuesArgs(obj) for obj in objects if isinstance(obj, BgWall)],
-        )
         return self._service.get_assemblies_u_values(
             code_version=code_version, payload=payload,
         )

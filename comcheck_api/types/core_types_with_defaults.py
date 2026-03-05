@@ -3817,3 +3817,5 @@ class ComBuilding(CustomBaseModel):
     requirements: list[Requirements] | None = Field(
         None, description='Requirements', min_length=0
     )
+
+    
