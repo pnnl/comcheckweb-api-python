@@ -146,6 +146,28 @@ class COMCheckApiService:
             self._handle_api_error(error)
             raise
 
+    def compliance(self, project_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Check compliance for a given project.
+
+        Args:
+            project_data: The project data to check compliance
+
+        Returns:
+            API response data as dictionary
+
+        Raises:
+            httpx.HTTPStatusError: If the API returns an error status
+            httpx.RequestError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post("/compliance", json=project_data)
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+            raise
+
     def start_run_simulation(
         self, project_data: Dict[str, Any]
     ) -> RunSimulationResponse:

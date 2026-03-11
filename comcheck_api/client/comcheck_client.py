@@ -94,7 +94,10 @@ class COMcheckClient:
 
     # TODO: return of update_project should be ComBuilding
     def update_project(
-        self, project_id: str, project_data: ComBuilding, mode: Literal["python", "json"] = "python",
+        self,
+        project_id: str,
+        project_data: ComBuilding,
+        mode: Literal["python", "json"] = "python",
     ) -> Dict[str, Any]:
         """Update a project by ID.
 
@@ -184,7 +187,7 @@ class COMcheckClient:
         # the service's update project due to interiorLightingSpace not being updated correctly
         # when returned from the update call
         return self.get_project(project_id=project_id, mode=mode)
-    
+
     def _parse_data(self, data, mode):
         if data is None:
             return None
@@ -203,6 +206,29 @@ class COMcheckClient:
         Returns:
             Simulation session ID
         """
+
+        # Verify the energy code
+
+        # Before start a simulation, need to check the validation, which is handled by compliance api, and also, need to verify the energy code.
+        compliance_result = self._service.compliance(
+            project.model_dump(mode="json", exclude_unset=True)
+        )
+        compliance_data = compliance_result.get("data", {})
+        status_keys = [
+            "envelopeStatus",
+            "interiorLightingStatus",
+            "exteriorLightingStatus",
+            "renewableStatus",
+            "energyCreditStatus",
+        ]
+        status_messages = [
+            compliance_data[key]["statusMessage"]
+            for key in status_keys
+            if compliance_data.get(key, {}).get("statusMessage") is not None
+        ]
+        if status_messages:
+            raise ValueError("\n".join(status_messages))
+
         if project_id:
             print("Updating project:", project_id)
             self.update_project(str(project_id), project)
@@ -218,7 +244,7 @@ class COMcheckClient:
             session_id: The simulation session ID
 
         Returns:
-            Simulation status information
+            Simulation status information: {sessionId, status, message}
         """
         return self._service.get_simulation_status(session_id).data
 
@@ -229,7 +255,7 @@ class COMcheckClient:
             session_id: The simulation session ID
 
         Returns:
-            Simulation result information
+            Simulation result information: {sessionId, performanceRating, energyCreditPerformanceRating, proposedBpf, baselineBpf}
         """
         return self._service.get_simulation_result(session_id).data
 
