@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Literal, Optional, Union, overload
 
 from comcheck_api.api import COMCheckApiService
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
+from comcheck_api.types.api_types import SimulationResultInfo, StatusInfo
 from comcheck_api.types.core_types import ComBuilding, InteriorLightingSpace
 
 Mode = Literal["python", "json"]
@@ -75,7 +76,8 @@ class COMcheckClient:
     ) -> Optional[Union["ComBuilding", Dict[str, Any]]]:
         resp = self._service.get_project(project_id)
         data = resp.get("data")
-        for building_area in data["lighting"]["wholeBldgUse"]:
+        # Ensure each building area has interiorLightingSpace initialized
+        for building_area in data["lighting"]["wholeBldgUse"]:  # type: ignore[index]
             building_area["interiorLightingSpace"] = {
                 **DEFAULT_BUILDING_AREA.interiorLightingSpace.model_dump(
                     mode="json", exclude_unset=True
@@ -92,13 +94,12 @@ class COMcheckClient:
         """
         return self._service.get_project_list().get("data", {})
 
-    # TODO: return of update_project should be ComBuilding
     def update_project(
         self,
         project_id: str,
         project_data: ComBuilding,
         mode: Literal["python", "json"] = "python",
-    ) -> Dict[str, Any]:
+    ) -> ComBuilding | dict[str, Any] | None:
         """Update a project by ID.
 
         Args:
@@ -234,10 +235,12 @@ class COMcheckClient:
             self.update_project(str(project_id), project)
 
         project_data = project.model_dump(mode="json", exclude_unset=True)
-        run_result = self._service.start_run_simulation(project_data)
-        return run_result.data["sessionId"]
+        run_result = self._service.start_run_simulation(project_data).data
+        if run_result is None:
+            raise RuntimeError("Failed to start simulation: no session data returned.")
+        return run_result.sessionId
 
-    def get_simulation_status(self, session_id: str) -> Dict[str, Any]:
+    def get_simulation_status(self, session_id: str) -> StatusInfo:
         """Get the status of a simulation run by session ID.
 
         Args:
@@ -246,9 +249,14 @@ class COMcheckClient:
         Returns:
             Simulation status information: {sessionId, status, message}
         """
-        return self._service.get_simulation_status(session_id).data
+        result = self._service.get_simulation_status(session_id).data
+        if result is None:
+            raise RuntimeError(
+                f"Failed to get simulation status for session '{session_id}'."
+            )
+        return result
 
-    def get_simulation_result(self, session_id: str) -> Dict[str, Any]:
+    def get_simulation_result(self, session_id: str) -> SimulationResultInfo:
         """Get the result of a simulation run by session ID.
 
         Args:
@@ -257,7 +265,12 @@ class COMcheckClient:
         Returns:
             Simulation result information: {sessionId, performanceRating, energyCreditPerformanceRating, proposedBpf, baselineBpf}
         """
-        return self._service.get_simulation_result(session_id).data
+        result = self._service.get_simulation_result(session_id).data
+        if result is None:
+            raise RuntimeError(
+                f"Failed to get simulation result for session '{session_id}'."
+            )
+        return result
 
     def close(self) -> None:
         """Close the API service connection."""
