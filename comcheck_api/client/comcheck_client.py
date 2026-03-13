@@ -208,9 +208,8 @@ class COMcheckClient:
             Simulation session ID
         """
 
-        # Verify the energy code
-
-        # Before start a simulation, need to check the validation, which is handled by compliance api, and also, need to verify the energy code.
+        # 1. The energy code verification is handled by the start_run_simulation method
+        # 2. Before start a simulation, need to check the validation, which is handled by compliance api, and also, need to verify the energy code.
         compliance_result = self._service.compliance(
             project.model_dump(mode="json", exclude_unset=True)
         )
