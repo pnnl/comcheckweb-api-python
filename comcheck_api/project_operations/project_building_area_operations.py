@@ -76,3 +76,20 @@ def remove_building_area_from_project(
     updated_project.lighting.remove_from_subcomponent_list(subcomponent_id=building_area_key, subcomponent_name="wholeBldgUse")
 
     return updated_project
+
+def fetch_building_area_keys_from_project(project: ComBuilding) -> list:
+    whole_use = project.get_by_path("lighting.wholeBldgUse")
+
+    if not isinstance(whole_use, list):
+        raise ValueError("No building area (wholeBldgUse) found in project.")
+
+    whole_bldg_use_list = [
+        {"key": getattr(area, "key"), "areaDescription": getattr(area, "areaDescription")}
+        for area in whole_use
+        if getattr(area, "key", None) is not None and getattr(area, "areaDescription", None) is not None
+    ]
+
+    if not whole_bldg_use_list:
+        raise ValueError("No valid building areas with keys and descriptions found.")
+
+    return whole_bldg_use_list
