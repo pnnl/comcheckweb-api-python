@@ -19,9 +19,6 @@ dependencies = [
 [tool.hatch.build.targets.wheel]
 packages = ["comcheck_api"]
 
-[tool.uv.workspace]
-members = []
-
 [tool.uv.sources]
 
 [dependency-groups]
