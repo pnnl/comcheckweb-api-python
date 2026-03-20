@@ -77,19 +77,31 @@ def remove_building_area_from_project(
 
     return updated_project
 
-def fetch_building_area_keys_from_project(project: ComBuilding) -> list:
+def get_building_area_keys_from_project(project: ComBuilding) -> list[dict]:
+    """
+    Extract valid building area identifiers from a COMcheck project.
+
+    This function retrieves the `lighting.wholeBldgUse` field from the provided
+    project and returns a list of dictionaries containing each area's unique key
+    and description.
+
+    Args:
+        project (ComBuilding): The COMcheck project object.
+
+    Returns:
+        list[dict]: A list of dictionaries with the shape:
+            {
+                "key": <area key>,
+                "areaDescription": <area description>
+            }
+    """
     whole_use = project.get_by_path("lighting.wholeBldgUse")
 
     if not isinstance(whole_use, list):
-        raise ValueError("No building area (wholeBldgUse) found in project.")
+        return []
 
-    whole_bldg_use_list = [
+    return [
         {"key": getattr(area, "key"), "areaDescription": getattr(area, "areaDescription")}
         for area in whole_use
         if getattr(area, "key", None) is not None and getattr(area, "areaDescription", None) is not None
     ]
-
-    if not whole_bldg_use_list:
-        raise ValueError("No valid building areas with keys and descriptions found.")
-
-    return whole_bldg_use_list
