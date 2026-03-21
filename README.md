@@ -1,20 +1,4 @@
-# comcheckweb-api-python
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.pnnl.gov/becp/checktool-libraries/comcheckweb-api-python.git
-# COMcheckWeb API — Python package
+# COMcheckWeb API — Python Package
 
 This repository contains the COMcheckWeb API Python package. It provides tools and scripts for working with the COMcheckWeb API and is intended to be used as a Python package maintained with `uv` for package management.
 
@@ -28,9 +12,15 @@ Quickly useful notes:
 - If you reference this package from other workspace packages, keep the `tool.uv.sources` entry that maps `comcheckweb-api-python = { workspace = true }` so `uv` resolves it to the local workspace copy.
 - For a single-package repo you can also rely on `members = ["."]` and omit additional sources, but leaving the explicit source entry is harmless and makes intent clear.
 
-## Getting started
+## Getting Started
 
 Clone the repository and follow the commands below to set up developer tooling.
+
+```bash
+git clone https://gitlab.pnnl.gov/becp/checktool-libraries/comcheckweb-api-python.git
+cd comcheckweb-api-python
+uv sync
+```
 
 ## Common commands
 
