@@ -1,6 +1,7 @@
-import pytest
+from copy import deepcopy
 
 from comcheck_api.client import COMcheckClient
+from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
 from comcheck_api.project_operations import project_building_area_operations
 from comcheck_api.utilities.get_project_default import (
     get_default_building_area_template,
@@ -10,7 +11,6 @@ from tests.project_operation_tests.conftest import (
     ComponentOperationConfig,
     run_flat_assembly_lifecycle,
 )
-
 
 building_area_config = ComponentOperationConfig(
     name="wholeBldgUse",
@@ -36,3 +36,42 @@ def test_building_area_operations(
         project=project,
         config=building_area_config,
     )
+
+
+def test_get_building_area_keys(project: ComBuilding):
+    project.lighting.wholeBldgUse = [deepcopy(DEFAULT_BUILDING_AREA), deepcopy(DEFAULT_BUILDING_AREA)]
+
+    result = project_building_area_operations.get_building_area_keys_from_project(
+        project
+    )
+
+    assert result == [
+        {
+            "key": DEFAULT_BUILDING_AREA.key,
+            "areaDescription": DEFAULT_BUILDING_AREA.areaDescription,
+        },
+        {
+            "key": DEFAULT_BUILDING_AREA.key,
+            "areaDescription": DEFAULT_BUILDING_AREA.areaDescription,
+        }
+    ]
+
+
+def test_get_building_area_keys_empty(project: ComBuilding):
+    project.lighting.wholeBldgUse = []
+
+    result = project_building_area_operations.get_building_area_keys_from_project(
+        project
+    )
+
+    assert result == []
+
+
+def test_get_building_area_keys_no_lighting(project: ComBuilding):
+    project.lighting = None
+
+    result = project_building_area_operations.get_building_area_keys_from_project(
+        project
+    )
+
+    assert result == []
