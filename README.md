@@ -55,9 +55,18 @@ Clone the repository and follow the commands below to set up developer tooling.
 - Run type checking:
 	`uv run mypy comcheck_api`
 
-## Contributing
+## Support
 
-If you plan to contribute, please run the pre-commit installer, follow the repository style (Black, MyPy where configured), and open merge requests for changes. See `pyproject.toml` for configured dev tools and dependency groups.
+This is a publicly available library maintained by PNNL. While the code is open source and free to use, **external contributions are not accepted** at this time.
+
+### Reporting Issues
+
+If you encounter bugs or have questions:
+- Open an issue on GitHub for bug reports
+- Check the [examples/](examples/) directory for usage guidance
+- Review the [documentation](docs/) for detailed information
+
+**Note:** Issues are welcome, but pull requests from external contributors will not be accepted.
 
 ## License
 
