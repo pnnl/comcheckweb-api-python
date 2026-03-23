@@ -72,7 +72,7 @@ Follow the checklist in [IMPROVEMENTS.md](IMPROVEMENTS.md):
 
 **High Priority (P1):**
 - [ ] Replace `print()` with `logging`
-- [ ] Make `BASE_URL` configurable
+- [x] Make `BASE_URL` configurable
 - [ ] Update README.md
 
 ### Creating a Release

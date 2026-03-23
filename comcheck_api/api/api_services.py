@@ -1,9 +1,10 @@
 """COMCheck API service module for making HTTP requests to the COMCheck API."""
 
-"""Note: Service layer accepts raw data types (dicts) as inputs to stay simple and 
-HTTP-library-friendly, but returns validated Pydantic models to provide type safety 
+"""Note: Service layer accepts raw data types (dicts) as inputs to stay simple and
+HTTP-library-friendly, but returns validated Pydantic models to provide type safety
 and catch API schema mismatches at the boundary."""
 
+import os
 from typing import Any, Dict, Optional
 
 import httpx
@@ -18,13 +19,14 @@ from comcheck_api.types.api_types import (
 class COMCheckApiService:
     """COMCheck API service class for interacting with the COM API."""
 
-    BASE_URL: str = "https://becp-dev.pnl.gov/ahj/COM"  # COM API base URL
-
-    def __init__(self, api_key: str) -> None:
+    def __init__(self, api_key: str, base_url: Optional[str] = None) -> None:
         """Initialize COMCheck API service.
 
         Args:
             api_key: API key for authentication
+            base_url: Optional base URL for the API. If not provided, falls back to
+                     COMCHECK_API_URL environment variable, then defaults to
+                     https://becp-dev.pnl.gov/ahj/COM
 
         Raises:
             ValueError: If API key is not provided
@@ -35,6 +37,9 @@ class COMCheckApiService:
                 "or set it in your environment variables."
             )
         self.api_key = api_key
+        self.base_url = base_url or os.getenv(
+            "COMCHECK_API_URL", "https://becp-dev.pnl.gov/ahj/COM"
+        )
         self._client: Optional[httpx.Client] = None
 
     def _get_client(self) -> httpx.Client:
@@ -45,7 +50,7 @@ class COMCheckApiService:
         """
         if self._client is None:
             self._client = httpx.Client(
-                base_url=self.BASE_URL,
+                base_url=self.base_url,
                 headers=self._prepare_headers(),
                 timeout=30.0,
             )
