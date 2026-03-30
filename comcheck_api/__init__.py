@@ -60,8 +60,10 @@ from .project_operations import (
     project_envelope_operations,
 )
 
-# Submodules for advanced usage
+# Utilities
 from . import utilities
+
+# Types
 from . import types
 
 __all__ = [
@@ -79,7 +81,8 @@ __all__ = [
     # Project Operations
     "project_building_area_operations",
     "project_envelope_operations",
-    # Submodules (for advanced usage)
+    # Utilities
     "utilities",
+    # Types
     "types",
 ]
