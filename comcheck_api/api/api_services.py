@@ -4,6 +4,7 @@
 HTTP-library-friendly, but returns validated Pydantic models to provide type safety
 and catch API schema mismatches at the boundary."""
 
+import logging
 import os
 from typing import Any, Dict, Optional
 
@@ -19,14 +20,11 @@ from comcheck_api.types.api_types import (
 class COMCheckApiService:
     """COMCheck API service class for interacting with the COM API."""
 
-    def __init__(self, api_key: str, base_url: Optional[str] = None) -> None:
+    def __init__(self, api_key: str) -> None:
         """Initialize COMCheck API service.
 
         Args:
             api_key: API key for authentication
-            base_url: Optional base URL for the API. If not provided, falls back to
-                     COMCHECK_API_URL environment variable, then defaults to
-                     https://becp-dev.pnl.gov/ahj/COM
 
         Raises:
             ValueError: If API key is not provided
@@ -37,7 +35,7 @@ class COMCheckApiService:
                 "or set it in your environment variables."
             )
         self.api_key = api_key
-        self.base_url = base_url or os.getenv(
+        self.base_url: str = os.getenv(
             "COMCHECK_API_URL", "https://becp-dev.pnl.gov/ahj/COM"
         )
         self._client: Optional[httpx.Client] = None
@@ -74,16 +72,28 @@ class COMCheckApiService:
         Args:
             error: The error object to handle
         """
+        logger = logging.getLogger(__name__)
+
         if isinstance(error, httpx.HTTPStatusError):
-            print(f"HTTP error occurred: {error}")
-            print(f"Status: {error.response.status_code}")
-            print(f"Response data: {error.response.text}")
-            print(f"Response headers: {error.response.headers}")
+            logger.error(
+                "HTTP error occurred: %s (Status: %s)",
+                error,
+                error.response.status_code,
+                exc_info=True,
+                extra={
+                    "response_data": error.response.text,
+                    "response_headers": dict(error.response.headers),
+                },
+            )
         elif isinstance(error, httpx.RequestError):
-            print(f"Request error occurred: {error}")
-            print(f"Request: {error.request}")
+            logger.error(
+                "Request error occurred: %s",
+                error,
+                exc_info=True,
+                extra={"request": str(error.request)},
+            )
         else:
-            print(f"Unexpected error: {error}")
+            logger.error("Unexpected error: %s", error, exc_info=True)
 
     def get_project(self, project_id: str) -> Dict[str, Any]:
         """Get a single project by ID.

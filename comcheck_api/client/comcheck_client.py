@@ -3,6 +3,7 @@
 """Note: Client layer provides user-friendly methods that accept Pydantic models as inputs
 and return either Pydantic models, primitives, or raw dicts depending on the operation."""
 
+import logging
 from typing import Any, Dict, List, Literal, Optional, Union, overload
 
 from comcheck_api.api import COMCheckApiService
@@ -94,7 +95,10 @@ class COMcheckClient:
 
     # TODO: return of update_project should be ComBuilding
     def update_project(
-        self, project_id: str, project_data: ComBuilding, mode: Literal["python", "json"] = "python",
+        self,
+        project_id: str,
+        project_data: ComBuilding,
+        mode: Literal["python", "json"] = "python",
     ) -> Dict[str, Any]:
         """Update a project by ID.
 
@@ -184,7 +188,7 @@ class COMcheckClient:
         # the service's update project due to interiorLightingSpace not being updated correctly
         # when returned from the update call
         return self.get_project(project_id=project_id, mode=mode)
-    
+
     def _parse_data(self, data, mode):
         if data is None:
             return None
@@ -203,8 +207,10 @@ class COMcheckClient:
         Returns:
             Simulation session ID
         """
+        logger = logging.getLogger(__name__)
+
         if project_id:
-            print("Updating project:", project_id)
+            logger.info("Updating project: %s", project_id)
             self.update_project(str(project_id), project)
 
         project_data = project.model_dump(mode="json", exclude_unset=True)
