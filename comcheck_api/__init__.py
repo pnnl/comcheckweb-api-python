@@ -1,17 +1,17 @@
 """COMcheckWeb API package.
 
 Example:
-    from comcheckweb.client import COMcheckClient
-    from comcheckweb.project_operations import (
+    from comcheck_api.client import COMcheckClient
+    from comcheck_api.project_operations import (
         project_building_area_operations,
         project_envelope_operations,
     )
-    from comcheckweb.utilities import export_to_json
-    from comcheckweb.utilities.get_project_default import (
+    from comcheck_api.utilities import export_to_json
+    from comcheck_api.utilities.get_project_default import (
         get_default_ag_wall_template,
         get_default_building_area_template,
     )
-    from comcheckweb.types import AssemblyType, AgWall
+    from comcheck_api.types import AssemblyType, AgWall
 """
 
 # COMcheck API Client
