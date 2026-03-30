@@ -8,6 +8,10 @@ from typing import Any, Dict, List, Literal, Optional, Union, overload
 
 from comcheck_api.api import COMCheckApiService
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
+from comcheck_api.exceptions import (
+    COMCheckProjectNotFoundError,
+    COMCheckSimulationError,
+)
 from comcheck_api.types.core_types import ComBuilding, InteriorLightingSpace
 
 Mode = Literal["python", "json"]
@@ -111,13 +115,13 @@ class COMcheckClient:
             API response data as dictionary
 
         Raises:
-            ValueError: If project is not found
+            COMCheckProjectNotFoundError: If project is not found
         """
         # Get existing project
         old_project = self.get_project(project_id, mode="json")
 
         if not old_project:
-            raise ValueError(f"Project with ID {project_id} not found.")
+            raise COMCheckProjectNotFoundError(project_id)
 
         project_data_json = project_data.model_dump(mode="json", exclude_unset=True)
 
@@ -217,7 +221,9 @@ class COMcheckClient:
         project_data = project.model_dump(mode="json", exclude_unset=True)
         run_result = self._service.start_run_simulation(project_data)
         if run_result.data is None:
-            raise RuntimeError("Simulation start failed: no session data returned")
+            raise COMCheckSimulationError(
+                "Simulation start failed: no session data returned"
+            )
         return run_result.data.sessionId
 
     def get_simulation_status(self, session_id: str) -> Dict[str, Any]:
@@ -231,7 +237,7 @@ class COMcheckClient:
         """
         status_response = self._service.get_simulation_status(session_id)
         if status_response.data is None:
-            raise RuntimeError(
+            raise COMCheckSimulationError(
                 f"Failed to get simulation status for session {session_id}"
             )
         return status_response.data.model_dump(mode="python")
@@ -247,7 +253,7 @@ class COMcheckClient:
         """
         result_response = self._service.get_simulation_result(session_id)
         if result_response.data is None:
-            raise RuntimeError(
+            raise COMCheckSimulationError(
                 f"Failed to get simulation result for session {session_id}"
             )
         return result_response.data.model_dump(mode="python")

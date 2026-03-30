@@ -17,6 +17,16 @@ Example:
 # COMcheck API Client
 from .client import COMcheckClient
 
+# Exceptions
+from .exceptions import (
+    COMCheckAPIError,
+    COMCheckHTTPError,
+    COMCheckConnectionError,
+    COMCheckValidationError,
+    COMCheckSimulationError,
+    COMCheckProjectNotFoundError,
+)
+
 # Project Defaults
 from .utilities import get_project_default
 
@@ -35,6 +45,13 @@ from . import types
 __all__ = [
     # Client
     "COMcheckClient",
+    # Exceptions
+    "COMCheckAPIError",
+    "COMCheckHTTPError",
+    "COMCheckConnectionError",
+    "COMCheckValidationError",
+    "COMCheckSimulationError",
+    "COMCheckProjectNotFoundError",
     # Defaults
     "get_project_default",
     # Project Operations
