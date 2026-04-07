@@ -78,6 +78,15 @@ class COMcheckClient:
         project_id: str,
         mode: Literal["python", "json"] = "python",
     ) -> Optional[Union["ComBuilding", Dict[str, Any]]]:
+        """Fetch a single project by ID.
+
+        Args:
+            project_id: The project ID to retrieve.
+            mode: ``"python"`` returns a ``ComBuilding`` model; ``"json"`` returns a raw dict.
+
+        Returns:
+            The project as a ``ComBuilding`` or dict, or ``None`` if not found.
+        """
         resp = self._service.get_project(project_id)
         data = resp.get("data")
         if data is not None:
@@ -195,6 +204,15 @@ class COMcheckClient:
         return self.get_project(project_id=project_id, mode=mode)
 
     def _parse_data(self, data, mode):
+        """Convert raw API data to the requested output format.
+
+        Args:
+            data: Raw dict from the API response, or ``None``.
+            mode: ``"python"`` wraps data in a ``ComBuilding``; ``"json"`` returns it as-is.
+
+        Returns:
+            A ``ComBuilding``, a raw dict, or ``None`` if ``data`` is ``None``.
+        """
         if data is None:
             return None
         if mode == "python":

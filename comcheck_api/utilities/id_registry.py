@@ -3,6 +3,11 @@ _prefix_counters: dict[str, int] = {}
 
 
 def register_existing_id(id: str):
+    """Register a pre-existing ID so it is not re-issued by the generator.
+
+    Args:
+        id: The existing ID string to reserve.
+    """
     if id in _used_ids:
         # ID already registered, skip silently
         return
@@ -16,6 +21,14 @@ def register_existing_id(id: str):
 
 
 def generate_id_with_prefix(prefix: str) -> str:
+    """Generate a unique ID of the form ``"<prefix> <n>"`` for the given prefix.
+
+    Args:
+        prefix: The prefix string (e.g. ``"Door:Door"``).
+
+    Returns:
+        A new unique ID string that has not been previously issued.
+    """
     counter = _prefix_counters.get(prefix, 0) + 1
 
     while True:
@@ -28,11 +41,17 @@ def generate_id_with_prefix(prefix: str) -> str:
 
 
 def release_id(id: str):
+    """Release a previously registered ID so it may be reused.
+
+    Args:
+        id: The ID string to release.
+    """
     _used_ids.discard(id)
     # Note: Not adjusting _prefix_counters for simplicity
 
 
 def reset_registry():
+    """Clear all registered IDs and prefix counters, resetting the registry to empty."""
     _used_ids.clear()
     _prefix_counters.clear()
 

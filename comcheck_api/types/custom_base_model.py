@@ -25,6 +25,7 @@ class CustomBaseModel(BaseModel):
 
     @classmethod
     def __pydantic_init_subclass__(cls, **kwargs):
+        """Automatically generate `add_<field>` methods for BaseModel-typed fields on subclasses."""
         super().__pydantic_init_subclass__(**kwargs)
         try:
             from typing import get_type_hints
@@ -38,7 +39,10 @@ class CustomBaseModel(BaseModel):
                 if isinstance(field_type, type) and issubclass(field_type, BaseModel):
 
                     def make_adder(fn, ft):
+                        """Create an adder method that sets a single BaseModel-typed field."""
+
                         def adder(self, instance, fn=fn, ft=ft):
+                            """Set the field `fn` to `instance` on this model."""
                             setattr(self, fn, instance)
                             logger.debug("Added %s: %s", fn, instance)
 
@@ -201,6 +205,18 @@ class CustomBaseModel(BaseModel):
                 )
 
     def _get_subcomponent_list(self, subcomponent_name: str):
+        """Return the current list for a named subcomponent attribute.
+
+        Args:
+            subcomponent_name: Name of the list-valued field on this model.
+
+        Returns:
+            The current list value for the given attribute.
+
+        Raises:
+            AttributeError: If the field does not exist on this model.
+            TypeError: If the field value is not a list.
+        """
         if subcomponent_name not in self.__class__.model_fields:
             raise AttributeError(
                 f"{self.__class__.__name__} has no subcomponent list '{subcomponent_name}'"
@@ -217,6 +233,16 @@ class CustomBaseModel(BaseModel):
         return current_subcomponents
 
     def get_by_path(self, path: str, default: Any = None) -> Any | None:
+        """Traverse nested attributes/list indices using a dot-bracket path expression.
+
+        Args:
+            path: Dot-separated path string with optional bracket indexing,
+                e.g. ``"envelope.roof[0].assemblyType"``.
+            default: Value to return if any segment of the path is missing.
+
+        Returns:
+            The value at the given path, or ``default`` if not found.
+        """
         current = self
 
         # Split on dots that are not inside brackets
@@ -246,9 +272,22 @@ class CustomBaseModel(BaseModel):
         return current
 
     def require_attribute(self, path: str) -> None:
+        """Assert that a nested attribute exists and is truthy.
+
+        Args:
+            path: Dot-bracket path to the attribute (see ``get_by_path``).
+
+        Raises:
+            ValueError: If the attribute is falsy or not found.
+        """
         if not self.get_by_path(path):
             raise ValueError(f"'{path}' is required in project")
 
     @classmethod
     def json_key(cls) -> str:
+        """Return the camelCase JSON key derived from the class name.
+
+        Returns:
+            Class name with the first character lowercased (e.g. ``AgWall`` → ``agWall``).
+        """
         return cls.__name__[0].lower() + cls.__name__[1:]

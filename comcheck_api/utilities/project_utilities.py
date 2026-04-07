@@ -17,15 +17,30 @@ def _require_building_area(project: ComBuilding, building_area_key: str) -> None
         raise ValueError(
             f"Building area key '{building_area_key}' not found in lighting.wholeBldgUse."
         )
-    
-def find_component_in_component_list(components: List[CustomBaseModel], component_id: str):
+
+
+def find_component_in_component_list(
+    components: List[CustomBaseModel], component_id: str
+):
+    """Find a component by its identifier within a list of components.
+
+    Args:
+        components: List of model instances to search through.
+        component_id: The identifier value to look up.
+
+    Returns:
+        The matching component, or None if not found or the list is empty.
+    """
     if not components:
         return None
-    
+
     component_type = type(components[0])
-    component_manager = DataManager[component_type](initial_data=components, model_type=component_type)
+    component_manager = DataManager[component_type](
+        initial_data=components, model_type=component_type
+    )
 
     return component_manager.get_by_identifier(component_id)
+
 
 def get_id_from_component(
     component: CustomBaseModel,
