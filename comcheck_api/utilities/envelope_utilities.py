@@ -39,7 +39,7 @@ def generate_assembly(
     description = type_map_description(assembly_type)
 
     result: Dict[str, Any] = {
-        **default_assembly,
+        **default_assembly.model_dump(mode="json"),
         "bldgUseKey": bldg_use_key,
         "assemblyType": f"{description}:{name}",
     }
