@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Made BASE_URL configurable via COMCHECK_API_URL environment variable
+
 ### To Be Added
 - Logging implementation to replace print statements
 - Custom exception classes for better error handling
@@ -14,7 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional examples and tutorials
 
 ### To Be Fixed
-- Remove hardcoded BASE_URL, make configurable via environment
 - Fix import path documentation in __init__.py
 - Security: Remove .env from version control
 
@@ -71,7 +73,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Known Issues
 - API key must be provided manually (no OAuth flow yet)
 - Some print() statements used instead of proper logging
-- Hardcoded API URL (should be configurable)
 - Limited error handling with custom exceptions
 
 ### Breaking Changes

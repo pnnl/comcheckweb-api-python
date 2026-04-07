@@ -1,21 +1,55 @@
-"""COMcheckWeb API package.
+"""COMcheckWeb API - Python client for programmatic building energy code compliance.
 
-Example:
-    from comcheckweb.client import COMcheckClient
-    from comcheckweb.project_operations import (
-        project_building_area_operations,
+This package provides a type-safe, automated interface to the U.S. Department of
+Energy's COMcheck Web API for building energy code compliance verification.
+
+Quick Start:
+    >>> from comcheck_api import COMcheckClient
+    >>> client = COMcheckClient(api_key="your-api-key")
+    >>> project = client.get_project("123")
+    >>> session_id = client.start_run_simulation(project)
+
+Basic Usage:
+    from comcheck_api import (
+        COMcheckClient,
+        COMCheckHTTPError,
+        export_to_json,
+    )
+
+    client = COMcheckClient(api_key="your-key")
+
+    try:
+        projects = client.list_projects()
+        export_to_json(projects, "projects.json")
+    except COMCheckHTTPError as e:
+        print(f"HTTP error: {e.status_code}")
+
+Advanced Usage:
+    from comcheck_api import (
+        COMcheckClient,
         project_envelope_operations,
     )
-    from comcheckweb.utilities import export_to_json
-    from comcheckweb.utilities.get_project_default import (
-        get_default_ag_wall_template,
-        get_default_building_area_template,
-    )
-    from comcheckweb.types import AssemblyType, AgWall
+    from comcheck_api.types import AgWall, ComBuilding
+
+    # For type imports, use the types submodule
+    # from comcheck_api.types import ...
+
+    # For advanced utilities, use the utilities submodule
+    # from comcheck_api.utilities import ...
 """
 
-# COMcheck API Client
+# Client
 from .client import COMcheckClient
+
+# Exceptions
+from .exceptions import (
+    COMCheckAPIError,
+    COMCheckHTTPError,
+    COMCheckConnectionError,
+    COMCheckValidationError,
+    COMCheckSimulationError,
+    COMCheckProjectNotFoundError,
+)
 
 # Project Defaults
 from .utilities import get_project_default
@@ -26,7 +60,7 @@ from .project_operations import (
     project_envelope_operations,
 )
 
-# Utility Functions
+# Utilities
 from . import utilities
 
 # Types
@@ -35,7 +69,14 @@ from . import types
 __all__ = [
     # Client
     "COMcheckClient",
-    # Defaults
+    # Exceptions
+    "COMCheckAPIError",
+    "COMCheckHTTPError",
+    "COMCheckConnectionError",
+    "COMCheckValidationError",
+    "COMCheckSimulationError",
+    "COMCheckProjectNotFoundError",
+    # Project Defaults
     "get_project_default",
     # Project Operations
     "project_building_area_operations",

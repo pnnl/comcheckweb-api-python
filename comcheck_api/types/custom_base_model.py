@@ -1,3 +1,4 @@
+import logging
 import re
 from typing import (
     Any,
@@ -9,6 +10,8 @@ from typing import (
 from pydantic.main import _model_construction
 from pydantic import BaseModel
 from comcheck_api.managers.data_manager import DataManager
+
+logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 S = TypeVar("S")
@@ -37,7 +40,7 @@ class CustomBaseModel(BaseModel):
                     def make_adder(fn, ft):
                         def adder(self, instance, fn=fn, ft=ft):
                             setattr(self, fn, instance)
-                            print(f"Added {fn}: {instance}")
+                            logger.debug("Added %s: %s", fn, instance)
 
                         adder.__name__ = f"add_{fn}"
                         return adder

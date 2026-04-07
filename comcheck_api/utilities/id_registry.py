@@ -1,5 +1,5 @@
-_used_ids = set()
-_prefix_counters = {}
+_used_ids: set[str] = set()
+_prefix_counters: dict[str, int] = {}
 
 
 def register_existing_id(id: str):

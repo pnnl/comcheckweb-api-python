@@ -1,13 +1,20 @@
 """COMCheck API service module for making HTTP requests to the COMCheck API."""
 
-"""Note: Service layer accepts raw data types (dicts) as inputs to stay simple and 
-HTTP-library-friendly, but returns validated Pydantic models to provide type safety 
+"""Note: Service layer accepts raw data types (dicts) as inputs to stay simple and
+HTTP-library-friendly, but returns validated Pydantic models to provide type safety
 and catch API schema mismatches at the boundary."""
 
-from typing import Any, Dict, Optional
+import logging
+import os
+from typing import Any, Dict, NoReturn, Optional
 
 import httpx
 
+from comcheck_api.exceptions import (
+    COMCheckHTTPError,
+    COMCheckConnectionError,
+    COMCheckValidationError,
+)
 from comcheck_api.types.api_types import (
     RunSimulationResponse,
     SimulationStatusResponse,
@@ -17,8 +24,6 @@ from comcheck_api.types.api_types import (
 
 class COMCheckApiService:
     """COMCheck API service class for interacting with the COM API."""
-
-    BASE_URL: str = "https://becp-dev.pnl.gov/ahj/COM"  # COM API base URL
 
     def __init__(self, api_key: str) -> None:
         """Initialize COMCheck API service.
@@ -35,6 +40,9 @@ class COMCheckApiService:
                 "or set it in your environment variables."
             )
         self.api_key = api_key
+        self.base_url: str = os.getenv(
+            "COMCHECK_API_URL", "https://becp-dev.pnl.gov/ahj/COM"
+        )
         self._client: Optional[httpx.Client] = None
 
     def _get_client(self) -> httpx.Client:
@@ -45,7 +53,7 @@ class COMCheckApiService:
         """
         if self._client is None:
             self._client = httpx.Client(
-                base_url=self.BASE_URL,
+                base_url=self.base_url,
                 headers=self._prepare_headers(),
                 timeout=30.0,
             )
@@ -63,22 +71,48 @@ class COMCheckApiService:
             "Accept": "application/json",
         }
 
-    def _handle_api_error(self, error: Exception) -> None:
-        """Handle API errors with detailed logging.
+    def _handle_api_error(self, error: Exception) -> NoReturn:
+        """Handle API errors with detailed logging and raise custom exceptions.
 
         Args:
             error: The error object to handle
+
+        Raises:
+            COMCheckHTTPError: For HTTP status errors
+            COMCheckConnectionError: For connection/request errors
+            COMCheckValidationError: For validation errors
         """
+        logger = logging.getLogger(__name__)
+
         if isinstance(error, httpx.HTTPStatusError):
-            print(f"HTTP error occurred: {error}")
-            print(f"Status: {error.response.status_code}")
-            print(f"Response data: {error.response.text}")
-            print(f"Response headers: {error.response.headers}")
+            logger.error(
+                "HTTP error occurred: %s (Status: %s)",
+                error,
+                error.response.status_code,
+                exc_info=True,
+                extra={
+                    "response_data": error.response.text,
+                    "response_headers": dict(error.response.headers),
+                },
+            )
+            raise COMCheckHTTPError(
+                status_code=error.response.status_code,
+                message=error.response.reason_phrase,
+                response_data=error.response.text,
+            ) from error
         elif isinstance(error, httpx.RequestError):
-            print(f"Request error occurred: {error}")
-            print(f"Request: {error.request}")
+            logger.error(
+                "Request error occurred: %s",
+                error,
+                exc_info=True,
+                extra={"request": str(error.request)},
+            )
+            raise COMCheckConnectionError(
+                f"Failed to connect to COMcheck API: {str(error)}"
+            ) from error
         else:
-            print(f"Unexpected error: {error}")
+            logger.error("Unexpected error: %s", error, exc_info=True)
+            raise
 
     def get_project(self, project_id: str) -> Dict[str, Any]:
         """Get a single project by ID.
@@ -90,8 +124,8 @@ class COMCheckApiService:
             API response data as dictionary
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error status
-            httpx.RequestError: If the request fails
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
         """
         try:
             client = self._get_client()
@@ -100,7 +134,6 @@ class COMCheckApiService:
             return response.json()
         except Exception as error:
             self._handle_api_error(error)
-            raise
 
     def get_project_list(self) -> Dict[str, Any]:
         """Get a list of all projects.
@@ -109,8 +142,8 @@ class COMCheckApiService:
             API response data as dictionary
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error status
-            httpx.RequestError: If the request fails
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
         """
         try:
             client = self._get_client()
@@ -119,7 +152,6 @@ class COMCheckApiService:
             return response.json()
         except Exception as error:
             self._handle_api_error(error)
-            raise
 
     def update_project(
         self, project_id: str, project_data: Dict[str, Any]
@@ -134,8 +166,8 @@ class COMCheckApiService:
             API response data as dictionary
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error status
-            httpx.RequestError: If the request fails
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
         """
         try:
             client = self._get_client()
@@ -144,7 +176,6 @@ class COMCheckApiService:
             return response.json()
         except Exception as error:
             self._handle_api_error(error)
-            raise
 
     def start_run_simulation(
         self, project_data: Dict[str, Any]
@@ -158,8 +189,8 @@ class COMCheckApiService:
             RunSimulationResponse with session information
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error status
-            httpx.RequestError: If the request fails
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
         """
         try:
             client = self._get_client()
@@ -170,7 +201,6 @@ class COMCheckApiService:
             return RunSimulationResponse.model_construct(**response.json())
         except Exception as error:
             self._handle_api_error(error)
-            raise
 
     def get_simulation_status(self, session_id: str) -> SimulationStatusResponse:
         """Get status of a simulation.
@@ -182,8 +212,8 @@ class COMCheckApiService:
             SimulationStatusResponse with status information
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error status
-            httpx.RequestError: If the request fails
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
         """
         try:
             client = self._get_client()
@@ -194,7 +224,6 @@ class COMCheckApiService:
             return SimulationStatusResponse.model_construct(**response.json())
         except Exception as error:
             self._handle_api_error(error)
-            raise
 
     def get_simulation_result(self, session_id: str) -> SimulationResultResponse:
         """Get result of a simulation.
@@ -206,8 +235,8 @@ class COMCheckApiService:
             SimulationResultResponse with simulation results
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error status
-            httpx.RequestError: If the request fails
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
         """
         try:
             client = self._get_client()
@@ -218,7 +247,6 @@ class COMCheckApiService:
             return SimulationResultResponse.model_construct(**response.json())
         except Exception as error:
             self._handle_api_error(error)
-            raise
 
     def close(self) -> None:
         """Close the HTTP client connection."""

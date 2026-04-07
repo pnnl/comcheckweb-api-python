@@ -343,7 +343,7 @@ uv publish
 
 - [ ] **Code Quality**
   - [ ] Replace all `print()` with `logging`
-  - [ ] Make `BASE_URL` configurable
+  - [x] Make `BASE_URL` configurable
   - [ ] Fix import paths in `__init__.py`
   - [ ] Resolve all TODO comments
   - [ ] Add custom exception classes

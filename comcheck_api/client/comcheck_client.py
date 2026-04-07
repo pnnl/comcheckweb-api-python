@@ -3,10 +3,15 @@
 """Note: Client layer provides user-friendly methods that accept Pydantic models as inputs
 and return either Pydantic models, primitives, or raw dicts depending on the operation."""
 
+import logging
 from typing import Any, Dict, List, Literal, Optional, Union, overload
 
 from comcheck_api.api import COMCheckApiService
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
+from comcheck_api.exceptions import (
+    COMCheckProjectNotFoundError,
+    COMCheckSimulationError,
+)
 from comcheck_api.types.core_types import ComBuilding, InteriorLightingSpace
 
 Mode = Literal["python", "json"]
@@ -75,12 +80,13 @@ class COMcheckClient:
     ) -> Optional[Union["ComBuilding", Dict[str, Any]]]:
         resp = self._service.get_project(project_id)
         data = resp.get("data")
-        for building_area in data["lighting"]["wholeBldgUse"]:
-            building_area["interiorLightingSpace"] = {
-                **DEFAULT_BUILDING_AREA.interiorLightingSpace.model_dump(
-                    mode="json", exclude_unset=True
-                )
-            }
+        if data is not None:
+            for building_area in data["lighting"]["wholeBldgUse"]:
+                building_area["interiorLightingSpace"] = {
+                    **DEFAULT_BUILDING_AREA.interiorLightingSpace.model_dump(
+                        mode="json", exclude_unset=True
+                    )
+                }
 
         return self._parse_data(data, mode)
 
@@ -94,8 +100,11 @@ class COMcheckClient:
 
     # TODO: return of update_project should be ComBuilding
     def update_project(
-        self, project_id: str, project_data: ComBuilding, mode: Literal["python", "json"] = "python",
-    ) -> Dict[str, Any]:
+        self,
+        project_id: str,
+        project_data: ComBuilding,
+        mode: Literal["python", "json"] = "python",
+    ) -> ComBuilding | dict[str, Any] | None:
         """Update a project by ID.
 
         Args:
@@ -106,13 +115,13 @@ class COMcheckClient:
             API response data as dictionary
 
         Raises:
-            ValueError: If project is not found
+            COMCheckProjectNotFoundError: If project is not found
         """
         # Get existing project
         old_project = self.get_project(project_id, mode="json")
 
         if not old_project:
-            raise ValueError(f"Project with ID {project_id} not found.")
+            raise COMCheckProjectNotFoundError(project_id)
 
         project_data_json = project_data.model_dump(mode="json", exclude_unset=True)
 
@@ -184,7 +193,7 @@ class COMcheckClient:
         # the service's update project due to interiorLightingSpace not being updated correctly
         # when returned from the update call
         return self.get_project(project_id=project_id, mode=mode)
-    
+
     def _parse_data(self, data, mode):
         if data is None:
             return None
@@ -203,13 +212,19 @@ class COMcheckClient:
         Returns:
             Simulation session ID
         """
+        logger = logging.getLogger(__name__)
+
         if project_id:
-            print("Updating project:", project_id)
+            logger.info("Updating project: %s", project_id)
             self.update_project(str(project_id), project)
 
         project_data = project.model_dump(mode="json", exclude_unset=True)
         run_result = self._service.start_run_simulation(project_data)
-        return run_result.data["sessionId"]
+        if run_result.data is None:
+            raise COMCheckSimulationError(
+                "Simulation start failed: no session data returned"
+            )
+        return run_result.data.sessionId
 
     def get_simulation_status(self, session_id: str) -> Dict[str, Any]:
         """Get the status of a simulation run by session ID.
@@ -220,7 +235,12 @@ class COMcheckClient:
         Returns:
             Simulation status information
         """
-        return self._service.get_simulation_status(session_id).data
+        status_response = self._service.get_simulation_status(session_id)
+        if status_response.data is None:
+            raise COMCheckSimulationError(
+                f"Failed to get simulation status for session {session_id}"
+            )
+        return status_response.data.model_dump(mode="python")
 
     def get_simulation_result(self, session_id: str) -> Dict[str, Any]:
         """Get the result of a simulation run by session ID.
@@ -231,7 +251,12 @@ class COMcheckClient:
         Returns:
             Simulation result information
         """
-        return self._service.get_simulation_result(session_id).data
+        result_response = self._service.get_simulation_result(session_id)
+        if result_response.data is None:
+            raise COMCheckSimulationError(
+                f"Failed to get simulation result for session {session_id}"
+            )
+        return result_response.data.model_dump(mode="python")
 
     def close(self) -> None:
         """Close the API service connection."""
