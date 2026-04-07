@@ -15,8 +15,8 @@ from comcheck_api.types.core_types import (
 )
 from comcheck_api.utilities.common import get_random_number
 
-DEFAULT_WINDOW: Window = Window(
-    **{
+DEFAULT_WINDOW: Window = Window.model_validate(
+    {
         "adjacentSpaceBuildingType": "WHOLE_BUILDING_OFFICE",
         "adjacentSpaceType": "ADJACENT_SPACE_EXTERIOR",
         "allowanceType": "ENV_ALLOWANCE_NONE",
@@ -48,8 +48,8 @@ DEFAULT_WINDOW: Window = Window(
     }
 )
 
-DEFAULT_DOOR: Door = Door(
-    **{
+DEFAULT_DOOR: Door = Door.model_validate(
+    {
         "adjacentSpaceBuildingType": None,
         "adjacentSpaceType": None,
         "allowanceType": None,
@@ -83,8 +83,8 @@ DEFAULT_DOOR: Door = Door(
     }
 )
 
-DEFAULT_SKYLIGHT: Skylight = Skylight(
-    **{
+DEFAULT_SKYLIGHT: Skylight = Skylight.model_validate(
+    {
         "adjacentSpaceType": None,
         "allowanceType": None,
         "assemblyType": "Skylight:Default Skylight",
@@ -110,8 +110,8 @@ DEFAULT_SKYLIGHT: Skylight = Skylight(
     }
 )
 
-DEFAULT_ROOF: Roof = Roof(
-    **{
+DEFAULT_ROOF: Roof = Roof.model_validate(
+    {
         "adjacentSpaceType": None,
         "allowanceType": None,
         "assemblyType": "Roof:Default Roof",
@@ -134,8 +134,8 @@ DEFAULT_ROOF: Roof = Roof(
     }
 )
 
-DEFAULT_FLOOR: Floor = Floor(
-    **{
+DEFAULT_FLOOR: Floor = Floor.model_validate(
+    {
         "adjacentSpaceType": None,
         "allowanceType": None,
         "altExemptType": None,
@@ -158,8 +158,8 @@ DEFAULT_FLOOR: Floor = Floor(
     }
 )
 
-DEFAULT_AG_WALL: AgWall = AgWall(
-    **{
+DEFAULT_AG_WALL: AgWall = AgWall.model_validate(
+    {
         "adjacentSpaceType": None,
         "agWallConstructionDetailsType": "NONE",
         "agWallExteriorFinishDetailsType": None,
@@ -191,8 +191,8 @@ DEFAULT_AG_WALL: AgWall = AgWall(
     }
 )
 
-DEFAULT_THERMAL_BRIDGE: ThermalBridge = ThermalBridge(
-    **{
+DEFAULT_THERMAL_BRIDGE: ThermalBridge = ThermalBridge.model_validate(
+    {
         "chiFactor": 0,
         "id": get_random_number(),
         "numberOfPoints": 0,
@@ -204,8 +204,8 @@ DEFAULT_THERMAL_BRIDGE: ThermalBridge = ThermalBridge(
     }
 )
 
-DEFAULT_BG_WALL: BgWall = BgWall(
-    **{
+DEFAULT_BG_WALL: BgWall = BgWall.model_validate(
+    {
         "adjacentSpaceBuildingType": None,
         "adjacentSpaceType": None,
         "allowanceType": None,
@@ -235,13 +235,7 @@ DEFAULT_BG_WALL: BgWall = BgWall(
 )
 
 DEFAULT_ENVELOPE: Envelope = Envelope(
-    agWall=[],
-    bgWall=[],
-    roof=[],
-    floor=[],
-    door=[],
-    window=[],
-    skylight=[]
+    agWall=[], bgWall=[], roof=[], floor=[], door=[], window=[], skylight=[]
 )
 
 # TODO: add values to other assemblies
