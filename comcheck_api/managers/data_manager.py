@@ -4,13 +4,11 @@ import copy
 import json
 from pathlib import Path
 from typing import (
-    TYPE_CHECKING,
     Any,
     Generic,
     List,
     Type,
     TypeVar,
-    cast,
 )
 from collections import namedtuple
 
@@ -20,10 +18,8 @@ from comcheck_api.utilities.id_registry import (
     generate_id_with_prefix,
 )
 
-if TYPE_CHECKING:
-    from comcheck_api.types.custom_base_model import CustomBaseModel
-
-T = TypeVar("T", bound=BaseModel)
+T = TypeVar("T")
+S = TypeVar("S")
 
 
 class DataManager(Generic[T]):
@@ -43,7 +39,7 @@ class DataManager(Generic[T]):
 
     def __init__(
         self,
-        initial_data: list[T] = [],
+        initial_data: list[T] | None = [],
         model_type: Type[BaseModel] | None = None,
         schema_path: str | Path = "../schemas/comCheck.schema.json",
     ):
@@ -55,7 +51,7 @@ class DataManager(Generic[T]):
         self._initialize_schema(schema_path)
         self._initialize_data(initial_data)
 
-    def _initialize_metadata(self, model_type: Type[BaseModel] | None = None) -> None:
+    def _initialize_metadata(self, model_type: BaseModel | None = None) -> None:
         """Resolve and store the model type and its ID field information.
 
         Args:
@@ -97,7 +93,7 @@ class DataManager(Generic[T]):
         for item in initial_data:
             self.add_new(item)
 
-    def _validate_item(self, item: T | dict[str, Any]) -> T:
+    def _validate_item(self, item: T) -> T:
         """Validate an item against the JSON schema reference.
 
         Args:
@@ -109,10 +105,12 @@ class DataManager(Generic[T]):
         Raises:
             ValidationError: If validation fails.
         """
-        assert self.model_type is not None
         if isinstance(item, self.model_type):
-            return cast(T, item)
-        return cast(T, self.model_type.model_validate(item))
+            model_instance = item
+        else:
+            model_instance = self.model_type.model_validate(item)
+
+        return model_instance
 
     def _get_identifier_value(self, item: T) -> Any:
         """Extract the identifier value from an item.
@@ -172,18 +170,17 @@ class DataManager(Generic[T]):
         )
 
         if not needs_new_identifier:
-            assert isinstance(current, str)
             register_existing_id(current)
             return
 
         new_id = generate_id_with_prefix(self._id_prefix)
 
-        object.__setattr__(item, self._identifier, new_id)
+        item.__dict__[self._identifier] = new_id
 
     def add_subcomponent(
         self,
         parent: T,
-        subcomponent: "CustomBaseModel",
+        subcomponent: S,
     ) -> T:
         """
         Add a new subcomponent to a parent item.
@@ -199,15 +196,13 @@ class DataManager(Generic[T]):
 
         subcomponent_name = subcomponent.json_key()
 
-        current_subcomponents: List[Any] = getattr(parent, subcomponent_name, [])
+        current_subcomponents: List[S] = getattr(parent, subcomponent_name, [])
 
-        subcomponent_manager: DataManager[Any] = DataManager(
+        subcomponent_manager = DataManager[subcomponent_type](
             initial_data=current_subcomponents, model_type=subcomponent_type
         )
 
-        object.__setattr__(
-            parent, subcomponent_name, subcomponent_manager.add_new(subcomponent)
-        )
+        parent.__dict__[subcomponent_name] = subcomponent_manager.add_new(subcomponent)
         updated = self.modify_one(self._get_identifier_value(parent), parent)
         return updated
 
@@ -274,7 +269,7 @@ class DataManager(Generic[T]):
             raise ValueError(f"Item with {self._identifier} '{id_value}' not found")
 
         # Convert updates to dict if it's a model object
-        updates_dict: dict[str, Any] = (
+        updates_dict = (
             updates.model_dump(mode="json", exclude_unset=True)
             if isinstance(updates, BaseModel)
             else updates
@@ -292,10 +287,9 @@ class DataManager(Generic[T]):
                 )
 
         original = self._data[item_index]
-        original_class = cast(Type[BaseModel], type(original))
 
         # Validate that all keys in updates_dict are valid fields
-        model_fields = original_class.model_fields
+        model_fields = type(original).model_fields
         invalid_fields = set(updates_dict.keys()) - set(model_fields.keys())
         if invalid_fields:
             raise ValueError(f"Invalid fields in updates: {invalid_fields}")
@@ -308,7 +302,7 @@ class DataManager(Generic[T]):
         )
         merged = {**original_dict, **updates_dict}
         try:
-            updated_item = cast(T, original_class.model_validate(merged))
+            updated_item = type(original).model_validate(merged)
         except Exception as e:
             raise ValueError(
                 f"Validation failed for updates to {self._identifier} '{id_value}': {str(e)}"

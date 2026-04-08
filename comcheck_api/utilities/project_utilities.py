@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import List
 from comcheck_api.types.custom_base_model import CustomBaseModel
 from comcheck_api.types.core_types import ComBuilding
 from comcheck_api.managers.data_manager import DataManager, get_model_info
@@ -35,7 +35,7 @@ def find_component_in_component_list(
         return None
 
     component_type = type(components[0])
-    component_manager: DataManager[Any] = DataManager(
+    component_manager = DataManager[component_type](
         initial_data=components, model_type=component_type
     )
 
@@ -44,7 +44,7 @@ def find_component_in_component_list(
 
 def get_id_from_component(
     component: CustomBaseModel,
-) -> str | None:
+) -> str:
     """Retrieve the id of a component"""
 
     identifier, _ = get_model_info(type(component))

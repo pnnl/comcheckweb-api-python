@@ -3,7 +3,6 @@ import re
 from typing import (
     Any,
     Optional,
-    Self,
     TypeVar,
     get_type_hints,
 )
@@ -14,6 +13,7 @@ from comcheck_api.managers.data_manager import DataManager
 
 logger = logging.getLogger(__name__)
 
+T = TypeVar("T")
 S = TypeVar("S")
 
 
@@ -59,7 +59,7 @@ class CustomBaseModel(BaseModel):
         self,
         subcomponent: S | dict,
         subcomponent_name: Optional[str] = None,
-    ) -> Self:
+    ) -> T:
         """
         Append a subcomponent to the corresponding subcomponent list.
 
@@ -76,7 +76,7 @@ class CustomBaseModel(BaseModel):
         )
 
         current_subcomponents = self._get_subcomponent_list(subcomponent_name)
-        subcomponent_manager: DataManager[Any] = DataManager(
+        subcomponent_manager = DataManager[subcomponent_type](
             initial_data=current_subcomponents, model_type=subcomponent_type
         )
 
@@ -90,9 +90,9 @@ class CustomBaseModel(BaseModel):
         self,
         *,
         subcomponent_updates: Optional[S | dict] = None,
-        subcomponent_id: Optional[str] = None,
-        subcomponent_name: Optional[str] = None,
-    ) -> Self:
+        subcomponent_id: str = None,
+        subcomponent_name: str = None,
+    ) -> T:
         """
         Append a subcomponent to the corresponding subcomponent list.
 
@@ -110,7 +110,7 @@ class CustomBaseModel(BaseModel):
         )
 
         current_subcomponents = self._get_subcomponent_list(subcomponent_name)
-        subcomponent_manager: DataManager[Any] = DataManager(
+        subcomponent_manager = DataManager[subcomponent_type](
             initial_data=current_subcomponents, model_type=subcomponent_type
         )
 
@@ -128,7 +128,7 @@ class CustomBaseModel(BaseModel):
         subcomponent: Optional[S | dict] = None,
         subcomponent_id: Optional[str] = None,
         subcomponent_name: Optional[str] = None,
-    ) -> Self:
+    ) -> T:
         """
         Remove a subcomponent from a list-valued attribute by instance or ID.
 
@@ -151,7 +151,7 @@ class CustomBaseModel(BaseModel):
         )
 
         current_subcomponents = self._get_subcomponent_list(subcomponent_name)
-        subcomponent_manager: DataManager[Any] = DataManager(
+        subcomponent_manager = DataManager[subcomponent_type](
             initial_data=current_subcomponents, model_type=subcomponent_type
         )
 
@@ -243,7 +243,7 @@ class CustomBaseModel(BaseModel):
         Returns:
             The value at the given path, or ``default`` if not found.
         """
-        current: Any = self
+        current = self
 
         # Split on dots that are not inside brackets
         parts = re.split(r"\.(?![^\[]*\])", path)
