@@ -52,6 +52,14 @@ class DataManager(Generic[T]):
         self._initialize_data(initial_data)
 
     def _initialize_metadata(self, model_type: BaseModel | None = None) -> None:
+        """Resolve and store the model type and its ID field information.
+
+        Args:
+            model_type: Explicit model class; falls back to the class-level ``model_type``.
+
+        Raises:
+            ValueError: If no model type is available or no ID info is found for it.
+        """
         self.model_type = model_type or self.__class__.model_type
         if self.model_type is None:
             raise ValueError(
@@ -77,6 +85,11 @@ class DataManager(Generic[T]):
                     self._schema = json.load(f)
 
     def _initialize_data(self, initial_data: list[T] = []) -> None:
+        """Populate the manager with an initial list of items.
+
+        Args:
+            initial_data: Items to add via ``add_new`` on startup.
+        """
         for item in initial_data:
             self.add_new(item)
 
@@ -96,9 +109,9 @@ class DataManager(Generic[T]):
             model_instance = item
         else:
             model_instance = self.model_type.model_validate(item)
-        
+
         return model_instance
-    
+
     def _get_identifier_value(self, item: T) -> Any:
         """Extract the identifier value from an item.
 
@@ -305,6 +318,15 @@ IdInfo = namedtuple("IdInfo", ["identifier", "id_prefix"])
 
 
 def get_model_info(model_class: Type[BaseModel]) -> IdInfo | None:
+    """Return the identifier field name and ID prefix for a known model class.
+
+    Args:
+        model_class: The Pydantic model class to look up.
+
+    Returns:
+        An ``IdInfo`` namedtuple with ``identifier`` and ``id_prefix`` fields,
+        or ``None`` if the class is not registered.
+    """
     from comcheck_api.types.core_types import (
         Door,
         Roof,

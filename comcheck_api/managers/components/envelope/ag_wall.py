@@ -1,6 +1,5 @@
 """AgWall (exterior wall) manager for COMcheck projects."""
 
-from typing import Union
 from comcheck_api.types.core_types import (
     AgWall,
     Door,
@@ -31,15 +30,9 @@ class AgWallListManager(DataManager[AgWall]):
     def add_new_thermal_bridge(
         self,
         ag_wall: AgWall,
-        thermal_bridge_type: Union[
-            ThermalBridgeTypeOptions, str
-        ] = ThermalBridgeTypeOptions.THERMAL_BRIDGE_OTHER,
-        thermal_bridge_category: Union[
-            ThermalBridgeCategoryOptions, str
-        ] = ThermalBridgeCategoryOptions.THERMAL_BRIDGE_UNCATEGORIZED,
-        thermal_bridge_compliance_type: Union[
-            ThermalBridgeComplianceTypeOptions, str
-        ] = ThermalBridgeComplianceTypeOptions.THERMAL_BRIDGE_NON_PRESCRIPTIVE,
+        thermal_bridge_type: ThermalBridgeTypeOptions = ThermalBridgeTypeOptions.THERMAL_BRIDGE_OTHER,
+        thermal_bridge_category: ThermalBridgeCategoryOptions = ThermalBridgeCategoryOptions.THERMAL_BRIDGE_UNCATEGORIZED,
+        thermal_bridge_compliance_type: ThermalBridgeComplianceTypeOptions = ThermalBridgeComplianceTypeOptions.THERMAL_BRIDGE_NON_PRESCRIPTIVE,
         psi_factor: float = 0.0,
         chi_factor: float = 0.0,
         thermal_bridge_length: float = 0.0,

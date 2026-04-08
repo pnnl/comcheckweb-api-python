@@ -39,10 +39,14 @@ def test_building_area_operations(
 
 
 def test_get_building_area_keys(project: ComBuilding):
-    project.lighting.wholeBldgUse = [deepcopy(DEFAULT_BUILDING_AREA), deepcopy(DEFAULT_BUILDING_AREA)]
+    local_project = project.model_copy(deep=True)
+    local_project.lighting.wholeBldgUse = [
+        deepcopy(DEFAULT_BUILDING_AREA),
+        deepcopy(DEFAULT_BUILDING_AREA),
+    ]
 
     result = project_building_area_operations.get_building_area_keys_from_project(
-        project
+        local_project
     )
 
     assert result == [
@@ -53,25 +57,26 @@ def test_get_building_area_keys(project: ComBuilding):
         {
             "key": DEFAULT_BUILDING_AREA.key,
             "areaDescription": DEFAULT_BUILDING_AREA.areaDescription,
-        }
+        },
     ]
 
 
 def test_get_building_area_keys_empty(project: ComBuilding):
-    project.lighting.wholeBldgUse = []
+    local_project = project.model_copy(deep=True)
+    local_project.lighting.wholeBldgUse = []
 
     result = project_building_area_operations.get_building_area_keys_from_project(
-        project
+        local_project
     )
 
     assert result == []
 
 
 def test_get_building_area_keys_no_lighting(project: ComBuilding):
-    project.lighting = None
+    local_project = project.model_copy(deep=True, update={"lighting": None})
 
     result = project_building_area_operations.get_building_area_keys_from_project(
-        project
+        local_project
     )
 
     assert result == []

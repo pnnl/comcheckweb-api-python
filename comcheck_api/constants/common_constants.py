@@ -1,7 +1,7 @@
 from comcheck_api.types.core_types import ComBuilding
 
-PROJECT_TEMPLATE = ComBuilding(
-    **{
+PROJECT_TEMPLATE = ComBuilding.model_validate(
+    {
         "control": {
             "code": "CEZ_IECC2018",
             "complianceMode": "UA",

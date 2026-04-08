@@ -9,6 +9,10 @@ from comcheck_api.client import COMcheckClient
 from comcheck_api.utilities.common import export_to_json
 from comcheck_api.types.core_types import *
 from comcheck_api.utilities.project_utilities import get_id_from_component
+from comcheck_api.project_operations import project_building_area_operations
+from comcheck_api.utilities.get_project_default import (
+    get_default_building_area_template,
+)
 from tests.project_operation_tests.assertions.components import (
     assert_component_added,
     assert_component_removed,
@@ -68,24 +72,37 @@ class ComponentOperationConfig:
     name: str
     path: str
     default_factory: Callable[[], Any]
-    add_component_to_project: Callable[[Any, str, Any], Any]
+    add_component_to_project: Callable[..., Any]
     update_component_in_project: Callable[[Any, str, dict], Any]
-    remove_component_from_project: Callable[[Any, str, dict], Any]
+    remove_component_from_project: Callable[[Any, str], Any]
     updates: dict = field(
         default_factory=lambda: {"description": f"Description {str(uuid.uuid4())}"}
     )
 
 
-def get_building_area_key(project) -> str:
-    whole_bldg_use = project.get_by_path("lighting.wholeBldgUse", [])
-    assert whole_bldg_use, "No wholeBldgUse found"
-    return whole_bldg_use[-1].key
+@pytest.fixture(scope="session")
+def building_area_key(client: COMcheckClient, project: ComBuilding) -> str:
+    existing = project.get_by_path("lighting.wholeBldgUse", [])
+    if existing:
+        return existing[-1].key
+
+    new_area = get_default_building_area_template()
+    updated = apply_and_reload(
+        client,
+        project_building_area_operations.add_building_area_to_project(
+            project, new_area
+        ),
+    )
+    object.__setattr__(project, "lighting", updated.lighting)
+    return new_area.key
 
 
 def apply_and_reload(client: COMcheckClient, project: ComBuilding) -> ComBuilding:
     project_id = getattr(project, "id", None)
     assert project_id, "No project id found"
-    return client.update_project(project_id, project)
+    result = client.update_project(project_id, project)
+    assert isinstance(result, ComBuilding)
+    return result
 
 
 def get_parent_and_child_list(config: ComponentOperationConfig, project: ComBuilding):
@@ -131,6 +148,7 @@ def run_flat_assembly_lifecycle(
         )
 
     target_id = get_id_from_component(default_component)
+    assert target_id is not None
 
     assert_component_added(
         project=project,
@@ -195,6 +213,7 @@ def run_nested_assembly_lifecycle(
     )
 
     target_id = get_id_from_component(default_component)
+    assert target_id is not None
 
     assert_component_added(
         project=project,

@@ -12,8 +12,11 @@ from comcheck_api.utilities.get_project_default import (
     get_default_window_template,
 )
 from comcheck_api.types.core_types import *
-from tests.project_operation_tests.conftest import ComponentOperationConfig, get_building_area_key, run_flat_assembly_lifecycle, run_nested_assembly_lifecycle
-
+from tests.project_operation_tests.conftest import (
+    ComponentOperationConfig,
+    run_flat_assembly_lifecycle,
+    run_nested_assembly_lifecycle,
+)
 
 ASSEMBLY_CONFIGS = [
     ComponentOperationConfig(
@@ -22,7 +25,7 @@ ASSEMBLY_CONFIGS = [
         default_factory=get_default_roof_template,
         add_component_to_project=project_envelope_operations.add_roof_to_project,
         update_component_in_project=project_envelope_operations.update_roof_in_project,
-        remove_component_from_project=project_envelope_operations.remove_roof_from_project
+        remove_component_from_project=project_envelope_operations.remove_roof_from_project,
     ),
     ComponentOperationConfig(
         name="floor",
@@ -30,7 +33,7 @@ ASSEMBLY_CONFIGS = [
         default_factory=get_default_floor_template,
         add_component_to_project=project_envelope_operations.add_floor_to_project,
         update_component_in_project=project_envelope_operations.update_floor_in_project,
-        remove_component_from_project=project_envelope_operations.remove_floor_from_project
+        remove_component_from_project=project_envelope_operations.remove_floor_from_project,
     ),
     ComponentOperationConfig(
         name="agWall",
@@ -38,7 +41,7 @@ ASSEMBLY_CONFIGS = [
         default_factory=get_default_ag_wall_template,
         add_component_to_project=project_envelope_operations.add_ag_wall_to_project,
         update_component_in_project=project_envelope_operations.update_ag_wall_in_project,
-        remove_component_from_project=project_envelope_operations.remove_ag_wall_from_project
+        remove_component_from_project=project_envelope_operations.remove_ag_wall_from_project,
     ),
     ComponentOperationConfig(
         name="bgWall",
@@ -46,7 +49,7 @@ ASSEMBLY_CONFIGS = [
         default_factory=get_default_bg_wall_template,
         add_component_to_project=project_envelope_operations.add_bg_wall_to_project,
         update_component_in_project=project_envelope_operations.update_bg_wall_in_project,
-        remove_component_from_project=project_envelope_operations.remove_bg_wall_from_project
+        remove_component_from_project=project_envelope_operations.remove_bg_wall_from_project,
     ),
     ComponentOperationConfig(
         name="window",
@@ -54,7 +57,7 @@ ASSEMBLY_CONFIGS = [
         default_factory=get_default_window_template,
         add_component_to_project=project_envelope_operations.add_window_to_project,
         update_component_in_project=project_envelope_operations.update_window_in_project,
-        remove_component_from_project=project_envelope_operations.remove_window_from_project
+        remove_component_from_project=project_envelope_operations.remove_window_from_project,
     ),
     ComponentOperationConfig(
         name="skylight",
@@ -62,7 +65,7 @@ ASSEMBLY_CONFIGS = [
         default_factory=get_default_skylight_template,
         add_component_to_project=project_envelope_operations.add_skylight_to_project,
         update_component_in_project=project_envelope_operations.update_skylight_in_project,
-        remove_component_from_project=project_envelope_operations.remove_skylight_from_project
+        remove_component_from_project=project_envelope_operations.remove_skylight_from_project,
     ),
     ComponentOperationConfig(
         name="door",
@@ -70,7 +73,7 @@ ASSEMBLY_CONFIGS = [
         default_factory=get_default_door_template,
         add_component_to_project=project_envelope_operations.add_door_to_project,
         update_component_in_project=project_envelope_operations.update_door_in_project,
-        remove_component_from_project=project_envelope_operations.remove_door_from_project
+        remove_component_from_project=project_envelope_operations.remove_door_from_project,
     ),
 ]
 
@@ -81,7 +84,7 @@ NESTED_ASSEMBLY_CONFIGS = [
         default_factory=get_default_window_template,
         add_component_to_project=project_envelope_operations.add_window_to_project,
         update_component_in_project=project_envelope_operations.update_window_in_project,
-        remove_component_from_project=project_envelope_operations.remove_window_from_project
+        remove_component_from_project=project_envelope_operations.remove_window_from_project,
     ),
     ComponentOperationConfig(
         name="skylight",
@@ -89,7 +92,7 @@ NESTED_ASSEMBLY_CONFIGS = [
         default_factory=get_default_skylight_template,
         add_component_to_project=project_envelope_operations.add_skylight_to_project,
         update_component_in_project=project_envelope_operations.update_skylight_in_project,
-        remove_component_from_project=project_envelope_operations.remove_skylight_from_project
+        remove_component_from_project=project_envelope_operations.remove_skylight_from_project,
     ),
     ComponentOperationConfig(
         name="door",
@@ -97,9 +100,10 @@ NESTED_ASSEMBLY_CONFIGS = [
         default_factory=get_default_door_template,
         add_component_to_project=project_envelope_operations.add_door_to_project,
         update_component_in_project=project_envelope_operations.update_door_in_project,
-        remove_component_from_project=project_envelope_operations.remove_door_from_project
+        remove_component_from_project=project_envelope_operations.remove_door_from_project,
     ),
 ]
+
 
 @pytest.mark.parametrize(
     "assembly_config",
@@ -110,14 +114,15 @@ def test_assembly_operations(
     client: COMcheckClient,
     project: ComBuilding,
     assembly_config: ComponentOperationConfig,
-    maybe_apply_and_reload
+    building_area_key: str,
+    maybe_apply_and_reload,
 ):
     project.projectType = ProjectTypeOptions.ALTERATION
     run_flat_assembly_lifecycle(
         client=client,
         project=project,
         config=assembly_config,
-        building_area_key=get_building_area_key(project),
+        building_area_key=building_area_key,
     )
 
 
@@ -130,12 +135,13 @@ def test_nested_assembly_operations(
     client: COMcheckClient,
     project: ComBuilding,
     nested_assembly_config: ComponentOperationConfig,
-    maybe_apply_and_reload
+    building_area_key: str,
+    maybe_apply_and_reload,
 ):
     project.projectType = ProjectTypeOptions.NEW_CONSTRUCTION
     run_nested_assembly_lifecycle(
         client=client,
         project=project,
         config=nested_assembly_config,
-        building_area_key=get_building_area_key(project),
+        building_area_key=building_area_key,
     )

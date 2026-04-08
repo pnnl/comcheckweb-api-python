@@ -1,7 +1,7 @@
 from comcheck_api.types.core_types import *
 
-SAMPLE_PROJECT_ENVELOPE = Envelope(
-    **{
+SAMPLE_PROJECT_ENVELOPE = Envelope.model_validate(
+    {
         "id": 13943,
         "useVltDetails": True,
         "useCoolRoofPerformanceDetails": False,
@@ -295,8 +295,8 @@ SAMPLE_PROJECT_ENVELOPE = Envelope(
 )
 
 SAMPLE_BUILDING_AREA = [
-    WholeBldgUse(
-        **{
+    WholeBldgUse.model_validate(
+        {
             "id": 45738,
             "lightingId": 13940,
             "key": "70084399",
