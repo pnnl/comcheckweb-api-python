@@ -21,6 +21,7 @@ from comcheck_api.utilities.project_utilities import _require_building_area
 
 # *********** Roof, agWall, bgWall and floor add/update operations ***********
 
+
 def add_roof_to_project(
     project: ComBuilding, building_area_key: str, new_roof: Roof
 ) -> ComBuilding:
@@ -63,9 +64,14 @@ def update_roof_in_project(
     """
     updated_project = project.model_copy(deep=True)
 
-    updated_project.envelope.update_subcomponent_list(subcomponent_updates=updates, subcomponent_id=roof_assembly_type, subcomponent_name="roof")
+    updated_project.envelope.update_subcomponent_list(
+        subcomponent_updates=updates,
+        subcomponent_id=roof_assembly_type,
+        subcomponent_name="roof",
+    )
 
     return updated_project
+
 
 def remove_roof_from_project(
     project: ComBuilding, roof_assembly_type: str
@@ -84,9 +90,12 @@ def remove_roof_from_project(
     """
     updated_project = project.model_copy(deep=True)
 
-    updated_project.envelope.remove_from_subcomponent_list(subcomponent_id=roof_assembly_type, subcomponent_name="roof")
+    updated_project.envelope.remove_from_subcomponent_list(
+        subcomponent_id=roof_assembly_type, subcomponent_name="roof"
+    )
 
     return updated_project
+
 
 def add_ag_wall_to_project(
     project: ComBuilding, building_area_key: str, new_ag_wall: AgWall
@@ -130,9 +139,14 @@ def update_ag_wall_in_project(
     """
     updated_project = project.model_copy(deep=True)
 
-    updated_project.envelope.update_subcomponent_list(subcomponent_updates=updates, subcomponent_id=ag_wall_assembly_type, subcomponent_name="agWall")
+    updated_project.envelope.update_subcomponent_list(
+        subcomponent_updates=updates,
+        subcomponent_id=ag_wall_assembly_type,
+        subcomponent_name="agWall",
+    )
 
     return updated_project
+
 
 def remove_ag_wall_from_project(
     project: ComBuilding, ag_wall_assembly_type: str
@@ -151,7 +165,9 @@ def remove_ag_wall_from_project(
     """
     updated_project = project.model_copy(deep=True)
 
-    updated_project.envelope.remove_from_subcomponent_list(subcomponent_id=ag_wall_assembly_type, subcomponent_name="agWall")
+    updated_project.envelope.remove_from_subcomponent_list(
+        subcomponent_id=ag_wall_assembly_type, subcomponent_name="agWall"
+    )
 
     return updated_project
 
@@ -197,7 +213,11 @@ def update_bg_wall_in_project(
     """
     updated_project = project.model_copy(deep=True)
 
-    updated_project.envelope.update_subcomponent_list(subcomponent_updates=updates, subcomponent_id=bg_wall_assembly_type, subcomponent_name="bgWall")
+    updated_project.envelope.update_subcomponent_list(
+        subcomponent_updates=updates,
+        subcomponent_id=bg_wall_assembly_type,
+        subcomponent_name="bgWall",
+    )
 
     return updated_project
 
@@ -219,10 +239,11 @@ def remove_bg_wall_from_project(
     """
     updated_project = project.model_copy(deep=True)
 
-    updated_project.envelope.remove_from_subcomponent_list(subcomponent_id=bg_wall_assembly_type, subcomponent_name="bgWall")
+    updated_project.envelope.remove_from_subcomponent_list(
+        subcomponent_id=bg_wall_assembly_type, subcomponent_name="bgWall"
+    )
 
     return updated_project
-
 
 
 def add_floor_to_project(
@@ -266,9 +287,14 @@ def update_floor_in_project(
     """
     updated_project = project.model_copy(deep=True)
 
-    updated_project.envelope.update_subcomponent_list(subcomponent_updates=updates, subcomponent_id=floor_assembly_type, subcomponent_name="floor")
+    updated_project.envelope.update_subcomponent_list(
+        subcomponent_updates=updates,
+        subcomponent_id=floor_assembly_type,
+        subcomponent_name="floor",
+    )
 
     return updated_project
+
 
 def remove_floor_from_project(
     project: ComBuilding, floor_assembly_type: str
@@ -287,7 +313,9 @@ def remove_floor_from_project(
     """
     updated_project = project.model_copy(deep=True)
 
-    updated_project.envelope.remove_from_subcomponent_list(subcomponent_id=floor_assembly_type, subcomponent_name="floor")
+    updated_project.envelope.remove_from_subcomponent_list(
+        subcomponent_id=floor_assembly_type, subcomponent_name="floor"
+    )
 
     return updated_project
 
@@ -345,6 +373,7 @@ def add_skylight_to_project(
         updated_project.envelope.append_subcomponent(new_skylight, "skylight")
         return updated_project
 
+
 def remove_skylight_from_project(
     project: ComBuilding,
     skylight_assembly_type: str,
@@ -372,10 +401,13 @@ def remove_skylight_from_project(
     if location_type == "orphaned":
         parent_obj = updated_project.envelope
     elif location_type == "roof":
-        parent_obj = updated_project.envelope.roof[roof_index]
-    parent_obj.remove_from_subcomponent_list(subcomponent_id=skylight_assembly_type, subcomponent_name="skylight")
+        parent_obj = updated_project.envelope.roof[roof_index]  # type: ignore[index]
+    parent_obj.remove_from_subcomponent_list(
+        subcomponent_id=skylight_assembly_type, subcomponent_name="skylight"
+    )
 
     return updated_project
+
 
 def update_skylight_in_project(
     project: ComBuilding,
@@ -410,8 +442,12 @@ def update_skylight_in_project(
     if location_type == "orphaned":
         parent_obj = updated_project.envelope
     elif location_type == "roof":
-        parent_obj = updated_project.envelope.roof[roof_index]
-    parent_obj.update_subcomponent_list(subcomponent_updates=updates, subcomponent_id=skylight_assembly_type, subcomponent_name="skylight")
+        parent_obj = updated_project.envelope.roof[roof_index]  # type: ignore[index]
+    parent_obj.update_subcomponent_list(
+        subcomponent_updates=updates,
+        subcomponent_id=skylight_assembly_type,
+        subcomponent_name="skylight",
+    )
 
     return updated_project
 
@@ -465,7 +501,8 @@ def add_window_to_project(
         # Alteration projects: orphaned windows
         updated_project.envelope.append_subcomponent(new_window, "window")
         return updated_project
-    
+
+
 def remove_window_from_project(
     project: ComBuilding,
     window_assembly_type: str,
@@ -490,8 +527,10 @@ def remove_window_from_project(
     if location_type == "orphaned":
         parent_obj = updated_project.envelope
     elif location_type in ["agWall", "bgWall"]:
-        parent_obj = updated_project.envelope.get_by_path(f"{location_type}[{wall_index}]")
-    parent_obj.remove_from_subcomponent_list(subcomponent_id=window_assembly_type, subcomponent_name="window")
+        parent_obj = updated_project.envelope.get_by_path(f"{location_type}[{wall_index}]")  # type: ignore[assignment]
+    parent_obj.remove_from_subcomponent_list(
+        subcomponent_id=window_assembly_type, subcomponent_name="window"
+    )
 
     return updated_project
 
@@ -528,8 +567,12 @@ def update_window_in_project(
     if location_type == "orphaned":
         parent_obj = updated_project.envelope
     elif location_type in ["agWall", "bgWall"]:
-        parent_obj = updated_project.envelope.get_by_path(f"{location_type}[{wall_index}]")
-    parent_obj.update_subcomponent_list(subcomponent_updates=updates, subcomponent_id=window_assembly_type, subcomponent_name="window")
+        parent_obj = updated_project.envelope.get_by_path(f"{location_type}[{wall_index}]")  # type: ignore[assignment]
+    parent_obj.update_subcomponent_list(
+        subcomponent_updates=updates,
+        subcomponent_id=window_assembly_type,
+        subcomponent_name="window",
+    )
 
     return updated_project
 
@@ -574,7 +617,11 @@ def add_door_to_project(
                 f"Wall's bldgUseKey '{wall_use_key}' does not match buildingAreaKey '{building_area_key}'."
             )
         wall.append_subcomponent(new_door, "door")
-        updated_project.envelope.update_subcomponent_list(subcomponent_updates=wall, subcomponent_id=getattr(wall, "assemblyType"), subcomponent_name=wall.json_key())
+        updated_project.envelope.update_subcomponent_list(
+            subcomponent_updates=wall,
+            subcomponent_id=getattr(wall, "assemblyType"),
+            subcomponent_name=wall.json_key(),
+        )
         return updated_project
     else:
         updated_project.envelope.append_subcomponent(new_door)
@@ -606,10 +653,13 @@ def remove_door_from_project(
     if location_type == "orphaned":
         parent_obj = updated_project.envelope
     elif location_type in ["agWall", "bgWall"]:
-        parent_obj = updated_project.envelope.get_by_path(f"{location_type}[{wall_index}]")
-    parent_obj.remove_from_subcomponent_list(subcomponent_id=door_assembly_type, subcomponent_name="door")
+        parent_obj = updated_project.envelope.get_by_path(f"{location_type}[{wall_index}]")  # type: ignore[assignment]
+    parent_obj.remove_from_subcomponent_list(
+        subcomponent_id=door_assembly_type, subcomponent_name="door"
+    )
 
     return updated_project
+
 
 def update_door_in_project(
     project: ComBuilding, door_assembly_type: str, updates: dict[str, Any] | Door
@@ -643,8 +693,12 @@ def update_door_in_project(
     if location_type == "orphaned":
         parent_obj = updated_project.envelope
     elif location_type in ["agWall", "bgWall"]:
-        parent_obj = updated_project.envelope.get_by_path(f"{location_type}[{wall_index}]")
-    parent_obj.update_subcomponent_list(subcomponent_updates=updates, subcomponent_id=door_assembly_type, subcomponent_name="door")
+        parent_obj = updated_project.envelope.get_by_path(f"{location_type}[{wall_index}]")  # type: ignore[assignment]
+    parent_obj.update_subcomponent_list(
+        subcomponent_updates=updates,
+        subcomponent_id=door_assembly_type,
+        subcomponent_name="door",
+    )
 
     return updated_project
 
@@ -753,6 +807,7 @@ def add_thermal_bridge_to_project(
 
 # *********** Helper Functions ***********
 
+
 def _find_component_location(
     project: ComBuilding, component_type: str, assembly_type: str
 ) -> tuple[str, int | None, int | None]:
@@ -777,7 +832,7 @@ def _find_component_location(
         ValueError: If component is not found anywhere
     """
     # Check orphaned components first
-    
+
     if project.projectType == ProjectTypeOptions.ALTERATION:
         orphaned_list = getattr(project.envelope, component_type, [])
         component_index = next(
@@ -807,7 +862,6 @@ def _find_component_location(
                 if component_index != -1:
                     return ("agWall", ag_wall_index, component_index)
 
-
             # Check bgWall components
             for bg_wall_index, bg_wall in enumerate(project.envelope.bgWall):
                 wall_components = getattr(bg_wall, component_type, [])
@@ -821,7 +875,6 @@ def _find_component_location(
                 )
                 if component_index != -1:
                     return ("bgWall", bg_wall_index, component_index)
-
 
         # For skylights: check roof components
         elif component_type == "skylight":
