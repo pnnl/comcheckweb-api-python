@@ -99,13 +99,13 @@ class COMcheckClient:
 
         return self._parse_data(data, mode)
 
-    def list_projects(self) -> Dict[str, Any]:
+    def list_projects(self) -> List[Dict[str, Any]]:
         """Get a list of all projects.
 
         Returns:
-            API response data as dictionary
+            API response data as list of project dictionaries
         """
-        return self._service.get_project_list().get("data", {})
+        return self._service.get_project_list().get("data", [])
 
     # TODO: return of update_project should be ComBuilding
     def update_project(
