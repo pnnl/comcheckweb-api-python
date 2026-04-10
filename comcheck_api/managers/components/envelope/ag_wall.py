@@ -30,9 +30,15 @@ class AgWallListManager(DataManager[AgWall]):
     def add_new_thermal_bridge(
         self,
         ag_wall: AgWall,
-        thermal_bridge_type: ThermalBridgeTypeOptions = ThermalBridgeTypeOptions.THERMAL_BRIDGE_OTHER,
-        thermal_bridge_category: ThermalBridgeCategoryOptions = ThermalBridgeCategoryOptions.THERMAL_BRIDGE_UNCATEGORIZED,
-        thermal_bridge_compliance_type: ThermalBridgeComplianceTypeOptions = ThermalBridgeComplianceTypeOptions.THERMAL_BRIDGE_NON_PRESCRIPTIVE,
+        thermal_bridge_type: (
+            ThermalBridgeTypeOptions | None
+        ) = ThermalBridgeTypeOptions.THERMAL_BRIDGE_OTHER,
+        thermal_bridge_category: (
+            ThermalBridgeCategoryOptions | None
+        ) = ThermalBridgeCategoryOptions.THERMAL_BRIDGE_UNCATEGORIZED,
+        thermal_bridge_compliance_type: (
+            ThermalBridgeComplianceTypeOptions | None
+        ) = ThermalBridgeComplianceTypeOptions.THERMAL_BRIDGE_NON_PRESCRIPTIVE,
         psi_factor: float = 0.0,
         chi_factor: float = 0.0,
         thermal_bridge_length: float = 0.0,

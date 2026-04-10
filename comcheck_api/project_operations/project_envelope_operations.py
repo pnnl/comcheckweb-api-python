@@ -401,7 +401,7 @@ def remove_skylight_from_project(
     if location_type == "orphaned":
         parent_obj = updated_project.envelope
     elif location_type == "roof":
-        parent_obj = updated_project.envelope.roof[roof_index]  # type: ignore[index]
+        parent_obj = updated_project.envelope.roof[roof_index]  # type: ignore
     parent_obj.remove_from_subcomponent_list(
         subcomponent_id=skylight_assembly_type, subcomponent_name="skylight"
     )
@@ -442,7 +442,7 @@ def update_skylight_in_project(
     if location_type == "orphaned":
         parent_obj = updated_project.envelope
     elif location_type == "roof":
-        parent_obj = updated_project.envelope.roof[roof_index]  # type: ignore[index]
+        parent_obj = updated_project.envelope.roof[roof_index]  # type: ignore
     parent_obj.update_subcomponent_list(
         subcomponent_updates=updates,
         subcomponent_id=skylight_assembly_type,
@@ -708,14 +708,14 @@ def add_thermal_bridge_to_project(
     project: ComBuilding,
     building_area_key: str,
     ag_wall: AgWall,
-    thermal_bridge_type: Union[
-        ThermalBridgeTypeOptions, str
-    ] = ThermalBridgeTypeOptions.THERMAL_BRIDGE_OTHER,
+    thermal_bridge_type: (
+        ThermalBridgeTypeOptions | None
+    ) = ThermalBridgeTypeOptions.THERMAL_BRIDGE_OTHER,
     thermal_bridge_category: Union[
-        ThermalBridgeCategoryOptions, str
+        ThermalBridgeCategoryOptions | None
     ] = ThermalBridgeCategoryOptions.THERMAL_BRIDGE_UNCATEGORIZED,
     thermal_bridge_compliance_type: Union[
-        ThermalBridgeComplianceTypeOptions, str
+        ThermalBridgeComplianceTypeOptions | None
     ] = ThermalBridgeComplianceTypeOptions.THERMAL_BRIDGE_NON_PRESCRIPTIVE,
     psi_factor: float = 0.0,
     chi_factor: float = 0.0,
