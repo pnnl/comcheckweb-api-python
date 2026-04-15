@@ -1,0 +1,83 @@
+site_name: COMcheck API - Python Client
+site_description: Type-safe Python client for the U.S. DOE COMcheck Web API
+repo_url: https://github.com/pnnl-int/comcheckweb-api-python
+docs_dir: docs_site
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            members_order: source
+            merge_init_into_class: true
+            show_if_no_docstring: false
+            signature_crossrefs: true
+            separate_signature: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - API Reference:
+      - Client: api/client.md
+      - API Service: api/api-service.md
+      - Types:
+          - API Types: api/types/api-types.md
+          - Common Types: api/types/common-types.md
+          - Custom Base Model: api/types/custom-base-model.md
+      - Managers:
+          - Data Manager: api/managers/data-manager.md
+          - Building Area: api/managers/building-area.md
+          - Envelope Components: api/managers/envelope.md
+      - Project Operations:
+          - Building Area Operations: api/operations/building-area.md
+          - Envelope Operations: api/operations/envelope.md
+      - Utilities:
+          - Project Defaults: api/utilities/defaults.md
+          - Export & Helpers: api/utilities/common.md
+          - Envelope Utilities: api/utilities/envelope.md
+          - ID Registry: api/utilities/id-registry.md
+      - Constants:
+          - Project Template: api/constants/common.md
+          - Building Area Defaults: api/constants/building-area.md
+          - Envelope Defaults: api/constants/envelope.md
+      - Exceptions: api/exceptions.md

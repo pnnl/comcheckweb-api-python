@@ -53,3 +53,6 @@ htmlcov/
 
 .env
 testprojectJson/
+
+# MkDocs build output
+site/

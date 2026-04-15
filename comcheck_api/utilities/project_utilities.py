@@ -1,3 +1,5 @@
+"""Internal helpers for validating and querying COMcheck project structures."""
+
 from typing import List
 from comcheck_api.types.custom_base_model import CustomBaseModel
 from comcheck_api.types.core_types import ComBuilding
@@ -45,7 +47,14 @@ def find_component_in_component_list(
 def get_id_from_component(
     component: CustomBaseModel,
 ) -> str:
-    """Retrieve the id of a component"""
+    """Retrieve the unique identifier value of a component.
+
+    Args:
+        component: A model instance whose identifier should be extracted.
+
+    Returns:
+        The identifier string, or ``None`` if the identifier attribute is unset.
+    """
 
     identifier, _ = get_model_info(type(component))
     return getattr(component, identifier, None)

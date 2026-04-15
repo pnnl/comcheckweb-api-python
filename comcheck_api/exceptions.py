@@ -24,19 +24,19 @@ class COMCheckHTTPError(COMCheckAPIError):
 
 
 class COMCheckValidationError(COMCheckAPIError):
-    """Validation failed."""
+    """Raised when request or response data fails Pydantic or schema validation."""
 
     pass
 
 
 class COMCheckConnectionError(COMCheckAPIError):
-    """Connection to COMcheck API failed."""
+    """Raised when the HTTP client cannot reach the COMcheck API server."""
 
     pass
 
 
 class COMCheckSimulationError(COMCheckAPIError):
-    """Simulation-related error."""
+    """Raised when a simulation request fails or returns unexpected data."""
 
     pass
 

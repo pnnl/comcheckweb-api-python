@@ -10,7 +10,15 @@ logger = logging.getLogger(__name__)
 
 
 def get_random_number(min_value: int = 0, max_value: int = 100) -> int:
-    """Return a pseudo-random integer between min_value and max_value inclusive."""
+    """Return a pseudo-random integer in the range [*min_value*, *max_value*].
+
+    Args:
+        min_value: Lower bound (inclusive).
+        max_value: Upper bound (inclusive).
+
+    Returns:
+        A random integer.
+    """
     return random.randint(min_value, max_value)
 
 
