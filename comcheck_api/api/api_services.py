@@ -23,7 +23,17 @@ from comcheck_api.types.api_types import (
 
 
 class COMCheckApiService:
-    """COMCheck API service class for interacting with the COM API."""
+    """Low-level HTTP service for the COMcheck Web API.
+
+    Handles authentication, request construction, response parsing, and
+    error mapping.  Methods accept raw dicts as inputs and return either
+    raw dicts or validated Pydantic response models.
+
+    Can be used as a context manager::
+
+        with COMCheckApiService(api_key="key") as svc:
+            data = svc.get_project("123")
+    """
 
     def __init__(self, api_key: str) -> None:
         """Initialize COMCheck API service.

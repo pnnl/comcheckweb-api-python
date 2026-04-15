@@ -1,3 +1,10 @@
+"""In-memory registry for unique component identifiers.
+
+The registry tracks every ID that has been issued or imported so that
+:func:`generate_id_with_prefix` never produces duplicates within a session.
+Call :func:`reset_registry` between test runs or independent sessions.
+"""
+
 _used_ids: set[str] = set()
 _prefix_counters: dict[str, int] = {}
 
@@ -57,9 +64,14 @@ def reset_registry():
 
 
 def _parse_prefix_number(id: str):
-    """
-    Parse prefix and trailing number from an ID like "Door 5"
-    Returns (prefix:str, number:int|None)
+    """Parse a prefix and optional trailing number from a composite ID.
+
+    Args:
+        id: An ID string such as ``"Door:Door 5"``.
+
+    Returns:
+        A ``(prefix, number)`` tuple where *number* is ``None`` when the ID
+        has no trailing integer.
     """
     parts = id.rsplit(" ", 1)
     if len(parts) == 2 and parts[1].isdigit():

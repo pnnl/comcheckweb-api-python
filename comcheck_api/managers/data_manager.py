@@ -43,7 +43,14 @@ class DataManager(Generic[T]):
         model_type: Type[BaseModel] | None = None,
         schema_path: str | Path = "../schemas/comCheck.schema.json",
     ):
-        """Initialize the data manager."""
+        """Initialize the data manager.
+
+        Args:
+            initial_data: Items to pre-populate the manager with.
+            model_type: Pydantic model class for the managed items.
+                Falls back to the class-level ``model_type`` attribute.
+            schema_path: Path to a JSON schema file for validation.
+        """
         self._data: list[T] = []
         self._schema: dict[str, Any] | None = None
 
@@ -77,7 +84,11 @@ class DataManager(Generic[T]):
             )
 
     def _initialize_schema(self, schema_path: str | Path) -> None:
-        """Load schema if provided"""
+        """Load the JSON schema from disk if the file exists.
+
+        Args:
+            schema_path: Path to the JSON schema file.
+        """
         if schema_path:
             schema_path = Path(schema_path)
             if schema_path.exists():
@@ -147,11 +158,16 @@ class DataManager(Generic[T]):
         return self.get_all()
 
     def generate_identifier(self, item: T) -> None:
-        """
-        Ensures the item has a valid and unique identifier.
+        """Ensure the item has a valid and unique identifier.
 
-        If the identifier is missing, invalid, duplicated, or does not match the
-        expected prefix, generate a new unique one.
+        If the identifier is missing, invalid, duplicated, or does not match
+        the expected prefix, a new unique one is generated via the ID registry.
+
+        Args:
+            item: The item whose identifier should be validated or assigned.
+
+        Raises:
+            Exception: If the item is already present in the managed list.
         """
         if any(existing is item for existing in self._data):
             raise Exception("Item already exists in managed list")

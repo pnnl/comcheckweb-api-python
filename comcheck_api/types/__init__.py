@@ -17,7 +17,17 @@ from .core_types import *  # noqa: F401, F403
 
 
 def _collect_exports(mod: ModuleType) -> List[str]:
-    """Collect exportable names from a module."""
+    """Collect public names exported by a module.
+
+    Uses the module's ``__all__`` list when available; otherwise falls back to
+    all names that do not start with an underscore.
+
+    Args:
+        mod: The module to inspect.
+
+    Returns:
+        List of exportable name strings.
+    """
     if hasattr(mod, "__all__"):
         return list(mod.__all__)
     return [name for name in dir(mod) if not name.startswith("_")]

@@ -1,3 +1,10 @@
+"""Default project template used to bootstrap new COMcheck projects.
+
+The :data:`PROJECT_TEMPLATE` constant is a fully validated :class:`ComBuilding`
+instance pre-populated with sensible defaults for all required sections
+(envelope, lighting, HVAC, location, etc.).
+"""
+
 from comcheck_api.types.core_types import ComBuilding
 
 PROJECT_TEMPLATE = ComBuilding.model_validate(

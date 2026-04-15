@@ -18,8 +18,14 @@ S = TypeVar("S")
 
 
 class CustomBaseModel(BaseModel):
-    """Base model providing structured, type-safe manipulation of nested
-    data components."""
+    """Base model providing structured, type-safe manipulation of nested data components.
+
+    Extends Pydantic's :class:`~pydantic.BaseModel` with convenience methods
+    for appending, updating, and removing items in list-valued sub-component
+    fields (e.g. windows on a wall, skylights on a roof).  Subclasses
+    automatically gain ``add_<field>`` helper methods for every field whose
+    type is itself a :class:`~pydantic.BaseModel`.
+    """
 
     _identifier: str = "id"
 
@@ -64,8 +70,8 @@ class CustomBaseModel(BaseModel):
         Append a subcomponent to the corresponding subcomponent list.
 
         Args:
-            subcomponent: The subcomponent instance to add
-            subcomponent name: Name of the subcomponent attribute (e.g., "door")
+            subcomponent: The subcomponent instance to add.
+            subcomponent_name: Name of the subcomponent attribute (e.g., ``"door"``).
 
         Returns:
             Item with the new subcomponent added.
@@ -177,9 +183,24 @@ class CustomBaseModel(BaseModel):
     def _get_normalized_subcomponent_info(
         self, subcomponent: S, subcomponent_name: str | None
     ):
-        """
+        """Resolve the concrete type and attribute name for a subcomponent.
+
+        When *subcomponent_name* is provided the type is looked up from
+        ``core_types`` by capitalising the name.  Otherwise the type and
+        name are derived from the *subcomponent* instance itself.
+
+        Args:
+            subcomponent: A model instance or dict representing the subcomponent.
+            subcomponent_name: Optional explicit attribute name (e.g. ``"door"``).
+
         Returns:
-            (subcomponent_type, resolved_subcomponent_name)
+            A ``(subcomponent_type, resolved_subcomponent_name)`` tuple.
+
+        Raises:
+            ValueError: If the name cannot be resolved to a known type, or if
+                *subcomponent* is a dict and no *subcomponent_name* is given.
+            TypeError: If *subcomponent* is neither a dict nor a
+                :class:`CustomBaseModel`.
         """
         if subcomponent_name:
             from comcheck_api.types import core_types
