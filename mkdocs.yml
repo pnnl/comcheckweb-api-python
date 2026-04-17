@@ -57,12 +57,10 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
+  - Simulation: simulation.md
   - API Reference:
       - Client: api/client.md
       - Project Operations:
           - Building Area Operations: api/operations/building-area.md
           - Envelope Operations: api/operations/envelope.md
-      - Constants:
-          - Project Template: api/constants/common.md
-          - Building Area Defaults: api/constants/building-area.md
-          - Envelope Defaults: api/constants/envelope.md
+      - Defaults: api/defaults.md

@@ -3,7 +3,7 @@ from copy import deepcopy
 from comcheck_api.client import COMcheckClient
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
 from comcheck_api.project_operations import project_building_area_operations
-from comcheck_api.utilities.get_project_default import (
+from comcheck_api.defaults import (
     get_default_building_area_template,
 )
 from comcheck_api.types.core_types import *

@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 from comcheck_api.client import COMcheckClient
 from comcheck_api.project_operations import project_envelope_operations
 from comcheck_api.utilities.common import export_to_json
-from comcheck_api.utilities.get_project_default import (
+from comcheck_api.defaults import (
     get_default_ag_wall_template,
     get_default_bg_wall_template,
     get_default_floor_template,

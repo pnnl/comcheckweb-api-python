@@ -52,7 +52,7 @@ from .exceptions import (
 )
 
 # Project Defaults
-from .utilities import get_project_default
+from . import defaults
 
 # Project Operations
 from .project_operations import (
@@ -77,7 +77,7 @@ __all__ = [
     "COMCheckSimulationError",
     "COMCheckProjectNotFoundError",
     # Project Defaults
-    "get_project_default",
+    "defaults",
     # Project Operations
     "project_building_area_operations",
     "project_envelope_operations",
