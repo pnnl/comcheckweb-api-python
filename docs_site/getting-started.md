@@ -50,7 +50,7 @@ with COMcheckClient(api_key="your-key") as client:
 
 ```python
 from comcheck_api import COMcheckClient, project_envelope_operations
-from comcheck_api.utilities.get_project_default import (
+from comcheck_api.defaults import (
     get_default_roof_template,
     get_default_ag_wall_template,
 )
@@ -102,7 +102,7 @@ print(f"Performance Rating: {result['performanceRating']}")
 
 ```python
 from comcheck_api import project_building_area_operations
-from comcheck_api.utilities.get_project_default import (
+from comcheck_api.defaults import (
     get_default_building_area_template,
 )
 

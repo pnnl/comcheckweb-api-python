@@ -2,7 +2,7 @@ import pytest
 
 from comcheck_api.client import COMcheckClient
 from comcheck_api.project_operations import project_envelope_operations
-from comcheck_api.utilities.get_project_default import (
+from comcheck_api.defaults import (
     get_default_ag_wall_template,
     get_default_bg_wall_template,
     get_default_door_template,

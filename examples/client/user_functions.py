@@ -3,7 +3,7 @@
 import os
 from dotenv import load_dotenv
 from comcheck_api.client import COMcheckClient
-from comcheck_api.utilities.get_project_default import get_default_project_template
+from comcheck_api.defaults import get_default_project_template
 
 # Initialize client
 load_dotenv()

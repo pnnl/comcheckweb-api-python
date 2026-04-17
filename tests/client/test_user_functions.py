@@ -2,7 +2,7 @@
 
 # import pytest
 # from comcheck_api.client import COMcheckClient
-# from comcheck_api.utilities.get_project_default import get_default_project_template
+# from comcheck_api.defaults import get_default_project_template
 
 
 # @pytest.fixture
@@ -40,7 +40,7 @@
 #     project_id = mock_project_list[0]["_id"]
 #     mock_project = {"id": project_id, "name": "Test Project"}
 #     mocker.patch.object(client, 'get_project', return_value=mock_project)
-    
+
 #     project = client.get_project(project_id, mode="json")
 #     assert project is not None, "Should return project data"
 #     assert isinstance(project, dict), "Should return JSON data as dict"
@@ -52,7 +52,7 @@
 #     mock_project = get_default_project_template()
 #     mock_project.projectName = "Test Project"
 #     mocker.patch.object(client, 'get_project', return_value=mock_project)
-    
+
 #     project = client.get_project(project_id)
 #     assert project is not None, "Should return project data"
 #     assert hasattr(project, 'projectName'), "Should return project object with attributes"
@@ -64,7 +64,7 @@
 #     default_project = get_default_project_template()
 #     mock_response = {"id": project_id, "status": "updated"}
 #     mocker.patch.object(client, 'update_project', return_value=mock_response)
-    
+
 #     response = client.update_project(project_id, default_project)
 #     assert response is not None, "Should return update response"
 #     assert response["status"] == "updated", "Should indicate successful update"

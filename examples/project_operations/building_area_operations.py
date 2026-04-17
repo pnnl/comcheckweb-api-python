@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 from comcheck_api.client import COMcheckClient
 from comcheck_api.project_operations import project_building_area_operations
-from comcheck_api.utilities.get_project_default import get_default_building_area_template
+from comcheck_api.defaults import get_default_building_area_template
 from comcheck_api.types.core_types import WholeBuildingTypeOptions
 
 # Initialize client

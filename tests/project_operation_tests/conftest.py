@@ -10,7 +10,7 @@ from comcheck_api.utilities.common import export_to_json
 from comcheck_api.types.core_types import *
 from comcheck_api.utilities.project_utilities import get_id_from_component
 from comcheck_api.project_operations import project_building_area_operations
-from comcheck_api.utilities.get_project_default import (
+from comcheck_api.defaults import (
     get_default_building_area_template,
 )
 from tests.project_operation_tests.assertions.components import (
