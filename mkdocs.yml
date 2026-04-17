@@ -57,6 +57,7 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
+  - Simulation: simulation.md
   - API Reference:
       - Client: api/client.md
       - Project Operations:
