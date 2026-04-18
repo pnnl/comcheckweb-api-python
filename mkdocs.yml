@@ -57,10 +57,9 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
+  - COMcheckClient: api/client.md
+  - Project Operations:
+      - Building Area: api/operations/building-area.md
+      - Envelope: api/operations/envelope.md
   - Simulation: simulation.md
-  - API Reference:
-      - Client: api/client.md
-      - Project Operations:
-          - Building Area Operations: api/operations/building-area.md
-          - Envelope Operations: api/operations/envelope.md
-      - Defaults: api/defaults.md
+  - Defaults: api/defaults.md
