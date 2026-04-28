@@ -22,6 +22,6 @@ roof_manager = RoofListManager([])
 roof = roof_manager.add_new(SAMPLE_ROOF)
 print("\nAdded roof:", roof)
 
-roof_manager.add_new_skylight(roof, SAMPEL_SKYLIGHT)
+roof_manager.add_new_skylight(roof[0], SAMPEL_SKYLIGHT)
 
 print("\nAdded skylight:", roof_manager.get_all())
