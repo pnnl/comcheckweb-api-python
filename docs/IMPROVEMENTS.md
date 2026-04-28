@@ -48,7 +48,7 @@ git commit -m "Remove sensitive .env file from version control"
 **Location:** `comcheck_api/api/api_services.py:21`
 
 ```python
-BASE_URL: str = "https://becp-dev.pnl.gov/ahj/COM"
+BASE_URL: str = "https://becp-dev.pnl.gov/checkweb-api/COM"
 ```
 
 **Issue:** URL is hardcoded, making it difficult to switch environments (dev/staging/prod).
@@ -195,7 +195,7 @@ except httpx.HTTPStatusError as error:
 ```bash
 # .env.example
 COM_API_KEY=your-api-key-here
-COMCHECK_API_URL=https://becp-dev.pnl.gov/ahj/COM
+COMCHECK_API_URL=https://becp-dev.pnl.gov/checkweb-api/COM
 ```
 
 ### Documentation Improvements
