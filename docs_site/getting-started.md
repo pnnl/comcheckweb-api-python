@@ -1,5 +1,8 @@
 # Getting Started
 
+!!! note "Supported Sections"
+    Currently, only **Building Area**, **Envelope**, and **Compliance Simulation** operations are fully supported. Interior lighting, exterior lighting, mechanical, credits, and renewable energy sections are planned but not yet implemented. See the [home page](index.md#current-status) for the full status table.
+
 ## Setup
 
 ### 1. Install the package

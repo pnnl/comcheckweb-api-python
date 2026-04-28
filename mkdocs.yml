@@ -57,9 +57,15 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
+  - Types Guide: types-guide.md
   - COMcheckClient: api/client.md
+  - Simulation: api/simulation.md
   - Project Operations:
       - Building Area: api/operations/building-area.md
       - Envelope: api/operations/envelope.md
-  - Simulation: simulation.md
-  - Defaults: api/defaults.md
+      - Interior Lighting: api/operations/interior-lighting.md
+      - Exterior Lighting: api/operations/exterior-lighting.md
+      - Mechanical: api/operations/mechanical.md
+      - Credits: api/operations/credits.md
+      - Renewable Energy: api/operations/renewable-energy.md
+  - Project Defaults: api/defaults.md

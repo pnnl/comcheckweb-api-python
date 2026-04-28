@@ -2,6 +2,23 @@
 
 Type-safe Python client for the PNNL's [COMcheck Web](https://comcheck.energycode.pnl.gov/) for building energy code compliance verification.
 
+## Current Status
+
+This package is under active development. The following sections are currently supported:
+
+| Section | Status |
+|---|---|
+| Building Area | Supported |
+| Envelope (roofs, walls, floors, windows, doors, skylights, thermal bridges) | Supported |
+| Compliance Simulation | Supported |
+| Interior Lighting | TBD |
+| Exterior Lighting | TBD |
+| Mechanical | TBD |
+| Credits | TBD |
+| Renewable Energy | TBD |
+
+Operations and data managers for the TBD sections are not yet implemented. The underlying types and models for these sections are available (see [Types Guide](types-guide.md)), but there are no high-level convenience functions for them yet.
+
 ## Features
 
 - **Type-safe** --- Pydantic models for all API inputs and outputs
