@@ -51,7 +51,7 @@ class COMCheckApiService:
             )
         self.api_key = api_key
         self.base_url: str = os.getenv(
-            "COMCHECK_API_URL", "https://becp-dev.pnl.gov/ahj/COM"
+            "COMCHECK_API_URL", "https://comcheck.energycode.pnl.gov/checkweb-api/COM"
         )
         self._client: Optional[httpx.Client] = None
 

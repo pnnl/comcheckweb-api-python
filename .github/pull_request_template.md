@@ -12,13 +12,6 @@ If you've found a bug or have a suggestion:
 2. **Share Feedback**: Your feedback helps us improve the library
 3. **Use and Share**: Use the library and share your experiences
 
-## For PNNL Internal Team Members
-
-If you're part of the internal development team:
-- Ensure you're working from the internal repository
-- Follow the development guidelines in [docs/VERSION_CONTROL.md](../docs/VERSION_CONTROL.md)
-- Contact the team lead if you have questions
-
 ---
 
 We appreciate your understanding and interest in the COMcheck API Python client!

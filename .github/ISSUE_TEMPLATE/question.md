@@ -12,7 +12,6 @@ Your question here.
 Describe what you've already tried or where you've looked for answers:
 - [ ] Checked the README
 - [ ] Reviewed the examples/ directory
-- [ ] Read the documentation in docs/
 - [ ] Searched existing issues
 
 ## Context
@@ -25,4 +24,4 @@ Provide any relevant context about what you're trying to accomplish.
 
 ---
 
-**Note:** Please check the [examples/](../../examples/) directory and [documentation](../../docs/) first. For usage questions, these are often the best resources.
+**Note:** Please check the [examples/](../../examples/) directory. For usage questions, these are often the best resources.

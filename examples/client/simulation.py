@@ -9,7 +9,8 @@ from comcheck_api.types.core_types import EnergyCodeOptions
 # Initialize client
 load_dotenv()
 client = COMcheckClient()
-client.set_api_key(os.getenv("COM_API_KEY"))
+api_key = os.getenv("COM_API_KEY") or "your-api-key-here"
+client.set_api_key(api_key)
 
 # Example 1: Run a simulation without saving to a project
 project = PROJECT_TEMPLATE.model_copy(deep=True)
@@ -26,6 +27,6 @@ results = client.get_simulation_result(session_id)
 print(f"Simulation results: {results}")
 
 # Example 4: Run simulation for an existing project
-project_id = "your-project-id"  # Replace with actual project ID
+project_id = 123  # Replace with actual project ID
 session_id = client.start_run_simulation(project, project_id)
 print(f"Started simulation for project {project_id}: {session_id}")
