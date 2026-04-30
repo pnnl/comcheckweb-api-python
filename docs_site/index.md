@@ -4,7 +4,7 @@ Type-safe Python client for the PNNL's [COMcheck Web](https://comcheck.energycod
 
 ## Current Status
 
-This package is under active development. The following sections are currently supported:
+This package is under active development. Here is the current support status for each section:
 
 | Section | Status |
 |---|---|
