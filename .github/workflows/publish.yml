@@ -1,0 +1,34 @@
+name: Publish to PyPI
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g. 1.0.0). Leave empty to use the version in pyproject.toml."
+        required: false
+
+permissions:
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set version (if provided)
+        if: ${{ inputs.version != '' }}
+        run: sed -i "s/^version = .*/version = \"${{ inputs.version }}\"/" pyproject.toml
+
+      - name: Show version
+        run: grep '^version' pyproject.toml
+
+      - name: Build package
+        run: uv build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
