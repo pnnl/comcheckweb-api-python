@@ -12,12 +12,45 @@ Quickly useful notes:
 - If you reference this package from other workspace packages, keep the `tool.uv.sources` entry that maps `comcheckweb-api-python = { workspace = true }` so `uv` resolves it to the local workspace copy.
 - For a single-package repo you can also rely on `members = ["."]` and omit additional sources, but leaving the explicit source entry is harmless and makes intent clear.
 
-## Getting Started
+## Usage
+
+### 1. Obtain an API Key
+
+Get your API key from [COMcheck Web](https://comcheck.energycode.pnl.gov):
+
+1. Log in to your COMcheck Web account
+2. Navigate to **Settings → Developer Setting**
+3. Generate and copy your API key
+
+> **Note:** The Developer Setting feature is currently under development.
+
+### 2. Configure the API Key
+
+Create a `.env` file in your project root (or copy from `.env.example`):
+
+```bash
+COM_API_KEY=your-api-key-here
+```
+
+### 3. Install the Package
+
+```bash
+pip install comcheckweb-api-python
+```
+
+### 4. Start Using the Package
+
+- **Simulation only:** You can use the simulation features directly without creating a project on COMcheck Web.
+- **Updating a project:** You must first create the project under your account on [COMcheck Web](https://comcheck.energycode.pnl.gov) before using this package to update it. Project creation is not yet supported through this package.
+
+For detailed usage examples and API reference, see the [documentation](https://pnnl-int.github.io/comcheckweb-api-python/).
+
+## Development
 
 Clone the repository and follow the commands below to set up developer tooling.
 
 ```bash
-git clone https://gitlab.pnnl.gov/becp/checktool-libraries/comcheckweb-api-python.git
+git clone https://github.com/pnnl-int/comcheckweb-api-python.git
 cd comcheckweb-api-python
 uv sync
 ```
