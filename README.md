@@ -26,11 +26,7 @@ Get your API key from [COMcheck Web](https://comcheck.energycode.pnl.gov):
 
 ### 2. Configure the API Key
 
-Create a `.env` file in your project root (or copy from `.env.example`):
-
-```bash
-COM_API_KEY=your-api-key-here
-```
+For detailed setup instructions, see the [Getting Started](https://pnnl-int.github.io/comcheckweb-api-python/getting-started/) guide.
 
 ### 3. Install the Package
 
