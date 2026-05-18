@@ -56,3 +56,5 @@ testprojectJson/
 
 # MkDocs build output
 site/
+
+.claude
