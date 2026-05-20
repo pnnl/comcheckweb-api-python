@@ -16,6 +16,11 @@ through natural-language prompts.
 - [04-claude-skill.md](04-claude-skill.md) — Deep dive on packaging the
   SDK as a Claude Skill: structure, distribution, and tradeoffs.
 - [05-comparison.md](05-comparison.md) — Side-by-side comparison of
-  `llms.txt`, Claude Skill, and MCP Server, with recommendations.
+  `llms.txt`, Claude Skill, and MCP Server, with recommendations and
+  token-usage analysis.
 - [06-rag-and-s3-vectors.md](06-rag-and-s3-vectors.md) — Earlier
   discussion on RAG-based architectures and S3 Vectors as a store.
+- [07-implementation-plan.md](07-implementation-plan.md) — Unified plan
+  that ships all three (`llms.txt`, Skill, MCP server) from a single
+  source of content, with phased build steps, user on-ramps, and
+  benefits.
