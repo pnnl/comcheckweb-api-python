@@ -311,6 +311,171 @@ comcheck_api/
 first subcommand, but it can grow later (`comcheck-api init` for the
 `CLAUDE.md` copy, `comcheck-api version`, etc.).
 
+#### What `clients.py` does (per-client config-file logic)
+
+This file knows the **boring, fiddly details of every supported AI
+client**. Each client gets its own small adapter.
+
+```python
+# comcheck_api/mcp/clients.py
+from dataclasses import dataclass
+from pathlib import Path
+import json, platform
+
+@dataclass
+class MCPClient:
+    """Describes how one AI client stores its MCP config."""
+    name: str                  # human-readable: "Claude Code"
+    config_path: Path          # where the config file lives
+    config_section: tuple      # JSON path: ("mcpServers",) or ("context_servers",)
+
+def all_clients() -> list[MCPClient]:
+    """Return every supported client with its config-file path."""
+    home = Path.home()
+    system = platform.system()
+    return [
+        MCPClient(
+            name="Claude Code",
+            config_path=home / ".claude.json",
+            config_section=("mcpServers",),
+        ),
+        MCPClient(
+            name="Claude Desktop",
+            config_path=_claude_desktop_path(home, system),
+            config_section=("mcpServers",),
+        ),
+        MCPClient(
+            name="Cursor",
+            config_path=home / ".cursor" / "mcp.json",
+            config_section=("mcpServers",),
+        ),
+        MCPClient(
+            name="Windsurf",
+            config_path=home / ".codeium" / "windsurf" / "mcp_config.json",
+            config_section=("mcpServers",),
+        ),
+        MCPClient(
+            name="Zed",
+            config_path=home / ".config" / "zed" / "settings.json",
+            config_section=("context_servers",),
+        ),
+    ]
+
+def detect_installed() -> list[MCPClient]:
+    return [c for c in all_clients() if c.config_path.exists()]
+
+def read_config(client: MCPClient) -> dict: ...
+def write_config(client: MCPClient, config: dict) -> None: ...
+def add_server(client: MCPClient, name: str, command: str) -> dict: ...
+def remove_server(client: MCPClient, name: str) -> dict: ...
+```
+
+What this gives you:
+
+- **One source of truth** for each client's quirks. If Cursor changes
+  its config path next year, you fix one line in this file.
+- **Easily testable** — each function takes a path and JSON, no UI
+  involved. Unit tests are trivial.
+- **Easy to extend** — adding "Continue" or "Aider" is a new entry in
+  `all_clients()`, not a new branch in your CLI code.
+
+#### What `setup.py` does (the `setup_mcp()` orchestration)
+
+This is the **user-facing flow**. It uses `clients.py` as a library
+and adds the interaction layer on top.
+
+> Note: this file is named `setup.py` because it implements the
+> `setup-mcp` subcommand. Despite the name, it has **nothing to do
+> with the legacy Python `setup.py` packaging file** — `pyproject.toml`
+> is the build config. Could be renamed `setup_mcp.py` to avoid
+> confusion.
+
+```python
+# comcheck_api/mcp/setup.py
+import shutil
+from comcheck_api.mcp import clients
+
+def setup_mcp(
+    server_name: str = "comcheck",
+    dry_run: bool = False,
+    force: bool = False,
+    yes: bool = False,
+) -> int:
+    """Register comcheck-mcp with each detected AI client."""
+
+    # 1. Find the absolute path to the comcheck-mcp executable.
+    command = shutil.which("comcheck-mcp")
+    if command is None:
+        print("ERROR: 'comcheck-mcp' not found on PATH.")
+        return 1
+
+    # 2. Detect installed clients.
+    detected = clients.detect_installed()
+    if not detected:
+        print("No MCP-aware AI clients detected.")
+        return 1
+
+    # 3. For each, ask + write.
+    for client in detected:
+        if not _confirm(f"Register {server_name} with {client.name}?", yes):
+            continue
+        existing = clients.read_config(client)
+        section = existing.get(client.config_section[0], {})
+        if server_name in section and not force:
+            if not _confirm(f"  already registered. Overwrite?", yes):
+                continue
+        new_config = clients.add_server(client, server_name, command)
+        if dry_run:
+            print(f"  [dry-run] would write {client.config_path}")
+        else:
+            clients.write_config(client, new_config)
+            print(f"  → wrote {client.config_path}")
+
+    print("\nDone. Restart your AI client(s) to activate.")
+    return 0
+```
+
+What this gives you:
+
+- **All the user-facing prompts and flags live here**, not scattered.
+- **All the JSON-mangling lives in `clients.py`**, where it's testable
+  in isolation.
+- **`cli.py` is a thin wrapper** that just parses arguments and calls
+  `setup_mcp(...)`.
+
+#### Call graph
+
+```
+comcheck-api setup-mcp        [user runs]
+  ↓
+cli.py main()                 [parses args]
+  ↓
+mcp/setup.py setup_mcp()      [user interaction + orchestration]
+  ↓
+mcp/clients.py *              [config-file mechanics]
+```
+
+#### Why split rather than one file?
+
+For v1 you could put everything in one ~150-line file and it'd be
+fine. The split pays off when:
+
+- **Testing**: `clients.py` is pure functions over paths and dicts —
+  100% testable without mocking `input()`. `setup.py`'s flow can be
+  tested with a fake stdin.
+- **Adding a new client**: a contributor only needs to touch
+  `clients.py`. They don't need to understand the whole CLI flow.
+- **Reusing the logic**: a year from now you might add
+  `comcheck-api remove-mcp`, `comcheck-api status`, or a one-shot
+  `comcheck-api setup-ai`. They'll all want to call into `clients.py`
+  without duplicating code.
+
+| File | What it knows | What it doesn't know |
+|---|---|---|
+| `clients.py` | Where each AI client stores its MCP config; how to read/merge/write that JSON | Whether the user said yes; whether `--dry-run` is set; how to print messages |
+| `setup.py` | The user-facing flow: detect, prompt, confirm, write, report | The OS-specific path of Claude Desktop's config; whether Zed uses `context_servers` |
+| `cli.py` | Argument parsing | Anything substantive |
+
 ### What the user experience looks like
 
 ```
