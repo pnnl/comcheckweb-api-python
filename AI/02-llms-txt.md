@@ -206,16 +206,25 @@ Three places, in order of value:
 
 ## How to generate them
 
-Don't hand-maintain `llms-full.txt` — script it.
+Don't hand-maintain `llms-full.txt` — script it. This repo ships
+[`scripts/build_ai_assets.py`](../scripts/build_ai_assets.py), which
+walks `comcheck_api/ai/skill/` and `docs_site/`, concatenates them in
+the right order, and writes:
 
-```python
-# scripts/build_llms_txt.py  (sketch)
-# Walks docs_site/, concatenates, prepends a generated cheat sheet from
-# examples/, writes to docs_site/llms-full.txt.
+- `docs_site/llms.txt`
+- `docs_site/llms-full.txt`
+- `CLAUDE.md` (repo root) and `comcheck_api/ai/CLAUDE.md`
+- `.cursor/rules/comcheck.mdc`
+
+Run it with:
+
+```bash
+python scripts/build_ai_assets.py
 ```
 
-Wire it into the existing MkDocs build (or a pre-commit hook). One-time
-effort: ~half a day.
+Wiring it into the MkDocs build (or a pre-commit hook) is still TODO;
+for now, the script is run by hand and the generated files are
+committed.
 
 ## Companion files: `CLAUDE.md` and `cursor.rules`
 
@@ -241,41 +250,14 @@ All of these get prepended to the system prompt automatically — no
 user action required.
 
 **What it's for**: telling Claude *how to work in this codebase*. Not
-raw documentation — instructions, conventions, gotchas:
+raw documentation — instructions, conventions, gotchas. The actual
+content for this repo is generated from
+[`comcheck_api/ai/skill/SKILL.md`](../comcheck_api/ai/skill/SKILL.md)
+by the build pipeline; see [the live `CLAUDE.md`](../CLAUDE.md).
 
-```markdown
-# COMcheck API Python Client
-
-## What this package is
-Type-safe Python client for the PNNL COMcheck Web API. Users build
-COMcheck project JSON, run compliance simulations, parse results.
-
-## Core entry points
-- `COMcheckClient` — the only client class users instantiate
-- Operation classes (`BuildingArea`, `Envelope`, ...) — fluent builders
-- All inputs/outputs are Pydantic models from `comcheck_api.types`
-
-## Conventions
-- Always use the operation classes; do not build raw dicts
-- Inputs accept dicts, outputs are validated Pydantic models — that
-  asymmetry is intentional, do not "fix" it
-- API key comes from the `COM_API_KEY` env var by default
-
-## Don't
-- Don't suggest constructing project JSON by hand
-- Don't suggest `requests` — the package uses `httpx`
-- Don't import private modules (anything starting with `_`)
-
-## Useful files to read
-- `comcheck_api/__init__.py` — public surface
-- `comcheck_api/project_operations/` — operation classes
-- `examples/` — golden patterns
-- `docs_site/llms-full.txt` — full SDK reference
-```
-
-The style: a brief to a new colleague, not API documentation. Reference
-docs live in `llms-full.txt`; `CLAUDE.md` is the *guidance layer* on
-top.
+The style: a brief to a new colleague, not API documentation.
+Reference docs live in `llms-full.txt`; `CLAUDE.md` is the
+*guidance layer* on top.
 
 ### `cursor.rules` / `.cursor/rules/*.mdc`
 
@@ -317,13 +299,15 @@ Ways to actually get it loaded:
 |---|---|---|---|
 | Ship in wheel only | None | Has to know it's there and copy it | Low |
 | Document in README | Tiny | Manual copy-paste | Medium |
-| `comcheck-api init` console script that copies it | Small | Run one command | High |
-| MCP server exposes guidance as a connection prompt | Medium | One-time MCP config | Highest |
+| **`comcheck-api init` console script that copies it** ✅ shipped | Small | Run one command | High |
+| **MCP server exposes guidance as a connection prompt** ✅ shipped | Medium | One-time MCP config | Highest |
 
-The `comcheck-api init` route is the practical sweet spot: ship the
-file inside the wheel, but provide a CLI command that drops it into
-the user's project root. Once it's there, every Claude session in
-that project auto-loads it.
+This repo ships **both** of the high-reliability paths:
+
+- `comcheck-api init [path]` drops `CLAUDE.md` and
+  `.cursor/rules/comcheck.mdc` into a project directory.
+- `comcheck-mcp` exposes the SKILL body as a `use_comcheck` MCP
+  prompt that hosts can surface at connection time.
 
 ### What it actually buys you
 

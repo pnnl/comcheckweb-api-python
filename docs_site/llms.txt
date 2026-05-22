@@ -1,0 +1,48 @@
+# COMcheck Web API – Python Client
+
+> Type-safe Python client for the PNNL COMcheck Web API. Build COMcheck
+> project JSON, run compliance simulations, and parse results.
+
+Targets Python 3.12+. Core entry point: `COMcheckClient`. Project
+construction uses functional operation modules
+(`project_building_area_operations`, `project_envelope_operations`).
+All inputs/outputs are Pydantic models.
+
+## Docs
+
+- [api/api-service.md](api/api-service.md)
+- [api/client.md](api/client.md)
+- [api/constants/building-area.md](api/constants/building-area.md)
+- [api/constants/common.md](api/constants/common.md)
+- [api/constants/envelope.md](api/constants/envelope.md)
+- [api/defaults.md](api/defaults.md)
+- [api/exceptions.md](api/exceptions.md)
+- [api/managers/building-area.md](api/managers/building-area.md)
+- [api/managers/data-manager.md](api/managers/data-manager.md)
+- [api/managers/envelope.md](api/managers/envelope.md)
+- [api/operations/building-area.md](api/operations/building-area.md)
+- [api/operations/credits.md](api/operations/credits.md)
+- [api/operations/envelope.md](api/operations/envelope.md)
+- [api/operations/exterior-lighting.md](api/operations/exterior-lighting.md)
+- [api/operations/interior-lighting.md](api/operations/interior-lighting.md)
+- [api/operations/mechanical.md](api/operations/mechanical.md)
+- [api/operations/renewable-energy.md](api/operations/renewable-energy.md)
+- [api/simulation.md](api/simulation.md)
+- [api/types/api-types.md](api/types/api-types.md)
+- [api/types/common-types.md](api/types/common-types.md)
+- [api/types/custom-base-model.md](api/types/custom-base-model.md)
+- [api/utilities/common.md](api/utilities/common.md)
+- [api/utilities/envelope.md](api/utilities/envelope.md)
+- [api/utilities/id-registry.md](api/utilities/id-registry.md)
+- [getting-started.md](getting-started.md)
+- [index.md](index.md)
+- [types-guide.md](types-guide.md)
+
+## Examples
+
+- [examples/client/simulation.py](examples/client/simulation.py)
+- [examples/client/user_functions.py](examples/client/user_functions.py)
+- [examples/data_manager/building_area.py](examples/data_manager/building_area.py)
+- [examples/data_manager/envelope.py](examples/data_manager/envelope.py)
+- [examples/project_operations/building_area_operations.py](examples/project_operations/building_area_operations.py)
+- [examples/project_operations/envelope_operations.py](examples/project_operations/envelope_operations.py)

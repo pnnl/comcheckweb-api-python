@@ -1,0 +1,1385 @@
+# COMcheck API — Compact Reference
+
+## Skill body
+
+# COMcheck API Python Client Skill
+
+## When to use this skill
+
+Triggers:
+- The user imports `comcheck_api` or asks for help with it.
+- The user mentions COMcheck, ASHRAE 90.1, IECC, or commercial building
+  energy code compliance.
+- The user wants to build, update, or run a simulation on a COMcheck
+  project from Python.
+
+## Core concepts
+
+- **Single entry point**: `COMcheckClient` is the only client class
+  users instantiate. Construct with `api_key=...` or rely on the
+  `COM_API_KEY` env var.
+- **Project shape**: a project is a `ComBuilding` Pydantic model. It
+  contains: `Project` (metadata), `Location`, `Envelope`, `WholeBldgUse[]`
+  (building areas), `HVAC`, `Lighting`, `Renewable`, and `Control`.
+- **Operation classes (functional)**: building areas and envelope
+  components are added/updated/removed via free functions in
+  `project_building_area_operations` and `project_envelope_operations`.
+  Each function takes a `ComBuilding` and returns a new `ComBuilding`.
+- **Defaults**: `comcheck_api.defaults` has `get_default_*_template()`
+  functions that return Pydantic models filled with sensible defaults.
+  Always start from these.
+- **Simulation flow is async**: `start_run_simulation` returns a
+  session ID. Poll `get_simulation_status` until status is `complete`,
+  then call `get_simulation_result`.
+
+## Quick start
+
+```python
+from comcheck_api import COMcheckClient
+from comcheck_api.defaults import get_default_project_template
+
+client = COMcheckClient(api_key="your-key")
+
+# Build a project from a default template
+project = get_default_project_template()
+project.Project.title = "5,000 sqft office in Seattle"
+
+# Save it (creates server-side project, returns ID via list)
+# Update if you have an existing ID:
+# updated = client.update_project(project_id="123", project_data=project)
+
+# Run a simulation
+session_id = client.start_run_simulation(project)
+
+# Poll until complete
+import time
+while True:
+    status = client.get_simulation_status(session_id)
+    if status["status"] == "complete":
+        break
+    time.sleep(5)
+
+result = client.get_simulation_result(session_id)
+print(result["performanceRating"])
+```
+
+## Conventions (do)
+
+- Use `get_default_*_template()` to start any new component, then
+  customize. Don't construct `ComBuilding` from scratch.
+- Use the operation classes (e.g.,
+  `project_envelope_operations.add_ag_wall_to_project(project, wall)`)
+  to mutate project structure. Don't manipulate nested dicts directly.
+- Read the API key from `COM_API_KEY` env var by default; let users
+  pass `api_key=...` to override.
+- Wrap network calls in try/except and catch `COMCheckHTTPError`,
+  `COMCheckConnectionError`, `COMCheckValidationError`,
+  `COMCheckSimulationError`, `COMCheckProjectNotFoundError`.
+- The package uses `httpx`, not `requests`.
+
+## Conventions (don't)
+
+- Don't construct project JSON by hand — use templates + operation
+  functions.
+- Don't suggest `requests` — the SDK is `httpx`-based.
+- Don't import private modules (anything starting with `_`).
+- Don't poll `get_simulation_status` faster than every 5 seconds.
+- Don't put the API key in source code; use env var or argument.
+
+## Common patterns
+
+### Adding an above-grade wall
+
+```python
+from comcheck_api import project_envelope_operations as envelope_ops
+from comcheck_api.defaults import get_default_ag_wall_template
+
+wall = get_default_ag_wall_template()
+wall.name = "South wall"
+wall.area = 4800.0
+project = envelope_ops.add_ag_wall_to_project(project, wall)
+```
+
+### Listing the user's projects and updating one
+
+```python
+projects = client.list_projects()
+target = next(p for p in projects if p["title"] == "My office")
+project_obj = client.get_project(target["id"])
+project_obj.Project.title = "My office (revised)"
+client.update_project(project_id=target["id"], project_data=project_obj)
+```
+
+### Polling a simulation with a timeout
+
+```python
+import time
+session_id = client.start_run_simulation(project)
+deadline = time.time() + 300  # 5 min
+while time.time() < deadline:
+    status = client.get_simulation_status(session_id)
+    if status["status"] == "complete":
+        result = client.get_simulation_result(session_id)
+        break
+    time.sleep(5)
+else:
+    raise TimeoutError(f"Simulation {session_id} did not complete in 5 min")
+```
+
+## When you need more detail
+
+- For envelope assemblies (roof, walls, floor, windows, doors,
+  skylights, thermal bridges) → read `reference/operations.md`.
+- For Pydantic model field-level details → read `reference/types.md`.
+- For the simulation start/poll/fetch flow → read
+  `reference/simulation.md`.
+- For complete worked examples → read files under `examples/`.
+- To validate generated code against a mocked client → run
+  `scripts/validate_code.py`.
+
+
+
+
+---
+
+## reference/operations.md
+
+# Project Operations Reference
+
+Operation functions are free functions in two modules:
+
+- `comcheck_api.project_operations.project_building_area_operations`
+- `comcheck_api.project_operations.project_envelope_operations`
+
+Each function takes a `ComBuilding` and a payload, and returns a new
+`ComBuilding`. Treat them as immutable transformations.
+
+## Building area operations
+
+```python
+from comcheck_api import project_building_area_operations as ba_ops
+```
+
+| Function | Purpose |
+|---|---|
+| `add_building_area_to_project(project, new_building_area)` | Add a `WholeBldgUse` building area to the project. |
+| `update_building_area_in_project(project, building_area_key, updates)` | Update fields of an existing building area by key. |
+| `remove_building_area_from_project(project, building_area_key)` | Remove a building area by key. |
+| `get_building_area_keys_from_project(project)` | List `[{key, areaDescription}, …]` for the project. |
+
+## Envelope operations
+
+```python
+from comcheck_api import project_envelope_operations as env_ops
+```
+
+Each envelope component has a consistent triplet:
+`add_*_to_project`, `update_*_in_project`, `remove_*_from_project`.
+Plus the special `add_thermal_bridge_to_project` (no
+update/remove yet).
+
+| Component | Add | Update | Remove |
+|---|---|---|---|
+| Roof | `add_roof_to_project` | `update_roof_in_project` | `remove_roof_from_project` |
+| Above-grade wall | `add_ag_wall_to_project` | `update_ag_wall_in_project` | `remove_ag_wall_from_project` |
+| Below-grade wall | `add_bg_wall_to_project` | `update_bg_wall_in_project` | `remove_bg_wall_from_project` |
+| Floor | `add_floor_to_project` | `update_floor_in_project` | `remove_floor_from_project` |
+| Skylight | `add_skylight_to_project` | `update_skylight_in_project` | `remove_skylight_from_project` |
+| Window | `add_window_to_project` | `update_window_in_project` | `remove_window_from_project` |
+| Door | `add_door_to_project` | `update_door_in_project` | `remove_door_from_project` |
+| Thermal bridge | `add_thermal_bridge_to_project` | — | — |
+
+## Nesting rules
+
+- Skylights nest under a `Roof`.
+- Windows, doors, thermal bridges nest under an above-grade or
+  below-grade wall.
+- Floors are top-level.
+
+The `add_*_to_project` functions accept the parent component
+identifier (or auto-place under the first matching parent) — see
+the existing `examples/project_operations/envelope_operations.py`
+for current calling conventions.
+
+## Working with templates
+
+Always start from `comcheck_api.defaults`:
+
+```python
+from comcheck_api.defaults import (
+    get_default_project_template,
+    get_default_roof_template,
+    get_default_ag_wall_template,
+    get_default_bg_wall_template,
+    get_default_floor_template,
+    get_default_window_template,
+    get_default_door_template,
+    get_default_skylight_template,
+    get_default_thermal_bridge_template,
+    get_default_building_area_template,
+)
+```
+
+Each returns a fully-populated Pydantic model with sensible defaults
+(Boulder, CO; metal-frame walls; double-pane low-E glazing; etc.).
+Customize fields after construction:
+
+```python
+roof = get_default_roof_template()
+roof.area = 6000.0
+roof.cavityRValue = 38.0
+project = env_ops.add_roof_to_project(project, roof)
+```
+
+
+---
+
+## reference/simulation.md
+
+# Simulation Flow Reference
+
+Simulations are asynchronous on the server side. Three-step pattern:
+
+1. **Start** — submit the project, receive a session ID.
+2. **Poll** — repeatedly check status until it reports `complete`.
+3. **Fetch** — retrieve the result by session ID.
+
+## Methods
+
+```python
+from comcheck_api import COMcheckClient
+client = COMcheckClient(api_key="...")
+```
+
+| Method | Returns | Purpose |
+|---|---|---|
+| `client.start_run_simulation(project, project_id=None)` | `str` (session ID) | Kick off the simulation. If `project_id` is provided, the project is also saved/updated. |
+| `client.get_simulation_status(session_id)` | `dict` | Current status. Fields: `sessionId`, `status` (`pending` / `running` / `complete` / `error`), optional `message`. |
+| `client.get_simulation_result(session_id)` | `dict` | Final result. Fields: `sessionId`, `performanceRating`, `energyCreditPerformanceRating`, `proposedBpf`, `baselineBpf`. |
+
+## Polling pattern
+
+Always include a timeout. 5 minutes is a safe default for a typical
+small/medium project.
+
+```python
+import time
+
+session_id = client.start_run_simulation(project)
+deadline = time.time() + 300
+
+while time.time() < deadline:
+    status = client.get_simulation_status(session_id)
+    if status["status"] == "complete":
+        break
+    if status["status"] == "error":
+        raise RuntimeError(f"Simulation failed: {status.get('message')}")
+    time.sleep(5)
+else:
+    raise TimeoutError(f"Simulation {session_id} did not complete in 5 minutes")
+
+result = client.get_simulation_result(session_id)
+```
+
+## Result interpretation
+
+- `performanceRating` is the primary pass/fail metric — typically
+  expressed as a percentage margin against the baseline. Positive =
+  better than baseline = pass.
+- `proposedBpf` / `baselineBpf` are Building Performance Factors for
+  the proposed and baseline (code-minimum) buildings.
+- `energyCreditPerformanceRating` is the credit rating used when
+  optional measures (renewables, advanced controls, etc.) are
+  included.
+
+## Don't
+
+- Don't poll faster than every 5 seconds — the backend rate-limits.
+- Don't run multiple concurrent simulations from the same API key
+  unless you've confirmed your quota allows it.
+- Don't drop the `session_id` — there's no recovery without it.
+
+
+---
+
+## reference/types.md
+
+# Types Reference
+
+All types are Pydantic models. Import from `comcheck_api.types`.
+
+## Top-level project model
+
+`ComBuilding` is the root project model. It contains:
+
+| Field | Type | Purpose |
+|---|---|---|
+| `Project` | `Project` | Project metadata: title, address, owner |
+| `Location` | `Location` | State, city, climate zone |
+| `Envelope` | `Envelope` | Roofs, walls, floors, windows, doors, skylights, thermal bridges |
+| `WholeBldgUse` | `list[WholeBldgUse]` | Building area zones (with interior lighting) |
+| `HVAC` | `HVAC` | Mechanical systems |
+| `Lighting` | `Lighting` | Exterior + interior lighting |
+| `Renewable` | `Renewable` | Renewable energy systems |
+| `Control` | `Control` | Energy code (CEZ_IECC2018, CEZ_90_1_2022, etc.) |
+
+## Envelope component models
+
+| Model | Notes |
+|---|---|
+| `Envelope` | Container for all envelope components. |
+| `Roof` | Skylights nest inside. |
+| `AgWall` (above-grade) | Windows, doors, thermal bridges nest inside. |
+| `BgWall` (below-grade) | Same nesting as AgWall. |
+| `Floor` | Top-level. |
+| `Skylight` | Standalone or nested under a `Roof`. |
+| `Window` | Standalone or nested under a wall. |
+| `Door` | Standalone or nested under a wall. |
+| `ThermalBridge` | Nested under a wall. |
+
+## Building area / lighting
+
+| Model | Purpose |
+|---|---|
+| `WholeBldgUse` | One building area / zone. Has `key`, `areaDescription`, `InteriorLightingSpace`. |
+| `InteriorLightingSpace` | Lighting configuration for one area. |
+
+## HVAC
+
+| Model | Purpose |
+|---|---|
+| `HVAC` | Container. |
+| `HVACSystem` | One HVAC system definition. |
+| `HVACPlant` | Central plant equipment. |
+| `Fan` / `FanSystem` | Fan and fan-system models. |
+| `ServiceWaterHeatingSystem` (SWH) | Service water heating. |
+
+## Enums (StrEnum)
+
+Common ones:
+
+| Enum | Examples |
+|---|---|
+| `EnergyCodeOptions` | `CEZ_IECC2018`, `CEZ_IECC2021`, `CEZ_90_1_2019`, `CEZ_90_1_2022` |
+| `ProjectTypeOptions` | `NEW_CONSTRUCTION`, `RETROFIT` |
+| `WallTypeOptions` | (see source for full set) |
+| `GlazingMaterialTypeOptions` | (see source for full set) |
+| `DoorTypeOptions` | (see source for full set) |
+
+For exhaustive enum values, check `comcheck_api/types/` source — these
+change with code revisions and are too long to enumerate here.
+
+## Tips
+
+- Pydantic models accept dicts in their constructors and produce
+  validated instances — useful when interop with JSON.
+- Models export to JSON with `.model_dump_json()`.
+- The SDK accepts dicts for inputs but always returns validated
+  Pydantic models — that asymmetry is intentional.
+
+
+---
+
+## docs_site/api/api-service.md
+
+# COMCheckApiService
+
+Low-level HTTP service layer. Most users should prefer
+[`COMcheckClient`](client.md) unless they need direct control over
+request/response handling.
+
+::: comcheck_api.api.api_services.COMCheckApiService
+
+
+---
+
+## docs_site/api/client.md
+
+# COMcheckClient
+
+The primary interface for interacting with the COMcheck Web API.
+
+::: comcheck_api.client.comcheck_client.COMcheckClient
+
+
+---
+
+## docs_site/api/constants/building-area.md
+
+# Building Area Constants
+
+Default building area template and configuration.
+
+::: comcheck_api.constants.building_area_constants
+
+
+---
+
+## docs_site/api/constants/common.md
+
+# Project Template
+
+The default `ComBuilding` template used to bootstrap new projects.
+
+::: comcheck_api.constants.common_constants
+
+
+---
+
+## docs_site/api/constants/envelope.md
+
+# Envelope Constants
+
+Default templates for all envelope component types (walls, roofs, floors,
+windows, doors, skylights, and thermal bridges).
+
+::: comcheck_api.constants.envelope_constants
+
+
+---
+
+## docs_site/api/defaults.md
+
+# Project Defaults
+
+Functions that return deep copies of pre-configured default templates for
+projects and building components.
+
+::: comcheck_api.defaults
+
+
+---
+
+## docs_site/api/exceptions.md
+
+# Exceptions
+
+Custom exception hierarchy for COMcheck API errors.
+
+::: comcheck_api.exceptions
+
+
+---
+
+## docs_site/api/managers/building-area.md
+
+# BuildingAreaListManager
+
+Manager for building area (WholeBldgUse) items.
+
+::: comcheck_api.managers.components.building_area.BuildingAreaListManager
+
+
+---
+
+## docs_site/api/managers/data-manager.md
+
+# DataManager
+
+Generic data manager providing CRUD operations with JSON schema validation
+and unique identifier enforcement.
+
+::: comcheck_api.managers.data_manager.DataManager
+
+---
+
+## Helper Functions
+
+::: comcheck_api.managers.data_manager.get_model_info
+
+
+---
+
+## docs_site/api/managers/envelope.md
+
+# Envelope Component Managers
+
+Managers for envelope building components (walls, roofs, floors, windows,
+doors, skylights, and thermal bridges).
+
+## AgWallListManager
+
+::: comcheck_api.managers.components.envelope.ag_wall.AgWallListManager
+
+---
+
+## BgWallListManager
+
+::: comcheck_api.managers.components.envelope.bg_wall.BgWallListManager
+
+---
+
+## RoofListManager
+
+::: comcheck_api.managers.components.envelope.roof.RoofListManager
+
+---
+
+## FloorListManager
+
+::: comcheck_api.managers.components.envelope.floor.FloorListManager
+
+---
+
+## WindowListManager
+
+::: comcheck_api.managers.components.envelope.window.WindowListManager
+
+---
+
+## DoorListManager
+
+::: comcheck_api.managers.components.envelope.door.DoorListManager
+
+---
+
+## SkylightListManager
+
+::: comcheck_api.managers.components.envelope.skylight.SkylightListManager
+
+---
+
+## ThermalBridgeListManager
+
+::: comcheck_api.managers.components.envelope.ag_wall.ThermalBridgeListManager
+
+
+---
+
+## docs_site/api/operations/building-area.md
+
+# Building Area Operations
+
+Functions for adding, updating, and removing building areas in a COMcheck project.
+
+::: comcheck_api.project_operations.project_building_area_operations
+
+
+---
+
+## docs_site/api/operations/credits.md
+
+# Credits
+
+!!! warning "Under Development"
+    Credits operations are not yet implemented. This section is planned for a future release.
+
+This page will cover operations for managing energy credits in COMcheck projects, including:
+
+- Efficiency packages
+- Energy credit calculations
+
+The underlying types for credits (`EfficiencyPackage`) are already available. See the [Types Guide](types-guide.md) for details on importing and using them.
+
+
+---
+
+## docs_site/api/operations/envelope.md
+
+# Envelope Operations
+
+Functions for adding, updating, and removing envelope components
+(roofs, walls, floors, windows, doors, skylights, and thermal bridges)
+in a COMcheck project.
+
+::: comcheck_api.project_operations.project_envelope_operations
+    options:
+      show_if_no_docstring: false
+
+
+---
+
+## docs_site/api/operations/exterior-lighting.md
+
+# Exterior Lighting
+
+!!! warning "Under Development"
+    Exterior lighting operations are not yet implemented. This section is planned for a future release.
+
+This page will cover operations for managing exterior lighting in COMcheck projects, including:
+
+- Adding and updating exterior lighting use areas
+- Managing exterior fixture schedules
+- Exterior lighting power allowance calculations
+
+The underlying types for exterior lighting (`ExteriorUse`, `ExteriorLightingSpace`, `Fixture`, `FixtureSchedule`) are already available. See the [Types Guide](types-guide.md) for details on importing and using them.
+
+
+---
+
+## docs_site/api/operations/interior-lighting.md
+
+# Interior Lighting
+
+!!! warning "Under Development"
+    Interior lighting operations are not yet implemented. This section is planned for a future release.
+
+This page will cover operations for managing interior lighting in COMcheck projects, including:
+
+- Adding and updating whole building use areas with lighting data
+- Managing activity use areas and fixture schedules
+- Lighting power allowance calculations
+- Lighting controls
+
+The underlying types for interior lighting (`WholeBldgUse`, `ActivityUse`, `Fixture`, `FixtureSchedule`) are already available. See the [Types Guide](types-guide.md) for details on importing and using them.
+
+
+---
+
+## docs_site/api/operations/mechanical.md
+
+# Mechanical
+
+!!! warning "Under Development"
+    Mechanical operations are not yet implemented. This section is planned for a future release.
+
+This page will cover operations for managing mechanical systems in COMcheck projects, including:
+
+- Adding and updating HVAC systems
+- Managing HVAC plants
+- Fan systems and pressure drop credits
+- Service water heating systems
+
+The underlying types for mechanical systems (`HVACSystem`, `HVACPlant`, `Fan`, `FanSystem`, `FanSystemPressureDropCredits`, `ServiceWaterHeatingSystem`) are already available. See the [Types Guide](types-guide.md) for details on importing and using them.
+
+
+---
+
+## docs_site/api/operations/renewable-energy.md
+
+# Renewable Energy
+
+!!! warning "Under Development"
+    Renewable energy operations are not yet implemented. This section is planned for a future release.
+
+This page will cover operations for managing renewable energy systems in COMcheck projects, including:
+
+- Adding and updating renewable energy systems
+- Offsite renewable energy procurement
+- Renewable energy exceptions and credits
+
+The underlying types for renewable energy (`RenewableSystem`, `OffsiteRenewableProcurement`, `Renewable`) are already available. See the [Types Guide](types-guide.md) for details on importing and using them.
+
+
+---
+
+## docs_site/api/simulation.md
+
+# Simulation
+
+COMcheck evaluates whether a building design meets energy code requirements
+by running a compliance simulation. The simulation compares the proposed
+building envelope against baseline performance factors and returns a
+**performance rating** that indicates pass/fail status.
+
+## Workflow
+
+A simulation run follows three steps:
+
+1. **Start** the simulation with a project.
+2. **Poll** for completion.
+3. **Retrieve** the results.
+
+```python
+import time
+from comcheck_api import COMcheckClient
+
+client = COMcheckClient(api_key="your-key")
+project = client.get_project("project-id")
+
+# 1. Start
+session_id = client.start_run_simulation(project)
+
+# 2. Poll
+while True:
+    status = client.get_simulation_status(session_id)
+    if status["status"] == "COMPLETED":
+        break
+    time.sleep(2)
+
+# 3. Results
+result = client.get_simulation_result(session_id)
+print(f"Performance Rating: {result['performanceRating']}")
+```
+
+## Running without a saved project
+
+You can simulate a project that only exists locally without saving it to the
+server first. Build a project from the default template, configure it, and
+pass it directly:
+
+```python
+from comcheck_api import COMcheckClient
+from comcheck_api.defaults import get_default_project_template
+from comcheck_api.types.core_types import EnergyCodeOptions
+
+client = COMcheckClient(api_key="your-key")
+
+project = get_default_project_template()
+project.control.code = EnergyCodeOptions.CEZ_90_1_2022
+
+session_id = client.start_run_simulation(project)
+```
+
+## Running for an existing project
+
+When you pass a `project_id`, the client saves the project via
+`update_project` before launching the simulation:
+
+```python
+session_id = client.start_run_simulation(project, project_id="your-project-id")
+```
+
+## Simulation status
+
+`get_simulation_status` returns a dict with:
+
+| Key | Description |
+| --- | --- |
+| `sessionId` | The session identifier |
+| `status` | `"RUNNING"`, `"COMPLETED"`, or `"FAILED"` |
+| `message` | Optional details (present on failure) |
+
+## Simulation results
+
+`get_simulation_result` returns a dict with:
+
+| Key | Description |
+| --- | --- |
+| `sessionId` | The session identifier |
+| `performanceRating` | Overall compliance rating |
+| `energyCreditPerformanceRating` | Rating including energy credits |
+| `proposedBpf` | Proposed building performance factor |
+| `baselineBpf` | Baseline building performance factor |
+
+
+---
+
+## docs_site/api/types/api-types.md
+
+# API Types
+
+Pydantic models for COMcheck API request and response payloads.
+
+::: comcheck_api.types.api_types
+
+
+---
+
+## docs_site/api/types/common-types.md
+
+# Common Types
+
+Shared type definitions used across the package.
+
+::: comcheck_api.types.common_types
+
+
+---
+
+## docs_site/api/types/custom-base-model.md
+
+# CustomBaseModel
+
+Base model with utilities for manipulating nested sub-component lists.
+
+::: comcheck_api.types.custom_base_model.CustomBaseModel
+
+
+---
+
+## docs_site/api/utilities/common.md
+
+# Export & Helpers
+
+Common utility functions used across the package.
+
+::: comcheck_api.utilities.common
+
+
+---
+
+## docs_site/api/utilities/envelope.md
+
+# Envelope Utilities
+
+Helper functions for working with envelope assemblies.
+
+::: comcheck_api.utilities.envelope_utilities
+
+
+---
+
+## docs_site/api/utilities/id-registry.md
+
+# ID Registry
+
+In-memory registry that tracks unique component identifiers to prevent
+duplicates within a session.
+
+::: comcheck_api.utilities.id_registry
+
+
+---
+
+## docs_site/getting-started.md
+
+# Getting Started
+
+!!! note "Supported Sections"
+    Currently, only **Building Area**, **Envelope**, and **Compliance Simulation** operations are fully supported. Interior lighting, exterior lighting, mechanical, credits, and renewable energy sections are planned but not yet implemented. See the [home page](index.md#current-status) for the full status table.
+
+## Setup
+
+### 1. Install the package
+
+```bash
+pip install comcheck_api
+```
+
+### 2. Set your API key
+
+You can provide the API key directly or via an environment variable:
+
+```bash
+# .env file
+COM_API_KEY=your-api-key-here
+```
+
+```python
+from comcheck_api import COMcheckClient
+
+# Option 1: Pass directly
+client = COMcheckClient(api_key="your-api-key")
+
+# Option 2: Set later
+client = COMcheckClient()
+client.set_api_key("your-api-key")
+```
+
+## Basic Workflow
+
+### Fetch and inspect a project
+
+```python
+from comcheck_api import COMcheckClient
+
+with COMcheckClient(api_key="your-key") as client:
+    # List all projects
+    projects = client.list_projects()
+
+    # Get a single project as a Pydantic model
+    project = client.get_project("project-id")
+
+    # Or as raw JSON dict
+    project_dict = client.get_project("project-id", mode="json")
+```
+
+### Modify a project with envelope operations
+
+```python
+from comcheck_api import COMcheckClient, project_envelope_operations
+from comcheck_api.defaults import (
+    get_default_roof_template,
+    get_default_ag_wall_template,
+)
+
+client = COMcheckClient(api_key="your-key")
+project = client.get_project("project-id")
+
+# Add a roof
+roof = get_default_roof_template()
+project = project_envelope_operations.add_roof_to_project(
+    project, building_area_key="area-key", new_roof=roof
+)
+
+# Add an above-grade wall
+wall = get_default_ag_wall_template()
+project = project_envelope_operations.add_ag_wall_to_project(
+    project, building_area_key="area-key", new_ag_wall=wall
+)
+
+# Save changes
+client.update_project("project-id", project)
+```
+
+### Run a compliance simulation
+
+```python
+import time
+from comcheck_api import COMcheckClient
+
+client = COMcheckClient(api_key="your-key")
+project = client.get_project("project-id")
+
+# Start simulation
+session_id = client.start_run_simulation(project)
+
+# Poll for completion
+while True:
+    status = client.get_simulation_status(session_id)
+    if status["status"] == "COMPLETED":
+        break
+    time.sleep(2)
+
+# Get results
+result = client.get_simulation_result(session_id)
+print(f"Performance Rating: {result['performanceRating']}")
+```
+
+### Work with building areas
+
+```python
+from comcheck_api import project_building_area_operations
+from comcheck_api.defaults import (
+    get_default_building_area_template,
+)
+
+# Add a building area
+area = get_default_building_area_template()
+project = project_building_area_operations.add_building_area_to_project(
+    project, new_building_area=area
+)
+
+# List building area keys
+keys = project_building_area_operations.get_building_area_keys_from_project(project)
+```
+
+## Error Handling
+
+```python
+from comcheck_api import (
+    COMcheckClient,
+    COMCheckHTTPError,
+    COMCheckConnectionError,
+    COMCheckProjectNotFoundError,
+)
+
+client = COMcheckClient(api_key="your-key")
+
+try:
+    project = client.get_project("nonexistent-id")
+except COMCheckProjectNotFoundError as e:
+    print(f"Project not found: {e.project_id}")
+except COMCheckHTTPError as e:
+    print(f"HTTP {e.status_code}: {e}")
+except COMCheckConnectionError:
+    print("Cannot reach the COMcheck API")
+```
+
+## Exporting Data
+
+```python
+from comcheck_api.utilities.common import export_to_json
+
+# Export any data to JSON
+json_str = export_to_json(project.model_dump(mode="json"))
+
+# Or save to a file
+export_to_json(project.model_dump(mode="json"), "my_project.json")
+```
+
+
+---
+
+## docs_site/index.md
+
+# COMcheck API - Python Client
+
+Type-safe Python client for the PNNL's [COMcheck Web](https://comcheck.energycode.pnl.gov/) for building energy code compliance verification.
+
+## Current Status
+
+This package is under active development. Here is the current support status for each section:
+
+| Section | Status |
+|---|---|
+| Building Area | Supported |
+| Envelope (roofs, walls, floors, windows, doors, skylights, thermal bridges) | Supported |
+| Compliance Simulation | Supported |
+| Interior Lighting | TBD |
+| Exterior Lighting | TBD |
+| Mechanical | TBD |
+| Credits | TBD |
+| Renewable Energy | TBD |
+
+Operations and data managers for the TBD sections are not yet implemented. The underlying types and models for these sections are available (see [Types Guide](types-guide.md)), but there are no high-level convenience functions for them yet.
+
+## Features
+
+- **Type-safe** --- Pydantic models for all API inputs and outputs
+- **Envelope management** --- Roofs, walls, floors, windows, doors, skylights, and thermal bridges
+- **Compliance simulation** --- Start simulations and retrieve results programmatically
+- **Validation** --- JSON schema validation and Pydantic type checking at every boundary
+
+## Quick Start
+
+```python
+from comcheck_api import COMcheckClient
+
+# Initialize the client
+client = COMcheckClient(api_key="your-api-key")
+
+# Fetch a project
+project = client.get_project("project-id")
+
+# Run a compliance simulation
+session_id = client.start_run_simulation(project)
+status = client.get_simulation_status(session_id)
+result = client.get_simulation_result(session_id)
+```
+
+## Installation
+
+```bash
+pip install comcheck_api
+```
+
+Or with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv add comcheck_api
+```
+
+## Requirements
+
+- Python >= 3.12
+- A valid COMcheck API key
+
+## Package Overview
+
+| Module | Description |
+|--------|-------------|
+| [`comcheck_api.client`](api/client.md) | High-level client interface |
+| [`comcheck_api.project_operations`](api/operations/building-area.md) | [Building area](api/operations/building-area.md) and [envelope](api/operations/envelope.md) operations |
+
+
+---
+
+## docs_site/types-guide.md
+
+# Types Guide
+
+The `comcheck_api` library is fully typed with Pydantic models and `StrEnum`/`IntEnum` option types defined in `comcheck_api.types.core_types`. Understanding these types is essential for correctly building and modifying COMcheck projects.
+
+## Importing Types
+
+All types are re-exported from `comcheck_api.types`, so you can import them directly:
+
+```python
+from comcheck_api.types import (
+    # Models
+    ComBuilding,
+    Envelope,
+    Roof,
+    AgWall,
+    Window,
+
+    # Enum options
+    EnergyCodeOptions,
+    WholeBuildingTypeOptions,
+    OrientationOptions,
+    RoofTypeOptions,
+    WallTypeOptions,
+)
+```
+
+## Type Categories
+
+There are two categories of types:
+
+### Models (Pydantic)
+
+Models represent the data structures returned by and sent to the COMcheck API. They provide auto-completion, validation, and serialization.
+
+```python
+from comcheck_api.types import ComBuilding, Roof
+
+# Models validate on construction
+project: ComBuilding = client.get_project("project-id")
+
+# Access nested attributes with full type hints
+roof: Roof = project.envelope.roof[0]
+print(roof.roofType)       # IDE shows available attributes
+print(roof.orientation)    # typed as OrientationOptions | None
+```
+
+### Enum Options (`StrEnum` / `IntEnum`)
+
+Enum options define the valid values for fields like building types, orientations, energy codes, etc. Using them prevents typos and gives you IDE auto-completion for all valid choices.
+
+```python
+from comcheck_api.types import (
+    EnergyCodeOptions,
+    WholeBuildingTypeOptions,
+    OrientationOptions,
+)
+
+# Set the energy code
+project.control.code = EnergyCodeOptions.CEZ_90_1_2022
+
+# Use building type options
+area.wholeBldgType = WholeBuildingTypeOptions.WHOLE_BUILDING_OFFICE
+
+# Set orientation
+wall.orientation = OrientationOptions.NORTH
+```
+
+To see all valid values for an enum, use your IDE's auto-complete on the enum class, or inspect it at runtime:
+
+```python
+from comcheck_api.types import EnergyCodeOptions
+
+# List all valid energy codes
+for code in EnergyCodeOptions:
+    print(code.name, "=", code.value)
+```
+
+## Common Types by Domain
+
+### Project Structure
+
+The top-level model is `ComBuilding`, which contains all project data:
+
+| Model | Description |
+|---|---|
+| `ComBuilding` | Top-level project model |
+| `Project` | Project info (name, address) |
+| `Location` | Geographic location |
+| `Envelope` | All envelope assemblies (roofs, walls, floors) |
+| `Lighting` | Lighting data (building areas, exterior) |
+| `HVAC` | HVAC systems |
+
+```python
+from comcheck_api.types import ComBuilding
+
+project: ComBuilding = client.get_project("project-id")
+project.project       # Project
+project.location      # Location
+project.envelope      # Envelope
+project.lighting      # Lighting
+```
+
+### Envelope Components
+
+| Model | Description | Key Options |
+|---|---|---|
+| `Roof` | Roof assembly | `RoofTypeOptions`, `RoofInsulationTypeOptions` |
+| `Floor` | Floor assembly | `FloorTypeOptions` |
+| `AgWall` | Above-grade wall | `WallTypeOptions`, `AgWallConstructionDetailsTypeOptions` |
+| `BgWall` | Below-grade wall | `BgWallTypeOptions` |
+| `Window` | Window component | `FenestrationFrameTypeOptions`, `GlazingTypeOptions` |
+| `Door` | Door component | `DoorTypeOptions` |
+| `Skylight` | Skylight component | `SkylightCurbTypeOptions`, `GlazingTypeOptions` |
+| `ThermalBridge` | Thermal bridge | `ThermalBridgeTypeOptions` |
+
+```python
+from comcheck_api.types import Roof, RoofTypeOptions, OrientationOptions
+
+# Type hints show you what fields are available
+roof = Roof(
+    roofType=RoofTypeOptions.ATTIC_ROOF_WITH_WOOD_JOIST,
+    orientation=OrientationOptions.NORTH,
+    # ... IDE auto-completes all fields
+)
+```
+
+### Building Area & Lighting
+
+| Model | Description | Key Options |
+|---|---|---|
+| `WholeBldgUse` | Building use area | `WholeBuildingTypeOptions` |
+| `ActivityUse` | Activity area within a building use | `ActivityTypeOptions` |
+| `ExteriorUse` | Exterior lighting use | `ExteriorUseTypeOptions` |
+| `Fixture` | Lighting fixture | `LightingTypeOptions` |
+| `FixtureSchedule` | Fixture schedule | - |
+| `LightingControls` | Lighting controls | `LightingControlTypeOptions` |
+
+### Mechanical
+
+| Model | Description | Key Options |
+|---|---|---|
+| `HVACSystem` | HVAC system | `CoolingEquipmentTypeOptions`, `FuelTypeOptions` |
+| `HVACPlant` | HVAC plant | `BoilerDraftTypeOptions` |
+| `Fan` | Fan | `FanEfficiencyExceptionTypeOptions` |
+| `FanSystem` | Fan system | `FanSystemComplianceMethodOptions` |
+| `ServiceWaterHeatingSystem` | Water heating | `SWHSystemDrawPatternTypeOptions` |
+
+## Tips
+
+**Use your IDE.** The biggest advantage of these types is auto-completion. When you type `project.envelope.`, your IDE will show all available attributes and their types.
+
+**Check enum values.** If you're unsure what values a field accepts, look at its type annotation. Fields typed as an `Options` enum only accept values from that enum:
+
+```python
+from comcheck_api.types import WallTypeOptions
+
+# See all options
+list(WallTypeOptions)
+```
+
+**Serialize models.** All models support Pydantic's serialization:
+
+```python
+# To dict
+data = project.model_dump()
+
+# To JSON string
+json_str = project.model_dump_json(indent=2)
+
+# Deep copy for modification
+copy = project.model_copy(deep=True)
+```
+
+
+---
+
+## skill/examples/full_project.py
+
+```python
+"""Build a complete project: building area + roof + walls + windows.
+
+Demonstrates a fuller workflow that mirrors a real compliance check.
+"""
+
+import os
+import time
+
+from comcheck_api import (
+    COMcheckClient,
+    project_building_area_operations as ba_ops,
+    project_envelope_operations as env_ops,
+)
+from comcheck_api.defaults import (
+    get_default_project_template,
+    get_default_building_area_template,
+    get_default_roof_template,
+    get_default_ag_wall_template,
+    get_default_window_template,
+    get_default_door_template,
+)
+
+
+def main() -> None:
+    client = COMcheckClient(api_key=os.environ["COM_API_KEY"])
+
+    # Project metadata
+    project = get_default_project_template()
+    project.Project.title = "5,000 sqft office"
+
+    # Add an open-office building area
+    area = get_default_building_area_template()
+    area.areaDescription = "Open office"
+    project = ba_ops.add_building_area_to_project(project, area)
+
+    # Roof
+    roof = get_default_roof_template()
+    roof.area = 5000.0
+    project = env_ops.add_roof_to_project(project, roof)
+
+    # Four walls
+    for direction, area_sqft in [
+        ("North", 1500.0),
+        ("South", 1500.0),
+        ("East", 1000.0),
+        ("West", 1000.0),
+    ]:
+        wall = get_default_ag_wall_template()
+        wall.name = f"{direction} wall"
+        wall.area = area_sqft
+        project = env_ops.add_ag_wall_to_project(project, wall)
+
+    # A south-facing window and an entry door
+    window = get_default_window_template()
+    window.name = "South window"
+    window.area = 200.0
+    project = env_ops.add_window_to_project(project, window)
+
+    door = get_default_door_template()
+    door.name = "Main entry"
+    project = env_ops.add_door_to_project(project, door)
+
+    # Simulate
+    session_id = client.start_run_simulation(project)
+    print(f"Simulation started: {session_id}")
+
+    deadline = time.time() + 300
+    while time.time() < deadline:
+        status = client.get_simulation_status(session_id)
+        if status["status"] == "complete":
+            break
+        if status["status"] == "error":
+            raise RuntimeError(f"Simulation failed: {status.get('message')}")
+        time.sleep(5)
+    else:
+        raise TimeoutError("Simulation did not complete in 5 minutes")
+
+    result = client.get_simulation_result(session_id)
+    margin = result["performanceRating"]
+    verdict = "PASS" if margin >= 0 else "FAIL"
+    print(f"Result: {verdict} ({margin}% margin)")
+
+
+if __name__ == "__main__":
+    main()
+
+```
+
+
+---
+
+## skill/examples/small_office.py
+
+```python
+"""Build a small office project from defaults and run a simulation.
+
+Demonstrates:
+- Using a default project template.
+- Customizing project metadata.
+- Adding an envelope component.
+- Polling the simulation to completion.
+"""
+
+import os
+import time
+
+from comcheck_api import COMcheckClient, project_envelope_operations as env_ops
+from comcheck_api.defaults import (
+    get_default_project_template,
+    get_default_ag_wall_template,
+)
+
+
+def main() -> None:
+    client = COMcheckClient(api_key=os.environ["COM_API_KEY"])
+
+    project = get_default_project_template()
+    project.Project.title = "Small Seattle office"
+
+    south_wall = get_default_ag_wall_template()
+    south_wall.name = "South wall"
+    south_wall.area = 1200.0
+    project = env_ops.add_ag_wall_to_project(project, south_wall)
+
+    session_id = client.start_run_simulation(project)
+    print(f"Started simulation {session_id}")
+
+    deadline = time.time() + 300
+    while time.time() < deadline:
+        status = client.get_simulation_status(session_id)
+        if status["status"] == "complete":
+            break
+        if status["status"] == "error":
+            raise RuntimeError(f"Simulation failed: {status.get('message')}")
+        time.sleep(5)
+    else:
+        raise TimeoutError("Simulation did not complete in 5 minutes")
+
+    result = client.get_simulation_result(session_id)
+    print(f"Performance rating: {result['performanceRating']}")
+
+
+if __name__ == "__main__":
+    main()
+
+```

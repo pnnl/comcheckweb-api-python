@@ -500,73 +500,95 @@ Done. Restart your AI client(s) to activate the comcheck tools.
 
 About as clean as PyPI distribution allows today.
 
-## Recommended tool surface
+## Tool surface (as shipped)
 
-Group the tools by what the model needs at each stage of building a
-project:
+The MCP server exposes 11 tools, plus Skill content as MCP resources
+and a connection-time prompt.
 
-### Discovery / lookup
+### Discovery / lookup (read-only)
 
-- `list_operations()` → returns the registered operation classes
-  (`BuildingArea`, `Envelope`, ...) with one-line summaries.
-- `lookup_type(name: str)` → returns a Pydantic model's fields, types,
-  defaults, and constraints. Reads directly from the installed package
-  via reflection — always in sync with the version installed.
-- `search_docs(query: str, k: int = 5)` → keyword + (optional) vector
-  search over the docs and examples. Even pure BM25 over the docs
-  corpus is useful.
+- `list_operations()` → enumerates public functions in
+  `project_building_area_operations` and
+  `project_envelope_operations` via `inspect`. Returns 26 functions
+  with signatures and docstring summaries. Always in sync with the
+  installed SDK.
+- `lookup_type(name: str)` → reflects a Pydantic model from
+  `comcheck_api.types`. Returns
+  `{kind: "model", fields: [{name, type, required, default, description}, ...]}`
+  for `BaseModel` subclasses, or
+  `{kind: "enum", members: [...]}` for StrEnum classes.
+- `search_docs(query: str, k: int = 5)` → BM25 ranking over Skill
+  content (paragraph-chunked). Returns scored snippets.
 
-### Code generation helpers
+### Project tools (write tools — host should gate)
 
-- `get_skeleton(scenario: str)` → returns a vetted starter snippet for
-  common scenarios ("envelope_only", "full_project_with_simulation",
-  "lighting_only"). These are *gold-standard* templates you control.
-- `get_example(name: str)` → returns the contents of a file from
-  `examples/`.
+- `list_projects()` → returns the user's saved projects.
+- `get_project(project_id)` → fetches one saved project as a JSON
+  dict.
+- `update_project(project_id, project_data)` → mutates an existing
+  saved project. Confirm before calling.
+
+The underlying SDK does **not** expose `create_project` or
+`delete_project` — projects are created/deleted via the COMcheck
+website UI; the SDK reads/updates already-saved projects only.
+
+### Simulation tools
+
+- `start_simulation(project_id)` → kicks off a real compliance
+  simulation against the user's COMcheck quota. Confirm before
+  calling. Returns `{"session_id": "..."}`.
+- `get_simulation_status(session_id)` → polls a session's status.
+- `get_simulation_result(session_id)` → fetches result metrics
+  (`performanceRating`, `proposedBpf`, `baselineBpf`, etc.).
 
 ### Validation (the killer feature)
 
-- `validate_code(code: str)` → executes the user's draft in a
-  subprocess against a *mock* `COMcheckClient`. Returns import errors,
-  type errors, missing required fields. **This is what makes the
-  difference vs. plain RAG** — the model gets a real feedback loop and
-  self-corrects.
-- `dry_run_project(project_json: dict)` → validates the JSON against
-  the existing `jsonschema` definitions without hitting the real API.
+- `validate_code(code, run=False)` → static syntax + import check by
+  default; with `run=True` runs the user's draft in a sandboxed
+  subprocess (network blocked, COMcheck HTTP service mocked, 5-second
+  timeout). Returns structured errors. **This is what makes the
+  difference vs. plain RAG** — the model gets a real feedback loop
+  and self-corrects.
+- `dry_run_project(project_json)` → validates JSON against the
+  `ComBuilding` Pydantic model. Returns Pydantic errors as
+  structured `[{loc, msg, type}]`.
 
-### Live API (optional, opt-in)
+### Resources and prompts
 
-- `start_simulation(project_json, api_key)` and
-  `get_simulation_result(session_id, api_key)` → calls the real
-  backend. Keep these gated behind an env var so casual sessions don't
-  burn the user's quota.
+- `comcheck://skill/SKILL.md` resource — full SKILL.md text.
+- `comcheck://skill/reference/<name>` resources — each reference doc.
+- `comcheck://skill/examples/<name>` resources — each example file.
+- `use_comcheck` prompt — SKILL.md body (frontmatter stripped) for
+  hosts that surface MCP prompts at connection time.
 
-## What the implementation looks like
+## Implementation
 
-The Anthropic `mcp` Python SDK is straightforward — a server is ~100
-lines for a basic version:
+See [`comcheck_api/mcp/server.py`](../comcheck_api/mcp/server.py) for
+the actual server. Sketch:
 
 ```python
-# comcheck_api/mcp/server.py  (sketch)
 from mcp.server.fastmcp import FastMCP
-from comcheck_api import COMcheckClient
-from comcheck_api.types import ...  # for reflection
+from comcheck_api.ai import content
+from comcheck_api.ai.tools import lookup, projects, simulation, validation
 
 mcp = FastMCP("comcheck")
 
 @mcp.tool()
 def lookup_type(name: str) -> dict:
-    """Return field-level schema for a Pydantic model in the SDK."""
-    ...
+    return lookup.lookup_type(name)
 
 @mcp.tool()
-def validate_code(code: str) -> dict:
-    """Run code in a sandbox with a mocked client; return errors."""
-    ...
+def validate_code(code: str, run: bool = False) -> dict:
+    return validation.validate_code(code, run=run)
+
+# ... other tools, resources, prompts ...
 
 def main():
     mcp.run()
 ```
+
+The server lazy-imports `mcp` so users without the `[mcp]` extra can
+still import `comcheck_api` cleanly.
 
 ## Realistic tradeoffs
 
@@ -583,7 +605,178 @@ def main():
   Zed, Continue, OpenAI's MCP support, and anything else that joins
   the protocol — which is now most major AI coding tools.
 
-### Operational responsibility
+## What "running a local MCP server" really means
+
+The phrase "local MCP server" sounds bigger than what actually happens.
+It does **not** mean a long-running daemon, a system service, or
+something the user starts and stops. It means: **a Python process
+exists for as long as the user's AI client is open.** That process is
+a child of the AI client, not a standalone service.
+
+```
+Claude Code (parent process)
+└── comcheck-mcp (child process, started automatically)
+```
+
+When the user closes Claude Code:
+
+```
+Claude Code → exits → kills its children → comcheck-mcp exits
+```
+
+The lifetime of the MCP server is **exactly the lifetime of the AI
+client**. Open Claude Code → comcheck-mcp starts. Close Claude Code →
+comcheck-mcp ends. Nothing is left running.
+
+### What it looks like on the user's machine
+
+If the user runs `ps` while Claude Code is open:
+
+```
+$ ps -ef | grep comcheck
+zhuy571   45821 12345  python /Users/zhuy571/.venv/bin/comcheck-mcp
+```
+
+One Python process. Idle most of the time (no CPU usage when nothing
+is happening). Talks to Claude Code over a pair of pipes
+(stdin/stdout). Wakes up only when Claude calls a tool, then goes
+back to sleep.
+
+### Resource consumption
+
+| Resource | Typical usage |
+|---|---|
+| Memory | ~30–60 MB (mostly Python interpreter + your package import) |
+| CPU | ~0% idle, brief spikes when a tool is called |
+| Network | None — talks to AI client over pipes, not over the network |
+| Ports | None — stdio transport doesn't use ports |
+| Disk | None at runtime |
+
+It's lighter than a single browser tab.
+
+### "But isn't 'always running' a security risk?"
+
+The natural worry: "Is something always running on my machine? Can it
+be exploited?"
+
+What's actually happening:
+
+- **Not always running.** Only while the AI client is open. Quit the
+  AI client, the server quits too.
+- **No network exposure.** It listens on stdin from one specific
+  parent process. There's no port, no socket, no way for anything
+  else to talk to it. The phrase "local server" makes people think
+  "listening on localhost:8080" — that's *not* what's happening here.
+  There is no server that can be reached with `curl`.
+- **Sandboxed by stdio.** Even a malicious tool scanning the system
+  would find no socket to attack. The two processes communicate over
+  a private file descriptor pair created at fork time.
+
+The closest mental model: a **plugin loaded by Claude Code that
+happens to live in a separate Python process for isolation**. Not a
+server in any traditional sense.
+
+### Why a separate process at all (vs. just `import`-ing the package)?
+
+Reasonable question. Three reasons MCP uses subprocesses:
+
+1. **Language independence.** MCP servers can be Python, Node, Go,
+   Rust, anything. Claude Code is written in JavaScript/TypeScript;
+   it can't `import` a Python package directly. Stdio + JSON-RPC is
+   the lingua franca.
+2. **Isolation.** A crash in your MCP server doesn't take down the AI
+   client. A `validate_code` tool running untrusted Python lives in
+   its own process tree.
+3. **Permissions.** The user can grant/revoke per-server tool access
+   without affecting the AI client itself.
+
+So "local MCP server" is really "Python plugin running as a
+subprocess for isolation reasons." The word "server" is doing too
+much heavy lifting in the name.
+
+### Lifecycle in VS Code (Claude Code extension)
+
+In VS Code with the Claude Code extension, the lifecycle ties to the
+**extension's session**, not the chat panel visibility:
+
+| User action | `comcheck-mcp` process? |
+|---|---|
+| Opens VS Code | Not yet running |
+| Activates Claude Code extension (opens chat panel) | **Started** |
+| Hides the chat panel but keeps VS Code open | **Still running** |
+| Switches to a different VS Code workspace | Depends — extension may restart, killing and respawning |
+| Closes VS Code | Killed |
+| Reloads window (`Cmd+Shift+P → Reload Window`) | Killed and respawned |
+
+So if the user opens VS Code in the morning, activates Claude Code,
+and doesn't close VS Code all day, `comcheck-mcp` is alive all day.
+
+#### Why this is fine in practice
+
+1. **Idle ~all the time.** The process is blocked on `read()` from
+   stdin, waiting for the next message from Claude Code. CPU 0%.
+   Memory stays at its initial ~30–60 MB (no allocations between tool
+   calls, no leaks). Compare to other things VS Code keeps running:
+   TypeScript LSP often uses 500 MB+, Copilot, Docker, etc.
+   `comcheck-mcp` is one of the lightest things in your process tree.
+2. **Scoped to one VS Code window.** Three windows = three
+   `comcheck-mcp` processes, each ~30–60 MB. Even a power user with
+   five windows is at maybe 150–300 MB total for *all* MCP servers
+   across *all* their workspaces.
+3. **Dies cleanly.** When VS Code exits or reloads, the extension
+   exits, and any subprocess it spawned is killed via signal
+   propagation. No orphan, no zombie, no leftover service.
+
+#### Real concerns to watch for
+
+| Concern | Mitigation |
+|---|---|
+| Memory if user has 10+ MCP servers | Keep imports lean; lazy-import heavy deps inside tool functions, not at module top-level. A lean server starts in <100 ms and uses <50 MB. |
+| Stale state after `pip install --upgrade comcheck_api` | The running server is still the *old* version until the user reloads the VS Code window. Document it: "After upgrading, reload your VS Code window." |
+| Sleeping laptops | Process is suspended/resumed cleanly. No issue for a stateless server. |
+
+#### What's *not* happening
+
+To put the worry to rest, here's what an "always-running" process
+would do that this one doesn't:
+
+- ❌ Listen on a network port → no, stdio only
+- ❌ Accept connections from other processes → no, only from its
+  parent
+- ❌ Run scheduled tasks or polling → no, purely reactive
+- ❌ Phone home or send telemetry → no (you control the code)
+- ❌ Auto-update itself → no, just a Python file in a venv
+- ❌ Survive after the AI client closes → no, killed with parent
+
+It's a **reactive subprocess**, not a "service."
+
+### A user's day, concretely
+
+```
+09:00  Opens VS Code, activates Claude Code extension
+       → comcheck-mcp starts (~50 MB RAM, 0% CPU)
+
+10:30  Asks Claude: "build me an envelope assembly"
+       → Claude calls lookup_type("EnvelopeAssembly")
+       → comcheck-mcp wakes, returns 300 tokens of schema (~5 ms work)
+       → goes back to idle
+
+12:00  Lunch — VS Code stays open, chat panel hidden
+       → comcheck-mcp still running, ~50 MB RAM, 0% CPU
+
+14:00  Asks: "validate this code"
+       → comcheck-mcp spawns sandboxed subprocess, returns errors
+       → goes back to idle
+
+18:00  Closes VS Code
+       → comcheck-mcp is killed
+```
+
+Total CPU time consumed by `comcheck-mcp` over a 9-hour day: probably
+under 5 seconds. Total memory: 50 MB the whole time. Invisible unless
+the user looks for it.
+
+## Operational responsibility
 
 There's one operational thing you do own: **package quality**. If
 `comcheck-mcp` crashes on startup, every user's AI session shows a

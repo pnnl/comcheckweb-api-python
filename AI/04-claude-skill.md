@@ -8,21 +8,26 @@ Anthropic introduced them in late 2025 as the official way to package
 domain expertise for Claude — they're like "plugins" but lighter: just
 files, no protocol, no running process.
 
-Mechanically, every Skill has the same shape:
+Mechanically, every Skill has the same shape. This repo ships its
+Skill at [`comcheck_api/ai/skill/`](../comcheck_api/ai/skill/):
 
 ```
-comcheck-api/
+comcheck_api/ai/skill/
 ├── SKILL.md            # required: name + description + body of instructions
-├── reference/          # optional: extra Markdown loaded on demand
+├── reference/          # extra Markdown loaded on demand
 │   ├── operations.md
 │   ├── types.md
 │   └── simulation.md
-├── examples/           # optional: copy/curate from your existing examples/
+├── examples/           # worked examples
 │   ├── small_office.py
 │   └── full_project.py
-└── scripts/            # optional: helper scripts Claude can execute
+└── scripts/            # helper scripts Claude can execute
     └── validate_code.py
 ```
+
+The same folder is bundled in the wheel and is the canonical content
+source for `llms.txt`, `CLAUDE.md`, the MCP server's resources/prompt,
+and the hosted agent (via `comcheck_api.ai.content`).
 
 ## How a Skill actually works: the three-stage loading model
 
@@ -205,19 +210,17 @@ beyond Claude.
 
 Two ways users get a Skill:
 
-1. **Manual install** — user clones into
-   `~/.claude/skills/comcheck-api/`. Works today, no infra. Publish
-   the skill folder in the GitHub repo (or as a separate
-   `comcheck-skill` repo).
-2. **Plugin** — wrap the skill in an Anthropic Plugin. Plugins are
-   distributed via plugin marketplaces (community or your own) and
-   installed via `claude plugin install`. This is the "official" path
-   for public distribution — gives discoverability without users
-   needing to know which folder to drop files into.
+1. **`comcheck-api install-skill`** ✅ shipped — copies the bundled
+   `comcheck_api/ai/skill/` folder into
+   `~/.claude/skills/comcheck-api/`. One command after
+   `pip install comcheck_api`.
+2. **Plugin** (future) — wrap the skill in an Anthropic Plugin
+   distributed via plugin marketplaces. The "official" path for
+   public discoverability; not yet wired up.
 
-The skill folder could also ship *inside the PyPI package* with a
-`comcheck-api install-skill` console script that copies it to
-`~/.claude/skills/`. Nice quality-of-life touch — install both at once.
+The skill folder ships *inside the PyPI package* and the
+`~/.claude/skills/` — install both the package and the Skill in two
+commands.
 
 ## Realistic tradeoffs
 
@@ -227,9 +230,11 @@ The skill folder could also ship *inside the PyPI package* with a
   Desktop, Agent SDK). Doesn't help users on Cursor, ChatGPT, etc.
 - **Quality lift**: real — Claude reads the file with intent, follows
   instructions, and progressive disclosure means a *lot* of content
-  can be included without polluting every turn. But there's no
-  validation loop unless `scripts/validate_code.py` is also shipped
-  for Claude to execute.
+  can be included without polluting every turn. The
+  [`scripts/validate_code.py`](../comcheck_api/ai/skill/scripts/validate_code.py)
+  bundled with this Skill gives Claude a real syntax/import feedback
+  loop too.
 - **Maintenance**: rebuild when SDK changes, same as the others. Easy
   to keep in lockstep with `llms.txt` since the source content is the
-  same.
+  same — both come out of `comcheck_api/ai/skill/` via the same build
+  pipeline.

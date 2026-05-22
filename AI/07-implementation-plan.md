@@ -1,5 +1,15 @@
 # Unified Implementation Plan: `llms.txt` + Claude Skill + MCP Server
 
+> **Status note:** This document is the original *unified plan*. The
+> concrete plan that was actually built — including phase-by-phase
+> status — lives in
+> [10-approach-2-implementation-plan.md](10-approach-2-implementation-plan.md).
+> Phases 1–5 of this plan landed; the tool surface in Phases 3–7 below
+> is more aspirational than what's currently in the wheel. Specifically,
+> the `create_project` / `delete_project` tools described below were
+> dropped — the underlying `COMcheckClient` only supports
+> list/get/update for saved projects, plus simulation start/poll/result.
+
 This plan ships all three options from a **single source of content**.
 The Claude Skill folder becomes the canonical asset; everything else is
 generated from it or reads from it at runtime.
@@ -25,7 +35,7 @@ MCP isn't only about tools. The protocol has three primitives:
 
 | MCP primitive | What it does | What we'll put there |
 |---|---|---|
-| **Tools** | Functions the model can call | `lookup_type`, `search_docs`, `validate_code`, `get_skeleton`, `get_example` |
+| **Tools** | Functions the model can call | `list_operations`, `lookup_type`, `search_docs`, `validate_code`, `dry_run_project`, `list_projects`, `get_project`, `update_project`, `start_simulation`, `get_simulation_status`, `get_simulation_result` |
 | **Resources** | Fetchable content the model can read | The Skill's Markdown files (`reference/*.md`, `examples/*.py`) |
 | **Prompts** | Pre-formatted instructions the host can surface | The body of `SKILL.md` as a "use comcheck" system prompt |
 
@@ -263,6 +273,61 @@ include = ["comcheck_api/ai/skill/**/*"]
   publish the Skill folder as a plugin for one-click install in
   Claude.
 
+### Phase 7 — Agent enablement (already shipped via Phase 2 above)
+
+Write tools that let Claude Code (and other agent-mode AI clients)
+*operate* on the user's COMcheck account, not just generate code,
+were folded directly into the Phase 2 tool surface — no separate
+phase. The actual tools shipped, with their risk class:
+
+| Tool | Risk class |
+|---|---|
+| `list_projects()` | Safe |
+| `get_project(project_id)` | Safe |
+| `update_project(project_id, project_data)` | Confirm (mutates existing) |
+| `start_simulation(project_id)` | Confirm (costs quota) |
+| `get_simulation_status(session_id)` | Safe |
+| `get_simulation_result(session_id)` | Safe |
+
+Notes:
+
+- No `create_project` / `delete_project`: the underlying
+  `COMcheckClient` doesn't expose them — the COMcheck Web API treats
+  project creation/deletion as a website-UI concern; the SDK only
+  reads/updates already-saved projects.
+- The MCP server doesn't enforce approvals itself; per-tool
+  confirmation gating is the consumer's responsibility (Claude Code's
+  built-in approval system, or the LangGraph agent's `permission_mode`
+  in the agent repo).
+
+Engineering work (covered in detail in [08-agent.md](08-agent.md)):
+
+- API key handling (read from env, never log).
+- Per-tool risk annotation so MCP clients can apply approval gates.
+- Session ID persistence (so `get_simulation_status` works across
+  Claude Code restarts).
+- Polling-loop ergonomics (block up to ~5 min, then return session
+  ID for later resume).
+- Idempotency log for resumable builds.
+
+Once done, **Claude Code with `comcheck-mcp` becomes a working
+agent**: the user says "build me a 5,000 sqft office in Seattle and
+run a sim," Claude orchestrates the whole flow. No new code beyond
+the new tools.
+
+### Phase 8 — Standalone agent (deprecated)
+
+**Decision:** The standalone in-package agent (Claude Agent SDK
+wrapper) is **not** being built. The hosted agent for the COMcheck
+website is going to be a LangGraph + A2A + AgentCore service in a
+**separate repo** that consumes this package as a dependency. See
+[08-agent.md](08-agent.md) for the agent options landscape and
+[09-supporting-agent-repo.md](09-supporting-agent-repo.md) for the
+two-repo architecture.
+
+This repo's job ends at the framework-agnostic `ai/tools/` surface
+and the local MCP server. **No agent code lives in this repo.**
+
 ### Phase 6 — Evaluation & iteration (ongoing)
 
 Build a small golden eval set (~20 prompts covering the 80% use
@@ -273,19 +338,22 @@ cases). For each, the eval harness:
 3. Records: imports OK? builds project? matches expected fields?
 
 This is what tells you the system is actually helping. Run it on
-every release.
+every release. Eval lives in the **agent repo**, not here — it
+exercises the full end-to-end agent loop.
 
-## Effort summary
+## Effort summary (status)
 
-| Phase | Time | Owner concern |
+| Phase | Status | Time |
 |---|---|---|
-| 1. Content authoring | 1–2 days | Content quality |
-| 2. Build pipeline | 1 day | CI |
-| 3. MCP server | 3–5 days | Sandbox security |
-| 4. CLI | 1 day | Cross-platform paths |
-| 5. Packaging | 1 day | PyPI release |
-| 6. Eval | ongoing | Pass-rate over time |
-| **Total to public release** | **~2 weeks** | |
+| 1. Content authoring | ✅ done | 1–2 days |
+| 2. Build pipeline | ✅ done | 1 day |
+| 3. MCP server | ✅ done | 3–5 days |
+| 4. CLI | ✅ done | 1 day |
+| 5. Packaging | ✅ done | 1 day |
+| 7. Agent enablement (write tools) | ✅ done (folded into Phase 2) | — |
+| 6. Tests + CI | ⏳ pending | ~1 day |
+| 6. Eval | ⏳ in agent repo | ongoing |
+| 8. Standalone agent | ❌ deprecated | — |
 
 ## How users use it
 
