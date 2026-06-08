@@ -78,25 +78,26 @@ common pitfalls. The Skill folder lives at
 [`comcheck_api/ai/skill/`](comcheck_api/ai/skill/) and ships in the
 wheel.
 
-To make it available to Claude, copy it into your Claude skills
-directory:
+### Setup in your own repo
+
+Copy the bundled Skill folder into a project-level
+`.claude/skills/comcheck-api/`. Claude Code scans
+`<project>/.claude/skills/` when a session opens against the repo,
+so the guidance kicks in only for projects that actually use this
+SDK — not on every Claude session everywhere.
 
 ```bash
-cp -R "$(python -c 'import comcheck_api.ai.content as c; print(c.skill_root())')" \
-      ~/.claude/skills/comcheck-api
+# Run this once in the root of the project that consumes comcheck_api:
+SKILL_SRC=$(python -c "import comcheck_api.ai.content as c; print(c.skill_root())")
+mkdir -p .claude/skills
+cp -R "$SKILL_SRC" .claude/skills/comcheck-api
 ```
 
-Then restart Claude. From the next session on, asking Claude to write
-or debug `comcheck_api` code will trigger the Skill — it pulls in the
-SKILL.md body, the reference docs, and worked examples on demand.
-
-The same Skill content also drives the repo-root `CLAUDE.md`, which
-auto-loads in Claude Code sessions opened against this repo. To
-regenerate it after editing `SKILL.md`:
-
-```bash
-uv run python scripts/build_ai_assets.py
-```
+Commit `.claude/skills/comcheck-api/`. Teammates get the same
+guidance the moment they open the repo in Claude Code, and Claude
+can pull in the reference docs, examples, and `validate_code.py`
+script on demand — not just the SKILL.md body. Re-run the copy
+after upgrading the package to pick up new conventions.
 
 For background on how the Skill is structured and why, see
 [`AI/skills.md`](AI/skills.md).
