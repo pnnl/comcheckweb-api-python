@@ -26,8 +26,7 @@ comcheck_api/ai/skill/
 ```
 
 The same folder is bundled in the wheel and is the canonical content
-source for `CLAUDE.md` and the framework-agnostic tool functions
-(via `comcheck_api.ai.content`).
+source for the repo-root `CLAUDE.md` (via `comcheck_api.ai.content`).
 
 ## How a Skill actually works: the three-stage loading model
 

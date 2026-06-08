@@ -41,6 +41,66 @@ pip install comcheckweb-api-python
 
 For detailed usage examples and API reference, see the [documentation](https://pnnl-int.github.io/comcheckweb-api-python/).
 
+## Introspection helpers
+
+The package ships typed helpers for discovering what the SDK exposes
+and for validating project data — useful from notebooks, IDE plugins,
+and AI agents alike. All return Pydantic models; call `.model_dump()`
+when you need JSON.
+
+```python
+import comcheck_api as cc
+
+# What operation functions does the SDK ship?
+for op in cc.list_operations():
+    print(op.group, op.signature)
+
+# What does the ComBuilding model look like?
+schema = cc.lookup_type("ComBuilding")
+for field in schema.fields:
+    print(field.name, field.type, field.required)
+
+# Does this dict satisfy the SDK schema?
+result = cc.validate_project(project_dict)
+if not result.ok:
+    for err in result.errors:
+        print(err.loc, err.msg)
+```
+
+See [`api/introspection`](https://pnnl-int.github.io/comcheckweb-api-python/api/introspection/)
+in the docs for the full reference.
+
+## AI integration: the Claude Skill
+
+A bundled Claude Skill teaches Claude how to use this SDK correctly —
+operation modules, default templates, the simulation polling loop,
+common pitfalls. The Skill folder lives at
+[`comcheck_api/ai/skill/`](comcheck_api/ai/skill/) and ships in the
+wheel.
+
+To make it available to Claude, copy it into your Claude skills
+directory:
+
+```bash
+cp -R "$(python -c 'import comcheck_api.ai.content as c; print(c.skill_root())')" \
+      ~/.claude/skills/comcheck-api
+```
+
+Then restart Claude. From the next session on, asking Claude to write
+or debug `comcheck_api` code will trigger the Skill — it pulls in the
+SKILL.md body, the reference docs, and worked examples on demand.
+
+The same Skill content also drives the repo-root `CLAUDE.md`, which
+auto-loads in Claude Code sessions opened against this repo. To
+regenerate it after editing `SKILL.md`:
+
+```bash
+uv run python scripts/build_ai_assets.py
+```
+
+For background on how the Skill is structured and why, see
+[`AI/skills.md`](AI/skills.md).
+
 ## Development
 
 Clone the repository and follow the commands below to set up developer tooling.
