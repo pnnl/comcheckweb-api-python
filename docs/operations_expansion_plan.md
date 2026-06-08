@@ -23,7 +23,7 @@ following the existing patterns in `project_envelope_operations` and
 - Nested locators (skylight in roof, window/door in wall) use an envelope-specific
   `_find_component_location` helper to pick the right parent before mutating.
 
-The new domains have the same structure but with two wrinkles new code has to
+The new domains have the same structure but with three wrinkles new code has to
 handle:
 
 1. **Two-level nesting** — `Fixture` lives inside `interiorLightingSpace.fixture`,
@@ -32,6 +32,11 @@ handle:
 2. **Singleton subcomponents** — `interiorLightingSpace` and
    `exteriorLightingSpace` are objects, not lists, so they only get `update_*`,
    no add/remove.
+3. **FixtureSchedule precedes Fixture** — every interior/exterior `Fixture` has a
+   `scheduleFixtureKey` that must already exist in `lighting.fixtureSchedule`.
+   The user-facing flow is *always* two steps: add the schedule first, then add
+   the fixture (which references the schedule's `scheduleFixtureKey`).
+   Operations should enforce/help with this ordering.
 
 ## Sample-JSON → identifier choices
 
@@ -50,6 +55,121 @@ handle:
 
 These have to be added to `MODEL_TO_ID_INFO` in
 `managers/data_manager.py:get_model_info`.
+
+## Lighting workflow (interior & exterior)
+
+Both interior and exterior lighting follow the same two-step authoring flow.
+Operations must enforce or assist this ordering — adding a fixture without a
+matching schedule entry is a user error.
+
+### Step 1 — Add a fixture schedule entry
+
+Every fixture is a reference to a row in `lighting.fixtureSchedule[]`, keyed by
+`scheduleFixtureKey` (a UUID). The schedule row carries the catalog-style
+fields (`fixtureType`, `description`, `fixtureWattage`, `lightingType`, track
+fields).
+
+```
+add_fixture_schedule_to_project(project, new_fixture_schedule)
+# returns updated project; new_fixture_schedule.scheduleFixtureKey must be unique
+```
+
+### Step 2 — Add a fixture into either interior or exterior lighting
+
+A `Fixture` instance (which lives inside an `interiorLightingSpace` or
+`exteriorLightingSpace`) carries `scheduleFixtureKey` matching one row in
+`lighting.fixtureSchedule[]`, plus per-instance fields (`quantity`,
+`description`, `lightingControl[]`, etc.).
+
+#### 2a. Interior fixture
+
+Lives at one of two depths:
+
+- `lighting.wholeBldgUse[i].interiorLightingSpace.fixture[]` (whole-building
+  level — used when `activityUse=[]`).
+- `lighting.wholeBldgUse[i].activityUse[j].interiorLightingSpace.fixture[]`
+  (per-activity — the common case in the sample JSON).
+
+```
+add_fixture_to_project(
+    project,
+    building_area_key,           # wholeBldgUse[i].key
+    new_fixture,                 # must reference an existing scheduleFixtureKey
+    activity_use_id=None,        # if set, target the activity's lighting space
+)
+```
+
+#### 2b. Exterior fixture
+
+Lives at:
+
+- `lighting.exteriorUse[k].exteriorLightingSpace.fixture[]`.
+
+```
+add_exterior_fixture_to_project(
+    project,
+    exterior_use_id,             # exteriorUse[k].id
+    new_fixture,                 # must reference an existing scheduleFixtureKey
+)
+```
+
+Sample exterior shape (from user spec):
+
+```json
+{
+  "id": 95626,
+  "areaDescription": "Ext Area",
+  "exteriorType": "EXTERIOR_MAIN_ENTRY",
+  "isTradable": true,
+  "powerDensity": 20,
+  "quantityUnits": "ft of door width",
+  "useQuantity": 2,
+  "exteriorLightingSpace": {
+    "id": 95401,
+    "fixture": [
+      {
+        "id": 2724271,
+        "scheduleFixtureKey": "2aeda530-...",
+        "description": "LED 1",
+        "fixtureType": "Fixture 1",
+        "fixtureWattage": 8,
+        "lightingType": "LED",
+        "quantity": 1,
+        "lightingControl": [
+          { "id": 25842587, "type": "LIGHTING_CONTROL_DAYLIGHT_SHUTOFF" },
+          { "id": 25842588, "type": "LIGHTING_CONTROL_SETBACK" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Validation rules (apply to both add operations)
+
+- `new_fixture.scheduleFixtureKey` must already be present in
+  `lighting.fixtureSchedule[]` — raise `ValueError` if not.
+- For interior: `building_area_key` must exist; if `activity_use_id` is given,
+  it must exist under that building area.
+- For exterior: `exterior_use_id` must exist in `lighting.exteriorUse[]`.
+
+### Convenience helper (optional)
+
+A combined helper can reduce ceremony for the common case — name follows the
+`fixture_schedule`-first ordering of the workflow:
+
+```
+add_fixture_schedule_with_fixture_to_project(
+    project,
+    new_fixture_schedule,
+    new_fixture,
+    *,
+    interior=None,   # (building_area_key, activity_use_id|None)
+    exterior=None,   # exterior_use_id
+)
+# adds the schedule then the fixture in one call;
+# raises if both/neither of `interior`/`exterior` are provided.
+```
 
 ## Plan
 
@@ -98,17 +218,25 @@ remove_activity_use_from_project(project, activity_use_id)
 update_interior_lighting_space_in_project(project, building_area_key, updates, activity_use_id=None)
 # updates the singleton lighting space at either bldg-area level or inside the named activity
 
+# Fixture schedule (shared by interior and exterior — lives in lighting.fixtureSchedule)
+add_fixture_schedule_to_project(project, new_fixture_schedule)
+update_fixture_schedule_in_project(project, schedule_fixture_key, updates)
+remove_fixture_schedule_from_project(project, schedule_fixture_key)
+# remove must verify no Fixture (interior or exterior) still references the key
+
+# Interior fixtures — must reference an existing schedule key
 add_fixture_to_project(project, building_area_key, new_fixture, activity_use_id=None)
 update_fixture_in_project(project, fixture_id, updates)
 remove_fixture_from_project(project, fixture_id)
 
-add_fixture_schedule_to_project(project, new_fixture_schedule)
-update_fixture_schedule_in_project(project, schedule_fixture_key, updates)
-remove_fixture_schedule_from_project(project, schedule_fixture_key)
+# Convenience: schedule + fixture in one call (see Lighting workflow)
+add_fixture_schedule_with_fixture_to_project(project, new_fixture_schedule, new_fixture, *, interior=..., exterior=...)
 ```
 
 Needs a `_find_fixture_location(project, fixture_id) -> (whole_idx, activity_idx_or_None)`
-helper analogous to `_find_component_location`.
+helper analogous to `_find_component_location`. The fixture-schedule operations
+should live here (rather than in exterior) since they are shared, and be
+re-exported from `project_exterior_lighting_operations` for convenience.
 
 #### `project_exterior_lighting_operations.py`
 
@@ -119,13 +247,15 @@ remove_exterior_use_from_project(project, exterior_use_id)
 
 update_exterior_lighting_space_in_project(project, exterior_use_id, updates)
 
+# Exterior fixtures — must reference an existing schedule key in lighting.fixtureSchedule
 add_exterior_fixture_to_project(project, exterior_use_id, new_fixture)
 update_exterior_fixture_in_project(project, fixture_id, updates)
 remove_exterior_fixture_from_project(project, fixture_id)
 ```
 
-Exterior fixtures are isolated to a single parent (`exteriorUse`), so this can
-be simpler than interior.
+Exterior fixtures are isolated to a single parent (`exteriorUse`), so this is
+simpler than interior. Fixture-schedule operations are shared with interior
+and live in the interior module.
 
 #### `project_mechanical_operations.py`
 
