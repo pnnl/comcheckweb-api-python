@@ -1,41 +1,45 @@
 # Supporting an External Agent Repo
 
-The agent (LangGraph + A2A + AWS AgentCore — see [08-agent.md](08-agent.md))
+The agent (LangGraph + A2A + AWS AgentCore — see [agent.md](agent.md))
 will live in a **separate repository**. This `comcheckweb-api-python`
 package becomes a **dependency** of the agent repo. The question this
 doc answers: *what should this package expose so the agent repo has
 an easy time consuming it?*
 
-**Decision**: expand this package to ship SDK + Skill content +
-reusable framework-agnostic tool functions, with strict internal
-layering.
+**Decision**: keep all useful helpers as first-class SDK surface,
+and ship the Skill content under `comcheck_api/ai/skill/` for
+agents that want progressive-disclosure context.
 
 ## What "support agent development" means
 
 Three things the agent repo will need from this package:
 
 1. **The SDK itself** — `import comcheck_api` (already done; that's
-   the package's job).
+   the package's job). This now includes typed introspection and
+   validation helpers (`list_operations`, `lookup_type`,
+   `validate_project`).
 2. **Knowledge content** — the Skill folder (`SKILL.md`,
    `reference/*.md`, `examples/*.py`) so the agent can load it as
    Skill-style progressive-disclosure context.
-3. **Tools** — Python functions the agent's LangGraph nodes can call
-   (`lookup_type`, `update_project`, `start_simulation`,
-   `validate_code`, etc.).
+3. **No agent-shaped wrappers** — the agent repo wraps SDK calls
+   itself with whatever framework decorators it uses
+   (LangGraph `@tool`, etc.). This package stays
+   framework-agnostic.
 
 ## Chosen design
 
-**Keep one package, with optional `[agent]` extra and a clear internal
-layering.**
+**One package. SDK is the surface. Skill content lives under `ai/`.**
 
 ### Layered structure inside `comcheck_api`
 
 ```
 comcheck_api/
-  __init__.py                    # SDK surface (existing)
+  __init__.py                    # SDK surface (existing + introspection/validation)
   client/                        # SDK (existing)
   project_operations/            # SDK (existing)
   types/                         # SDK (existing)
+  introspection.py               # list_operations, lookup_type
+  validation.py                  # validate_project
   ...
 
   ai/                            # AI-facing surface
@@ -47,36 +51,32 @@ comcheck_api/
       reference/
       examples/
       scripts/
-    tools/                       # ready-made tool functions
-      __init__.py
-      lookup.py                  # lookup_type, list_operations, search_docs
-      projects.py                # list/get/update project
-      simulation.py              # start, status, result
-      validation.py              # validate_code, dry_run_project
 ```
 
 ### The dependency direction is strict and one-way
 
 ```
-ai/tools/ ──▶ comcheck_api SDK (existing)
-   ▲
-   │
-ai/skill/ (data files, no code dep)
+ai/content.py ──▶ ai/skill/ (data files)
+
+introspection.py, validation.py ──▶ comcheck_api SDK (existing)
 ```
 
-`ai/` depends on the SDK. The SDK never depends on `ai/`. This means:
+`ai/` depends on no code outside itself. The introspection/validation
+helpers depend on the SDK they introspect. The SDK never depends on
+`ai/`. This means:
 
-- A user who runs `pip install comcheck_api` gets the SDK and
-  nothing else costly.
-- The agent repo runs `pip install comcheck_api[agent]` and gets the
-  SDK + `ai/` (skill content + reusable tool functions).
+- A user who runs `pip install comcheck_api` gets the SDK + the
+  introspection/validation helpers + bundled Skill files.
+- The agent repo runs `pip install comcheck_api[agent]` (currently
+  identical — the extra is a marker for future agent-specific
+  optional deps).
 
 ### Optional dependencies
 
 ```toml
 # pyproject.toml
 [project.optional-dependencies]
-agent = []   # marker extra; agents consume comcheck_api.ai directly
+agent = []   # marker extra; agents consume comcheck_api directly
 ```
 
 ### Shipping the Skill folder in the wheel
@@ -101,18 +101,30 @@ normally or zip-imported.
 ```python
 # agent_repo/agent/tools.py
 from langchain_core.tools import tool
-from comcheck_api.ai import tools as cc_tools  # shared layer
+import comcheck_api as cc
 from comcheck_api.ai.content import load_skill_reference
+
+@tool
+def list_operations() -> list[dict]:
+    """List public functions in the project operation modules."""
+    return [op.model_dump() for op in cc.list_operations()]
+
+@tool
+def lookup_type(name: str) -> dict | None:
+    """Reflect a Pydantic model or enum from comcheck_api.types."""
+    schema = cc.lookup_type(name)
+    return schema.model_dump() if schema else None
+
+@tool
+def validate_project(data: dict) -> dict:
+    """Validate a project dict against the SDK schema."""
+    return cc.validate_project(data).model_dump()
 
 @tool
 def update_project(project_id: str, project_data: dict) -> dict:
     """Update a saved COMcheck project."""
-    return cc_tools.projects.update_project(project_id, project_data)
-
-@tool
-def start_simulation(project_id: str) -> dict:
-    """Start a compliance simulation. Costs the user's COMcheck quota."""
-    return cc_tools.simulation.start(project_id)
+    client = cc.COMcheckClient()
+    return client.update_project(project_id=project_id, project_data=project_data)
 
 
 # agent_repo/agent/nodes/skill_router.py
@@ -133,9 +145,11 @@ The agent repo holds:
 - A2A endpoint code.
 - AgentCore deployment config.
 - Eval harness.
+- The thin `@tool` adapters that wrap typed SDK calls into
+  JSON-shaped tool returns.
 
 Every line of substantive COMcheck logic is reused from
-`comcheck_api.ai`, not duplicated.
+`comcheck_api`, not duplicated.
 
 ## Why this shape is the right one
 
@@ -150,12 +164,13 @@ Every line of substantive COMcheck logic is reused from
 If it lived in the agent repo, the local Claude users would have to
 reach across repos to get it.
 
-### 2. Tools are versioned with the SDK
+### 2. Introspection helpers are first-class
 
-When a new operation class is added to `comcheck_api`, the tool
-functions in `ai/tools/` update in the same commit. Anyone who bumps
-their `comcheck_api` dependency gets the new tools automatically — no
-separate release dance.
+`list_operations`, `lookup_type`, `validate_project` are useful to
+anyone — a dev exploring the SDK in a notebook, an IDE plugin, an
+LLM agent. They live on the SDK proper and return typed Pydantic
+models. Agents that need plain JSON `.model_dump()` themselves —
+that's a one-liner, not a reason for a shim layer.
 
 ### 3. The agent repo stays small and focused
 
@@ -169,47 +184,28 @@ infra changes happen without touching domain logic and vice versa.
 | Lives in **`comcheckweb-api-python`** (this repo) | Lives in **agent repo** |
 |---|---|
 | `comcheck_api/` SDK | LangGraph graph & state definitions |
-| `comcheck_api/ai/skill/` (canonical content) | System prompt + prompt iteration |
-| `comcheck_api/ai/tools/` (reusable tool functions) | Tool *registration* with LangGraph (`@tool` wrappers) |
+| `comcheck_api/introspection.py`, `validation.py` | System prompt + prompt iteration |
+| `comcheck_api/ai/skill/` (canonical content) | `@tool`-decorated wrappers around SDK calls |
 | `comcheck_api/ai/content.py` (Skill loader) | Skill *retrieval node* (which docs to load when) |
 | `comcheck_api/ai/CLAUDE.md` (generated) | Approval policy nodes |
 | Public docs (`docs_site/`) | A2A endpoint code |
-| **Unit tests** for tools and content loading | AgentCore deployment config |
+| **Unit tests** for introspection/validation/content | AgentCore deployment config |
 |   | Eval harness for chat-style flows |
 |   | Internal runbooks |
 
 Two repos, two clear missions:
 
 - **This repo**: "Here is the COMcheck domain SDK and the canonical
-  content/tools that go with it."
+  content that goes with it."
 - **Agent repo**: "Here is the deployed product that uses that SDK
   to provide a hosted chatbot."
 
 ## The one discipline rule
 
-**`comcheck_api/ai/tools/` should know nothing about LangGraph.** It
-exposes plain Python functions. The agent repo is responsible for
-adapting them into `@tool`-decorated LangChain tools.
-
-This keeps the package framework-agnostic. If we ever decide to also
-ship a Claude Agent SDK demo, or build a CrewAI integration, or a
-CLI agent, they all consume the same plain-Python tool surface and
-adapt it to their own framework. No agent-framework dependency leaks
-into the SDK package.
-
-```python
-# GOOD — framework-agnostic
-# comcheck_api/ai/tools/projects.py
-def update_project(project_id: str, project_data: dict, *, api_key=None) -> dict:
-    """Update a saved COMcheck project."""
-    ...
-
-# BAD — leaks LangGraph into the SDK package
-from langchain_core.tools import tool
-@tool
-def update_project(project_id: str, project_data: dict) -> dict:
-    ...
-```
+**The SDK package depends on nothing agent-framework-specific.** It
+exposes plain Python functions and Pydantic models. The agent repo
+is responsible for adapting them into `@tool`-decorated LangChain
+tools (or Claude Agent SDK tools, or CrewAI tools, etc.).
 
 A `langchain_core` import inside `comcheck_api` would force every
 PyPI consumer to pull in LangChain's transitive dependencies. Don't
@@ -217,16 +213,16 @@ do it. Adapters belong in the consumer, not the library.
 
 ## Phased path forward
 
-### Step 1 — Land the AI substrate in this repo ✅ done
+### Step 1 — Land the SDK + Skill substrate in this repo ✅ done
 
-Tracked in [10-approach-2-implementation-plan.md](10-approach-2-implementation-plan.md).
+Tracked in [implementation-plan.md](implementation-plan.md).
 What landed:
 
 - `ai/skill/` content authored (SKILL.md, 3 reference docs, 2
   examples, validate_code.py).
-- `ai/tools/` reusable Python functions (lookup, projects,
-  simulation, validation).
 - `ai/content.py` Skill loader using `importlib.resources`.
+- `comcheck_api.list_operations` / `lookup_type` / `validate_project`
+  as first-class SDK helpers with Pydantic return types.
 - `comcheck_api/ai/CLAUDE.md` generated from `SKILL.md`.
 
 Pending here: unit tests, CI sync check.
@@ -235,7 +231,9 @@ Pending here: unit tests, CI sync check.
 
 - `pyproject.toml` declares `comcheck_api[agent]` dependency.
 - LangGraph graph defined.
-- Tool wrappers around `comcheck_api.ai.tools.*`.
+- `@tool` wrappers around `comcheck_api.list_operations`,
+  `lookup_type`, `validate_project`, and the `COMcheckClient`
+  methods.
 - Skill retrieval node using `comcheck_api.ai.content`.
 - A2A endpoint.
 - AgentCore deployment.
@@ -245,11 +243,10 @@ this package is already there.
 
 ### Step 3 — Iterate together
 
-When the agent reveals a missing tool ("the LLM keeps wanting to
-query simulations by date range"), the missing tool gets added to
-`comcheck_api/ai/tools/` in this repo, a new version is released,
-and the agent's dependency is bumped. Single source of truth pays
-off.
+When the agent reveals a missing helper ("the LLM keeps wanting to
+introspect a default template"), the missing helper gets added to
+the SDK in this repo, a new version is released, and the agent's
+dependency is bumped. Single source of truth pays off.
 
 ## Summary
 
@@ -257,8 +254,8 @@ off.
   (SDK only or `[agent]`).
 - **One canonical content folder** (`comcheck_api/ai/skill/`) used by
   Claude users and the hosted agent.
-- **Strict layering**: SDK ← `ai/`. Never the reverse.
-- **Framework-agnostic tool functions** in `ai/tools/` — LangGraph
-  adapters live in the agent repo.
+- **Introspection / validation are first-class on the SDK** — typed
+  Pydantic returns, no shim layer.
 - **The agent repo is small and focused**: orchestration, prompts,
-  deployment. All COMcheck domain logic stays here.
+  deployment, framework-specific adapters. All COMcheck domain
+  logic stays here.

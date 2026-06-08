@@ -60,6 +60,12 @@ from .project_operations import (
     project_envelope_operations,
 )
 
+# Introspection helpers
+from .introspection import list_operations, lookup_type
+
+# Validation helpers
+from .validation import validate_project
+
 # Utilities
 from . import utilities
 
@@ -81,6 +87,11 @@ __all__ = [
     # Project Operations
     "project_building_area_operations",
     "project_envelope_operations",
+    # Introspection
+    "list_operations",
+    "lookup_type",
+    # Validation
+    "validate_project",
     # Utilities
     "utilities",
     # Types

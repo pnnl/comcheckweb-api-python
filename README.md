@@ -74,6 +74,26 @@ uv sync
 - Run type checking:
 	`uv run mypy comcheck_api`
 
+## Running the docs locally
+
+The documentation site is built with MkDocs (Material theme +
+mkdocstrings). The dependencies live in the optional `docs` group
+defined in `pyproject.toml`.
+
+```bash
+# Install the docs group (mkdocs, mkdocs-material, mkdocstrings).
+uv sync --group docs
+
+# Serve with live reload at http://127.0.0.1:8000
+uv run mkdocs serve
+
+# One-shot build into ./site/
+uv run mkdocs build
+
+# Fail on warnings (good before committing)
+uv run mkdocs build --strict
+```
+
 ## Support
 
 This is a publicly available library maintained by PNNL. While the code is open source and free to use, **external contributions are not accepted** at this time.

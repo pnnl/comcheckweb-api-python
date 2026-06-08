@@ -6,9 +6,11 @@ of the `comcheck_api` PyPI package. The shipped approach is:
 - A **Claude Skill** under `comcheck_api/ai/skill/` — domain
   instructions, reference docs, and worked examples that teach an
   LLM how to drive the SDK.
-- A **framework-agnostic tool surface** under
-  `comcheck_api/ai/tools/` — plain Python functions an external
-  agent (LangGraph, Claude Agent SDK, etc.) can wrap.
+- **First-class introspection / validation helpers on the SDK
+  itself** — `comcheck_api.list_operations()`,
+  `comcheck_api.lookup_type()`, `comcheck_api.validate_project()`.
+  Typed Pydantic returns; usable from any Python code (notebooks,
+  IDE plugins, agents).
 - A generated **`CLAUDE.md`** at `comcheck_api/ai/CLAUDE.md` and at
   the repo root — auto-loaded in Claude Code sessions.
 
@@ -22,7 +24,8 @@ repo, without leaking framework dependencies into the SDK.
 |---|---|---|
 | Skill content | ✅ shipped | [`comcheck_api/ai/skill/`](../comcheck_api/ai/skill/) |
 | Skill loader (`importlib.resources`) | ✅ shipped | [`comcheck_api/ai/content.py`](../comcheck_api/ai/content.py) |
-| Framework-agnostic tool functions | ✅ shipped | [`comcheck_api/ai/tools/`](../comcheck_api/ai/tools/) |
+| `list_operations`, `lookup_type` (typed) | ✅ shipped | [`comcheck_api/introspection.py`](../comcheck_api/introspection.py) |
+| `validate_project` (typed) | ✅ shipped | [`comcheck_api/validation.py`](../comcheck_api/validation.py) |
 | `CLAUDE.md` (generated from `SKILL.md`) | ✅ shipped | [`comcheck_api/ai/CLAUDE.md`](../comcheck_api/ai/CLAUDE.md) |
 | `[agent]` extra | ✅ shipped | [`pyproject.toml`](../pyproject.toml) |
 | Unit tests + CI sync check | ⏳ pending | — |
@@ -30,19 +33,20 @@ repo, without leaking framework dependencies into the SDK.
 
 ## Contents
 
-- [04-claude-skill.md](04-claude-skill.md) — Deep dive on packaging
+- [claude-skill.md](claude-skill.md) — Deep dive on packaging
   the SDK as a Claude Skill: structure, progressive-disclosure
   loading model, distribution.
-- [08-agent.md](08-agent.md) — Agent landscape: how an external
-  agent consumes the Skill content and the framework-agnostic tool
-  functions, and the engineering considerations any agent must
-  handle (API keys, approval gates, polling, idempotency, cost).
-- [09-supporting-agent-repo.md](09-supporting-agent-repo.md) —
+- [agent.md](agent.md) — Agent landscape: how an external
+  agent consumes the Skill content and the SDK's introspection /
+  validation helpers, and the engineering considerations any agent
+  must handle (API keys, approval gates, polling, idempotency,
+  cost).
+- [supporting-agent-repo.md](supporting-agent-repo.md) —
   Chosen architecture for supporting an external agent repo
-  (LangGraph + A2A + AgentCore): expand this package with `ai/`,
-  shared Skill folder + framework-agnostic tool functions,
-  ownership map between the two repos.
-- [10-approach-2-implementation-plan.md](10-approach-2-implementation-plan.md)
+  (LangGraph + A2A + AgentCore): expand this package with `ai/`
+  (Skill content + loader), keep introspection/validation on the
+  SDK proper, ownership map between the two repos.
+- [implementation-plan.md](implementation-plan.md)
   — Concrete implementation plan with current phase status: scope,
   layout, dependency rules, what landed, and what remains
   (tests + CI).

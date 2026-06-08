@@ -21,37 +21,43 @@ This repo provides two things an agent can consume directly:
 
 1. **The Skill content** under `comcheck_api/ai/skill/` — domain
    instructions, reference docs, and worked examples that teach an
-   LLM how to drive the SDK correctly.
-2. **The framework-agnostic tool functions** under
-   `comcheck_api/ai/tools/` — plain Python functions an agent can
-   wrap as LangGraph nodes, Claude Agent SDK tools, or any other
-   framework's tool format.
+   LLM how to drive the SDK correctly. Loaded at runtime via
+   `comcheck_api.ai.content`.
+2. **First-class SDK helpers** — `comcheck_api.list_operations()`,
+   `comcheck_api.lookup_type()`, and
+   `comcheck_api.validate_project()` return typed Pydantic models
+   directly from the SDK. Plus the existing `COMcheckClient`
+   methods (`list_projects`, `get_project`, `update_project`,
+   `start_run_simulation`, `get_simulation_status`,
+   `get_simulation_result`).
 
 The hosted-chatbot agent for the COMcheck website is a **LangGraph +
 A2A + AgentCore** service in a separate repository. It depends on
-this package and consumes both the Skill content and the tool
-functions. See [09-supporting-agent-repo.md](09-supporting-agent-repo.md)
-for the two-repo architecture.
+this package and consumes both the Skill content and the SDK helpers.
+See [supporting-agent-repo.md](supporting-agent-repo.md) for
+the two-repo architecture.
 
-## Available tool surface
+## Available SDK surface for agents
 
-The framework-agnostic tools in
-[`comcheck_api/ai/tools/`](../comcheck_api/ai/tools/) cover:
+Everything an agent needs is exported from the package root:
 
-| Module | What it does |
+| Helper | What it does |
 |---|---|
-| `lookup` | `list_operations()`, `lookup_type(name)`, `search_docs(query)` |
-| `projects` | `list_projects()`, `get_project(id)`, `update_project(id, data)` |
-| `simulation` | `start_simulation(project_id)`, `get_status(session_id)`, `get_result(session_id)` |
-| `validation` | `validate_code(code)`, `dry_run_project(json)` |
+| `list_operations()` | Live introspection of `project_*_operations` modules; returns `OperationInfo[]` |
+| `lookup_type(name)` | Reflects a Pydantic model or enum from `comcheck_api.types`; returns `TypeSchema \| None` |
+| `validate_project(data)` | Validates a project dict/`ComBuilding` against the SDK schema; returns `ValidationResult` |
+| `COMcheckClient` | The full client surface: project CRUD-on-existing, simulation lifecycle |
 
 (There's no `create_project` / `delete_project` — the underlying
 `COMcheckClient` doesn't expose them; projects are created/deleted
 via the COMcheck website UI.)
 
+Agents that need plain JSON (e.g. tool-calling LLMs) can `.model_dump()`
+any return value — Pydantic does the serialization.
+
 ## Engineering considerations for any agent
 
-These apply regardless of which framework wraps the tools.
+These apply regardless of which framework wraps the SDK.
 
 ### 1. API key handling
 
@@ -63,7 +69,8 @@ doesn't accidentally print it back to the user.
 ### 2. Approval gates for destructive actions
 
 - `update_project` — usually safe; confirm on shared projects.
-- `start_simulation` — confirm because it costs quota and queue time.
+- `start_run_simulation` — confirm because it costs quota and queue
+  time.
 
 The agent framework should provide per-tool approval hooks. Wire them
 up; don't trust the model to self-restrict.
@@ -100,9 +107,9 @@ only as smart as the prompt teaches it to be. Plan to iterate.
 | Stage | Status | What it enables |
 |---|---|---|
 | Skill content | ✅ done | Claude users get domain-aware help via progressive disclosure |
-| Framework-agnostic tool functions | ✅ done | Any agent framework can wrap them |
-| Hosted chatbot for the COMcheck website | ⏳ in agent repo | LangGraph + A2A + AgentCore. See [09-supporting-agent-repo.md](09-supporting-agent-repo.md). |
+| SDK introspection/validation helpers | ✅ done | Any agent framework calls them directly — no shim layer |
+| Hosted chatbot for the COMcheck website | ⏳ in agent repo | LangGraph + A2A + AgentCore. See [supporting-agent-repo.md](supporting-agent-repo.md). |
 
-Skill content and tool functions are shipped from this repo. The
-hosted chatbot lives in the separate agent repo and consumes
-`comcheck_api.ai.skill/` + `comcheck_api.ai.tools/` as a dependency.
+Skill content and SDK helpers are shipped from this repo. The hosted
+chatbot lives in the separate agent repo and consumes the SDK +
+`comcheck_api.ai.skill/` as a dependency.
