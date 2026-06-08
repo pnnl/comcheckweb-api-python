@@ -159,8 +159,4 @@ def dry_run_project(project_json: dict[str, Any]) -> dict[str, Any]:
     return {"ok": True, "errors": []}
 
 
-# --------------------------------------------------------------------------
-# Re-export json so MCP wrappers can serialize uniformly.
-# --------------------------------------------------------------------------
-
 __all__ = ["validate_code", "dry_run_project", "json"]

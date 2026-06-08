@@ -1,4 +1,4 @@
-# Option 2: Claude Skill
+# Claude Skill
 
 ## What it actually is
 
@@ -26,8 +26,8 @@ comcheck_api/ai/skill/
 ```
 
 The same folder is bundled in the wheel and is the canonical content
-source for `llms.txt`, `CLAUDE.md`, the MCP server's resources/prompt,
-and the hosted agent (via `comcheck_api.ai.content`).
+source for `CLAUDE.md` and the framework-agnostic tool functions
+(via `comcheck_api.ai.content`).
 
 ## How a Skill actually works: the three-stage loading model
 
@@ -100,8 +100,7 @@ reads that file. Same for `examples/` and `scripts/`.
 Files in `scripts/` can also be **executed** — Claude runs them as
 subprocesses (when the user has approved the relevant tool). That's
 how a skill can include a `validate_code.py` that imports
-`comcheck_api` and reports errors on generated code, similar to what
-an MCP server would do.
+`comcheck_api` and reports errors on generated code.
 
 ### Why this design matters
 
@@ -119,122 +118,28 @@ turns and only 5,000 tokens on the rare turn where Claude pulls a deep
 reference. Compare to `CLAUDE.md`, which costs its full size on
 **every** turn.
 
-## How a Skill differs from MCP
+## Distribution
 
-| Aspect | Claude Skill | MCP Server |
-|---|---|---|
-| Form | Static files | Running process |
-| Content | Markdown + optional scripts | Code, defines tools at runtime |
-| Activation | Description-matched, lazy | Tool-call-driven, always connected |
-| Reflection (live SDK introspection) | No | Yes |
-| Code execution | Yes, via `scripts/` (with permission) | Yes, via tools |
-| Custom tool API | No (uses Claude's built-in tools to read files / run scripts) | Yes (you define the tool surface) |
+Users get the Skill bundled inside the PyPI wheel under
+`comcheck_api/ai/skill/`. They can copy it into
+`~/.claude/skills/comcheck-api/` to make it available across all of
+their Claude sessions.
 
-A Skill is essentially **a guidebook with appendices and a few bundled
-scripts**. An MCP server is **a live API**. A skill can do "read these
-docs, then run this validation script." An MCP server can do "let me
-query the installed package directly and tell you what fields
-`EnvelopeAssembly` has." Different shapes, different sweet spots.
-
-## Are Skills usable in other agents?
-
-**No, not natively. Skills are a Claude-specific format.** The
-*content* is portable, but the format is not.
-
-### Why Skills are Claude-only
-
-The Skill specification is defined by Anthropic. The
-progressive-disclosure loading behavior, the frontmatter contract, and
-the discovery paths (`~/.claude/skills/`, plugin marketplaces) are
-implemented inside Claude's clients (Claude Code, Claude Desktop,
-claude.ai, the Agent SDK). Nothing in the Skill format is open-protocol
-the way MCP is.
-
-A Cursor session, a ChatGPT session, a Gemini agent — none of them
-know what `~/.claude/skills/` is, none of them parse `SKILL.md`
-frontmatter, and none of them follow Claude's progressive-disclosure
-rules. They'll happily ignore the folder if it exists on the user's
-disk.
-
-### What other ecosystems have instead
-
-There's no perfect equivalent, but the rough analogues:
-
-| Ecosystem | Closest thing | How it differs |
-|---|---|---|
-| **Cursor** | `.cursor/rules/*.mdc` | Always-loaded based on globs, no progressive disclosure, no scripts |
-| **OpenAI / ChatGPT** | Custom GPTs (with knowledge files + actions) | Hosted on OpenAI, no local file loading, can't ship via PyPI |
-| **Gemini** | Gems | Similar to Custom GPTs, hosted, not portable |
-| **Generic agent frameworks** | RAG over docs | You pick the loading strategy, but no standard "skill" format |
-| **MCP (cross-ecosystem)** | Tools + resources + prompts | Different shape — code-driven, not file-driven |
-
-The closest thing to a *cross-ecosystem* skill format that several
-tools agree on is actually **MCP itself** — specifically MCP's
-"prompts" and "resources" features (less famous than tools, but
-supported by the same servers). But MCP doesn't have Skill-style
-progressive disclosure built in; you'd have to design that into your
-server.
-
-### How portable is the *content*?
-
-Very. The actual prose and examples in `SKILL.md`, `reference/*.md`,
-`examples/*.py` are just Markdown and Python. You can:
-
-- Concatenate them into your `llms-full.txt` → useful for any AI tool.
-- Copy `SKILL.md` body into a `.cursor/rules/*.mdc` → slightly
-  different framing, mostly works.
-- Expose them as MCP resources → any MCP client can fetch them.
-
-So if you build a skill, treat the **content** as the canonical asset
-and emit other formats from it (a single content pipeline). The Skill
-packaging is what's Claude-specific; the words inside aren't.
-
-### Practical implication
-
-If your audience is mixed (some on Claude, some on Cursor, some on
-ChatGPT), the right mental model is:
-
-- **Skill**: best experience for Claude users specifically.
-- **MCP server**: best cross-tool reach for IDE-based AI (Claude Code,
-  Cursor, Windsurf, Zed, Continue, etc.).
-- **`llms.txt` + `CLAUDE.md` + `cursor.rules`**: covers everyone else
-  passively.
-
-A Skill is a great *complement* to an MCP server when you want the
-strongest possible Claude-specific experience (e.g., a skill that says
-"prefer the comcheck-mcp tools when available; otherwise consult these
-reference docs"). It's not a replacement for MCP if you want to reach
-beyond Claude.
-
-## Distribution channels
-
-Two ways users get a Skill:
-
-1. **`comcheck-api install-skill`** ✅ shipped — copies the bundled
-   `comcheck_api/ai/skill/` folder into
-   `~/.claude/skills/comcheck-api/`. One command after
-   `pip install comcheck_api`.
-2. **Plugin** (future) — wrap the skill in an Anthropic Plugin
-   distributed via plugin marketplaces. The "official" path for
-   public discoverability; not yet wired up.
-
-The skill folder ships *inside the PyPI package* and the
-`~/.claude/skills/` — install both the package and the Skill in two
-commands.
+The same folder is also the canonical source for the repo-root
+`CLAUDE.md`, which auto-loads in Claude Code sessions opened against
+this project.
 
 ## Realistic tradeoffs
 
-- **Effort**: lowest of the three to write *well* — it's structured
-  authoring, not engineering. ~1–2 days for a solid v1.
-- **Reach**: Claude ecosystem only (Claude Code, claude.ai, Claude
-  Desktop, Agent SDK). Doesn't help users on Cursor, ChatGPT, etc.
+- **Effort**: lowest of the AI options to write *well* — it's
+  structured authoring, not engineering. ~1–2 days for a solid v1.
+- **Reach**: Claude ecosystem (Claude Code, claude.ai, Claude Desktop,
+  Agent SDK).
 - **Quality lift**: real — Claude reads the file with intent, follows
   instructions, and progressive disclosure means a *lot* of content
   can be included without polluting every turn. The
   [`scripts/validate_code.py`](../comcheck_api/ai/skill/scripts/validate_code.py)
   bundled with this Skill gives Claude a real syntax/import feedback
   loop too.
-- **Maintenance**: rebuild when SDK changes, same as the others. Easy
-  to keep in lockstep with `llms.txt` since the source content is the
-  same — both come out of `comcheck_api/ai/skill/` via the same build
-  pipeline.
+- **Maintenance**: rebuild when SDK changes. The Skill folder is the
+  single source — `CLAUDE.md` is generated from it.

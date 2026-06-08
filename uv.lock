@@ -248,6 +248,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "types-jsonschema", specifier = ">=4.23.0" },
 ]
+provides-extras = ["agent"]
 
 [package.metadata.requires-dev]
 dev = [

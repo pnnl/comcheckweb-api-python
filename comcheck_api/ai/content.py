@@ -1,10 +1,10 @@
 """Runtime loader for Skill content bundled in the wheel.
 
-Consumers (the MCP server, an external LangGraph agent, etc.) call
-these helpers to read SKILL.md, reference docs, and examples without
-hard-coding paths. Uses ``importlib.resources`` so the files are
-located correctly whether the package is installed normally or
-zip-imported.
+Consumers (an external LangGraph agent, the ``comcheck-api init``
+command, etc.) call these helpers to read SKILL.md, reference docs,
+and examples without hard-coding paths. Uses ``importlib.resources``
+so the files are located correctly whether the package is installed
+normally or zip-imported.
 """
 
 from __future__ import annotations

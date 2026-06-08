@@ -8,11 +8,8 @@ Runs the user's code in a subprocess with the network layer mocked.
 Prints structured errors to stdout and exits non-zero if validation
 fails.
 
-This script is invoked by:
-- The Skill (Claude can run it via shell tools to self-check generated
-  code).
-- The MCP server's `validate_code` tool (which calls this script in a
-  sandboxed subprocess).
+This script is invoked by the Skill so Claude can run it via shell
+tools to self-check generated code.
 
 Security: the calling layer is responsible for sandboxing — running
 this script from an untrusted source still executes arbitrary Python.

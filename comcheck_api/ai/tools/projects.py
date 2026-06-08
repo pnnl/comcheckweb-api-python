@@ -1,8 +1,8 @@
 """Project CRUD tools.
 
 Thin wrappers around :class:`comcheck_api.COMcheckClient`. Returns plain
-dicts (not Pydantic models) so downstream agents and MCP clients can
-serialize results without additional adapters.
+dicts (not Pydantic models) so downstream agents can serialize results
+without additional adapters.
 
 Write tools (``update_project``) should be gated behind user approval
 in any agent that uses them — they mutate state on the user's COMcheck
