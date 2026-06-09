@@ -14,7 +14,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from comcheck_api.ai import content
+from comcheck_api import ai
 
 
 def _cmd_install_skill(args: argparse.Namespace) -> int:
@@ -31,7 +31,7 @@ def _cmd_install_skill(args: argparse.Namespace) -> int:
         print(f"{target_root} already exists. Re-run with --force to overwrite.")
         return 1
 
-    src = content.skill_root()
+    src = ai.skill_root()
     if args.dry_run:
         print(f"[dry-run] would copy {src} → {target_root}")
         return 0

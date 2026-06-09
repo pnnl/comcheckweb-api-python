@@ -1,8 +1,25 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash (maintainer use only)
+#
+# Fetch the COMcheck JSON schema from a git repo (sparse-checkout) and
+# regenerate the SDK's TypedDict types from it.
+#
+# Required env var:
+#   REPO_SSH  — git SSH URL of the schema-hosting repo
+#
+# Optional env vars (with sensible defaults):
+#   BRANCH        — branch to check out (default: main)
+#   PATH_IN_REPO  — path to the schema file inside that repo
+#                   (default: comCheck.schema.json)
+#   OUT           — destination path inside this repo
+#                   (default: comcheck_api/schemas/comCheck.schema.json)
+#
+# Example:
+#   REPO_SSH=ssh://git@example.org/path/to/comcheck-schema.git \
+#     ./tools/fetch_comcheck_schema.sh
+
 set -euo pipefail
 
-# Configuration (override via env vars)
-REPO_SSH="${REPO_SSH:-ssh://git@gitlab-data.pnnl.gov:2222/becp/comcheck-schema.git}"
+REPO_SSH="${REPO_SSH:?REPO_SSH must be set, e.g. REPO_SSH=ssh://git@host/path/to/comcheck-schema.git}"
 BRANCH="${BRANCH:-main}"
 PATH_IN_REPO="${PATH_IN_REPO:-comCheck.schema.json}"
 OUT="${OUT:-comcheck_api/schemas/comCheck.schema.json}"
