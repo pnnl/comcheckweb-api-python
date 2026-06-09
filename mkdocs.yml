@@ -69,3 +69,4 @@ nav:
       - Credits: api/operations/credits.md
       - Renewable Energy: api/operations/renewable-energy.md
   - Project Defaults: api/defaults.md
+  - Introspection & Validation: api/introspection.md

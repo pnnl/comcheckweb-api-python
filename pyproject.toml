@@ -16,8 +16,15 @@ dependencies = [
     "types-jsonschema>=4.23.0",
 ]
 
+[project.scripts]
+comcheck-api = "comcheck_api.cli:main"
+
 [tool.hatch.build.targets.wheel]
 packages = ["comcheck_api"]
+include = [
+  "comcheck_api/ai/skill/**/*.md",
+  "comcheck_api/ai/skill/**/*.py",
+]
 
 [tool.uv.workspace]
 members = []

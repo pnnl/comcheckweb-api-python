@@ -41,6 +41,65 @@ pip install comcheckweb-api-python
 
 For detailed usage examples and API reference, see the [documentation](https://pnnl-int.github.io/comcheckweb-api-python/).
 
+## Introspection helpers
+
+The package ships typed helpers for discovering what the SDK exposes
+and for validating project data — useful from notebooks, IDE plugins,
+and AI agents alike. All return Pydantic models; call `.model_dump()`
+when you need JSON.
+
+```python
+import comcheck_api as cc
+
+# What operation functions does the SDK ship?
+for op in cc.list_operations():
+    print(op.group, op.signature)
+
+# What does the ComBuilding model look like?
+schema = cc.lookup_type("ComBuilding")
+for field in schema.fields:
+    print(field.name, field.type, field.required)
+
+# Does this dict satisfy the SDK schema?
+result = cc.validate_project(project_dict)
+if not result.ok:
+    for err in result.errors:
+        print(err.loc, err.msg)
+```
+
+See [`api/introspection`](https://pnnl-int.github.io/comcheckweb-api-python/api/introspection/)
+in the docs for the full reference.
+
+## AI integration: the Claude Skill
+
+A bundled Claude Skill teaches Claude how to use this SDK correctly —
+operation modules, default templates, the simulation polling loop,
+common pitfalls. The Skill folder lives at
+[`comcheck_api/ai/skill/`](comcheck_api/ai/skill/) and ships in the
+wheel.
+
+### Setup in your own repo
+
+Install the bundled Skill into a project-level
+`.claude/skills/comcheck-api/`. Claude Code scans
+`<project>/.claude/skills/` when a session opens against the repo,
+so the guidance kicks in only for projects that actually use this
+SDK — not on every Claude session everywhere.
+
+```bash
+# Run this once in the root of the project that consumes comcheck_api:
+comcheck-api install-skill
+```
+
+Commit `.claude/skills/comcheck-api/`. Teammates get the same
+guidance the moment they open the repo in Claude Code, and Claude
+can pull in the reference docs, examples, and `validate_code.py`
+script on demand — not just the SKILL.md body. Re-run the command
+with `--force` after upgrading the package to refresh the skill.
+
+To install globally for every Claude session instead of per-project,
+pass `--global` (writes to `~/.claude/skills/comcheck-api/`).
+
 ## Development
 
 Clone the repository and follow the commands below to set up developer tooling.
@@ -73,6 +132,26 @@ uv sync
 
 - Run type checking:
 	`uv run mypy comcheck_api`
+
+## Running the docs locally
+
+The documentation site is built with MkDocs (Material theme +
+mkdocstrings). The dependencies live in the optional `docs` group
+defined in `pyproject.toml`.
+
+```bash
+# Install the docs group (mkdocs, mkdocs-material, mkdocstrings).
+uv sync --group docs
+
+# Serve with live reload at http://127.0.0.1:8000
+uv run mkdocs serve
+
+# One-shot build into ./site/
+uv run mkdocs build
+
+# Fail on warnings (good before committing)
+uv run mkdocs build --strict
+```
 
 ## Support
 
