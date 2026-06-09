@@ -139,6 +139,5 @@ else:
 - For Pydantic model field-level details → read `reference/types.md`.
 - For the simulation start/poll/fetch flow → read
   `reference/simulation.md`.
-- For complete worked examples → read files under `examples/`.
 - To validate generated code against a mocked client → run
   `scripts/validate_code.py`.
