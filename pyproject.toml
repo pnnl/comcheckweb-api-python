@@ -16,9 +16,6 @@ dependencies = [
     "types-jsonschema>=4.23.0",
 ]
 
-[project.optional-dependencies]
-agent = []  # marker extra; agents consume comcheck_api.ai directly
-
 [project.scripts]
 comcheck-api = "comcheck_api.cli:main"
 
