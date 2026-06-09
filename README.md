@@ -80,7 +80,7 @@ wheel.
 
 ### Setup in your own repo
 
-Copy the bundled Skill folder into a project-level
+Install the bundled Skill into a project-level
 `.claude/skills/comcheck-api/`. Claude Code scans
 `<project>/.claude/skills/` when a session opens against the repo,
 so the guidance kicks in only for projects that actually use this
@@ -88,19 +88,17 @@ SDK — not on every Claude session everywhere.
 
 ```bash
 # Run this once in the root of the project that consumes comcheck_api:
-SKILL_SRC=$(python -c "import comcheck_api.ai.content as c; print(c.skill_root())")
-mkdir -p .claude/skills
-cp -R "$SKILL_SRC" .claude/skills/comcheck-api
+comcheck-api install-skill
 ```
 
 Commit `.claude/skills/comcheck-api/`. Teammates get the same
 guidance the moment they open the repo in Claude Code, and Claude
 can pull in the reference docs, examples, and `validate_code.py`
-script on demand — not just the SKILL.md body. Re-run the copy
-after upgrading the package to pick up new conventions.
+script on demand — not just the SKILL.md body. Re-run the command
+with `--force` after upgrading the package to refresh the skill.
 
-For background on how the Skill is structured and why, see
-[`AI/skills.md`](AI/skills.md).
+To install globally for every Claude session instead of per-project,
+pass `--global` (writes to `~/.claude/skills/comcheck-api/`).
 
 ## Development
 

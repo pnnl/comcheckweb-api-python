@@ -33,8 +33,9 @@ def read_skill_body() -> str:
 def read_skill_body_only() -> str:
     """Return SKILL.md with the YAML frontmatter stripped.
 
-    Useful when generating a CLAUDE.md or LangGraph system prompt that
-    shouldn't include Skill-specific frontmatter.
+    Useful when feeding the Skill body into a LangGraph system prompt
+    or any other surface that shouldn't include Skill-specific
+    frontmatter.
     """
     text = read_skill_body()
     if text.startswith("---"):
