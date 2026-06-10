@@ -2,10 +2,19 @@
 name: comcheck-api
 description: Use this skill when the user is writing Python code that uses
   the comcheck_api package to build COMcheck project JSON, run compliance
-  simulations against the PNNL COMcheck Web API, or work with envelope,
-  lighting, mechanical, or building-area operations. Triggers on imports
-  of `comcheck_api`, mentions of COMcheck/ASHRAE 90.1/IECC compliance,
-  or requests to validate building energy code compliance.
+  simulations against the PNNL COMcheck Web API, or work with envelope
+  or building-area operations. Triggers on imports of `comcheck_api`,
+  mentions of COMcheck/ASHRAE 90.1/IECC compliance, or requests to
+  validate building energy code compliance.
+
+  NOTE: implemented surface area is the `COMcheckClient` user
+  methods (`list_projects`, `get_project`, `update_project`,
+  `start_run_simulation`, `get_simulation_status`,
+  `get_simulation_result`, `set_api_key`) plus the project-mutation
+  operations for **building areas** and **envelope**. Interior-
+  lighting fixtures (under `activityUse[]`), exterior lighting,
+  mechanical/HVAC, and renewable-energy operations are not
+  available — do not write code that adds, updates, or removes them.
 ---
 
 # COMcheck API Python Client Skill
@@ -30,6 +39,13 @@ Triggers:
   `envelope`, `lighting` (which contains `wholeBldgUse[]` — the
   building areas), `hvac`, `renewable`, and `control` (energy code).
   No `Project`/`Control` PascalCase aliases exist.
+  The fields `hvac`, `renewable`, and the **interior-lighting fixtures
+  inside `activityUse[]`**, plus exterior lighting (`exteriorUse[]`)
+  and the shared `fixtureSchedule[]`, exist on the model but have
+  **no operation functions** — leave them at template defaults. Only
+  `lighting.wholeBldgUse[]` (building areas, including each area's
+  own `interiorLightingSpace` singleton) is mutable, via
+  `project_building_area_operations`.
 - **Operation modules (functional)**: building areas and envelope
   components are added/updated/removed via free functions in
   `project_building_area_operations` and `project_envelope_operations`.
@@ -133,6 +149,21 @@ print(result["performanceRating"])
   bypass the validation logic in the operation modules. Always go
   through `project_envelope_operations` and
   `project_building_area_operations` instead.
+- Don't add, update, or remove interior lighting (the
+  `activityUse[]` fixtures), exterior lighting (`exteriorUse[]`,
+  `fixtureSchedule[]`), HVAC/mechanical, or renewable-energy
+  components — no operations exist for them. The whole-building
+  `interiorLightingSpace` singleton on each `WholeBldgUse` *is*
+  editable through `project_building_area_operations`; the per-
+  activity lighting nested under `activityUse[]` is not. The
+  `COMcheckClient` user methods (`list_projects`, `get_project`,
+  `update_project`, `start_run_simulation`, `get_simulation_status`,
+  `get_simulation_result`, `set_api_key`) are fully supported and
+  fine to use. If asked for an unsupported mutation area, tell the
+  user it's not implemented and offer building-area / envelope /
+  simulation instead. Confirm operation scope with
+  `comcheck_api.list_operations()` (only `building_area` and
+  `envelope` groups exist).
 
 ## Common patterns
 
@@ -228,6 +259,9 @@ else:
 
 ## When you need more detail
 
+- For the authoritative list of what's implemented → call
+  `comcheck_api.list_operations()`. Only operations it returns are
+  supported.
 - For envelope assemblies (roof, walls, floor, windows, doors,
   skylights, thermal bridges) → read `reference/operations.md`.
 - For Pydantic model field-level details → read `reference/types.md`.
