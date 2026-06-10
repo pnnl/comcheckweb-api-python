@@ -27,7 +27,7 @@ include = [
 ]
 
 [tool.hatch.build.targets.wheel.force-include]
-"DISCLAIMER" = "comcheck_api/DISCLAIMER"
+"DISCLAIMER.md" = "comcheck_api/DISCLAIMER.md"
 
 [tool.uv.workspace]
 members = []
