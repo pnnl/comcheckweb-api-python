@@ -2248,7 +2248,7 @@
                     "description": "Fixture schedules",
                     "type": "array",
                     "items": {
-                        "$ref": "comCheck.schema.json/#definitions/FixtureSchedule"
+                        "$ref": "comCheck.schema.json#/definitions/FixtureSchedule"
                     }
                 }
             },

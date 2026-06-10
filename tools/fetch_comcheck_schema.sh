@@ -1,4 +1,6 @@
-#!/usr/bin/env bash (maintainer use only)
+#!/usr/bin/env bash
+#
+# (maintainer use only)
 #
 # Fetch the COMcheck JSON schema from a git repo (sparse-checkout) and
 # regenerate the SDK's TypedDict types from it.
@@ -16,8 +18,18 @@
 # Example:
 #   REPO_SSH=ssh://git@example.org/path/to/comcheck-schema.git \
 #     ./tools/fetch_comcheck_schema.sh
-
 set -euo pipefail
+
+# Load REPO_SSH (and any other vars) from a .env file at the repo root if present,
+# without clobbering values already set in the environment.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/../.env}"
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
 
 REPO_SSH="${REPO_SSH:?REPO_SSH must be set, e.g. REPO_SSH=ssh://git@host/path/to/comcheck-schema.git}"
 BRANCH="${BRANCH:-main}"
