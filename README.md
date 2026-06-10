@@ -106,50 +106,44 @@ A bundled Skill teaches AI coding agents how to use this SDK correctly —
 operation modules, default templates, the simulation polling loop,
 common pitfalls. The Skill folder lives at
 [`comcheck_api/ai/skill/`](comcheck_api/ai/skill/) and ships in the
-wheel. It works with both **Claude Code** and **OpenAI Codex CLI**.
+wheel. It follows the open agent-skills standard (`SKILL.md` plus
+`reference/` and `scripts/`), so the same folder works for both
+**Claude Code** and **OpenAI Codex** — only the install location
+differs.
 
 ### Setup in your own repo
 
-Install the bundled Skill into a project-level
-`.claude/skills/comcheck-api/`. Claude Code scans
-`<project>/.claude/skills/` when a session opens against the repo,
-so the guidance kicks in only for projects that actually use this
-SDK — not on every Claude session everywhere.
+Run the installer once in the root of the project that consumes
+`comcheck_api`. By default it installs the Skill for **both** agents:
 
 ```bash
-# Run this once in the root of the project that consumes comcheck_api:
 comcheck-api install-skill
 ```
 
-Commit `.claude/skills/comcheck-api/`. Teammates get the same
-guidance the moment they open the repo in Claude Code, and Claude
-can pull in the reference docs, examples, and `validate_code.py`
-script on demand — not just the SKILL.md body. Re-run the command
-with `--force` after upgrading the package to refresh the skill.
+This writes:
 
-To install globally for every Claude session instead of per-project,
-pass `--global` (writes to `~/.claude/skills/comcheck-api/`).
+- `.claude/skills/comcheck-api/` — Claude Code scans
+  `<project>/.claude/skills/` when a session opens against the repo.
+- `.agents/skills/comcheck-api/` — Codex scans `.agents/skills` from
+  the working directory up to the repository root.
 
-### Setup for OpenAI Codex
+So the guidance kicks in only for projects that actually use this SDK,
+not on every session everywhere. Commit both folders; teammates get the
+same guidance the moment they open the repo, and the agent can pull in
+the reference docs and `validate_code.py` script on demand — not just
+the `SKILL.md` body.
 
-Codex implements the same open agent-skills standard, so the same
-Skill folder works — only the install location differs. Codex scans
-`.agents/skills` from the working directory up to the repository root.
-Pass `--codex` to install there:
+To install for only one agent, pass `--claude` or `--codex`:
 
 ```bash
-# Run this once in the root of the project that consumes comcheck_api:
-comcheck-api install-skill --codex
+comcheck-api install-skill --claude   # Claude Code only
+comcheck-api install-skill --codex    # Codex only
 ```
 
-This writes the Skill into `.agents/skills/comcheck-api/`. Commit that
-folder so teammates get the same guidance, and Codex will load
-`SKILL.md` (plus the reference docs and `validate_code.py` on demand)
-whenever a task matches. Re-run with `--force` after upgrading the
-package to refresh it.
-
-To install for every Codex session instead of per-project, pass
-`--global` (writes to `~/.agents/skills/comcheck-api/`).
+Re-run with `--force` after upgrading the package to refresh the Skill.
+Pass `--global` to install into the user-global skills dirs
+(`~/.claude/skills/` and/or `~/.agents/skills/`) for every session
+instead of per-project.
 
 ## Development
 
