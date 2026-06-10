@@ -203,11 +203,18 @@ project = env_ops.add_ag_wall_to_project(project, area_key, wall)
 
 ```python
 projects = client.list_projects()
-target = next(p for p in projects if p["title"] == "My office")
+target = next(p for p in projects if p["name"] == "My office")  # key is "name", not "title"
 project_obj = client.get_project(target["_id"])     # note the underscore
 project_obj.project.projectTitle = "My office (revised)"
 client.update_project(project_id=target["_id"], project_data=project_obj)
 ```
+
+`list_projects()` returns **raw, untyped dicts** straight from the API
+(no TypedDict enforces the shape). Each entry looks like:
+`{"_id", "name", "energyCode", "status", "sharing", "ownedByMe",
+"lastUpdated"}`. The display name is under `"name"` — there is **no
+`"title"` key** (matching on `"title"` silently fails with
+`StopIteration`/`KeyError`).
 
 `get_project(project_id, mode="json")` returns a raw dict instead of
 a `ComBuilding` model — handy when you just need the JSON shape.
@@ -247,6 +254,12 @@ else:
   `EnergyCodeOptions.CEZ_90_1_2022`. Setting them to raw strings
   works at runtime but emits `PydanticSerializationUnexpectedValue`
   warnings every time the model serializes.
+- **There is no `STEEL_FRAME` wall type — steel framing maps to
+  `METAL_FRAME_*`.** `WallTypeOptions` members are `WOOD_FRAME_16/24`,
+  `METAL_FRAME_16/24`, `METAL_WALL_WO_TB`, `METAL_BLDG`, `CONCRETE`,
+  `MASONRY`, `OTHER` (each suffixed `_AG_WALL`). A user asking for a
+  "steel-frame wall" wants `WallTypeOptions.METAL_FRAME_16_AG_WALL`
+  (or `_24_`).
 - **`COMcheckClient(api_key=...)` does not auto-read env vars.** No
   `COM_API_KEY` fallback exists in `__init__`. Pass it explicitly.
 - **`SimulationStatus` is a known-values catalog, not an exhaustive
@@ -256,6 +269,16 @@ else:
   don't crash polling. Only `SUCCESS` and `FAILED` are guaranteed
   terminal — break/raise on those, keep polling for everything
   else (don't enumerate non-terminals).
+- **A 500 from `start_run_simulation` usually means bad project
+  data, not a server outage.** All HTTP errors surface as the same
+  `COMCheckHTTPError` — there is no validation-specific exception, so
+  a payload the engine rejects (e.g. a malformed shape like assigning
+  a list to an object field, or project state the engine won't
+  accept) comes back as a bare HTTP 500, indistinguishable from a
+  real outage. To tell them apart, simulate a fresh
+  `get_default_project_template()` project: if that succeeds, the 500
+  is your project data, not the server. Inspect
+  `COMCheckHTTPError.status_code` / `.response_data` for detail.
 
 ## When you need more detail
 
