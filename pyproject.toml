@@ -26,6 +26,9 @@ include = [
   "comcheck_api/ai/skill/**/*.py",
 ]
 
+[tool.hatch.build.targets.wheel.force-include]
+"DISCLAIMER" = "comcheck_api/DISCLAIMER"
+
 [tool.uv.workspace]
 members = []
 
