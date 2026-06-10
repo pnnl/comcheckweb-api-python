@@ -27,33 +27,43 @@ from comcheck_api import project_building_area_operations as ba_ops
 from comcheck_api import project_envelope_operations as env_ops
 ```
 
-Each envelope component has a consistent triplet:
-`add_*_to_project`, `update_*_in_project`, `remove_*_from_project`.
-Plus the special `add_thermal_bridge_to_project` (no
-update/remove yet).
+Every envelope `add_*_to_project` call attaches the new component to
+a building-area key. Default projects have no areas — add one first:
 
-| Component | Add | Update | Remove |
-|---|---|---|---|
-| Roof | `add_roof_to_project` | `update_roof_in_project` | `remove_roof_from_project` |
-| Above-grade wall | `add_ag_wall_to_project` | `update_ag_wall_in_project` | `remove_ag_wall_from_project` |
-| Below-grade wall | `add_bg_wall_to_project` | `update_bg_wall_in_project` | `remove_bg_wall_from_project` |
-| Floor | `add_floor_to_project` | `update_floor_in_project` | `remove_floor_from_project` |
-| Skylight | `add_skylight_to_project` | `update_skylight_in_project` | `remove_skylight_from_project` |
-| Window | `add_window_to_project` | `update_window_in_project` | `remove_window_from_project` |
-| Door | `add_door_to_project` | `update_door_in_project` | `remove_door_from_project` |
-| Thermal bridge | `add_thermal_bridge_to_project` | — | — |
+```python
+from comcheck_api.defaults import get_default_building_area_template
+
+area = get_default_building_area_template()
+area.areaDescription = "Open office"
+project = ba_ops.add_building_area_to_project(project, area)
+
+area_key = ba_ops.get_building_area_keys_from_project(project)[0]["key"]
+```
+
+| Component | Add signature | Update / Remove key |
+|---|---|---|
+| Roof | `add_roof_to_project(project, building_area_key, new_roof)` | `assemblyType` |
+| Above-grade wall | `add_ag_wall_to_project(project, building_area_key, new_ag_wall)` | `assemblyType` |
+| Below-grade wall | `add_bg_wall_to_project(project, building_area_key, new_bg_wall)` | `assemblyType` |
+| Floor | `add_floor_to_project(project, building_area_key, new_floor)` | `assemblyType` |
+| Skylight | `add_skylight_to_project(project, building_area_key, new_skylight, roof=None)` | `assemblyType` |
+| Window | `add_window_to_project(project, building_area_key, new_window, wall=None)` | `assemblyType` |
+| Door | `add_door_to_project(project, building_area_key, new_door, wall=None)` | `assemblyType` |
+| Thermal bridge | `add_thermal_bridge_to_project(project, building_area_key, ag_wall, ...)` | (no update/remove yet) |
+
+The `update_*_in_project` and `remove_*_from_project` functions take
+the component's `assemblyType` string, e.g.
+`update_ag_wall_in_project(project, ag_wall_assembly_type, updates)`.
 
 ## Nesting rules
 
-- Skylights nest under a `Roof`.
-- Windows, doors, thermal bridges nest under an above-grade or
-  below-grade wall.
-- Floors are top-level.
-
-The `add_*_to_project` functions accept the parent component
-identifier (or auto-place under the first matching parent) — see
-the existing `examples/project_operations/envelope_operations.py`
-for current calling conventions.
+- Skylights live inside a `Roof`. Pass `roof=` to
+  `add_skylight_to_project` to attach to a specific roof; otherwise
+  it goes on the first one in the area.
+- Windows and doors live inside an above-grade or below-grade wall.
+  Pass `wall=` to target a specific wall.
+- Thermal bridges always require an `ag_wall=` argument.
+- Floors and walls live directly under the building area.
 
 ## Working with templates
 
@@ -76,11 +86,16 @@ from comcheck_api.defaults import (
 
 Each returns a fully-populated Pydantic model with sensible defaults
 (Boulder, CO; metal-frame walls; double-pane low-E glazing; etc.).
-Customize fields after construction:
+Customize fields after construction, then attach to a building area:
 
 ```python
+from comcheck_api.types import OrientationOptions
+
+area_key = ba_ops.get_building_area_keys_from_project(project)[0]["key"]
+
 roof = get_default_roof_template()
-roof.area = 6000.0
+roof.grossArea = 6000.0          # field is grossArea, not area
 roof.cavityRValue = 38.0
-project = env_ops.add_roof_to_project(project, roof)
+roof.orientation = OrientationOptions.UNSPECIFIED_ORIENTATION
+project = env_ops.add_roof_to_project(project, area_key, roof)
 ```

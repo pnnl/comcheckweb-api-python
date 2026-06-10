@@ -5,15 +5,34 @@
 
 ## Setup
 
-### 1. Install the package
+### 1. Obtain an API Key
+
+Get a Personal Access Token from the
+[COMcheck Web site](https://comcheck.energycode.pnl.gov):
+
+1. Log in (or register a new account if you don't have one).
+2. Click your **username** in the left-side navigation.
+3. From the menu that appears, choose **Settings**.
+4. Click **Developer Setting** to open the Personal Access Token
+   page.
+5. Click **Generate**, then immediately copy the token.
+
+!!! warning "Save it now — shown only once"
+    The token is displayed once and cannot be retrieved later. Save
+    it to a password manager or your `.env` file before leaving the
+    page. If you lose it, generate a new one (the previous token
+    becomes invalid).
+
+### 2. Install the package
 
 ```bash
 pip install comcheck_api
 ```
 
-### 2. Set your API key
+### 3. Set your API key
 
-You can provide the API key directly or via an environment variable:
+The SDK does **not** auto-load the env var — read it yourself and
+pass it in. With `python-dotenv` this is two extra lines:
 
 ```bash
 # .env file
@@ -21,14 +40,18 @@ COM_API_KEY=your-api-key-here
 ```
 
 ```python
+import os
+from dotenv import load_dotenv
 from comcheck_api import COMcheckClient
 
-# Option 1: Pass directly
-client = COMcheckClient(api_key="your-api-key")
+load_dotenv()
+
+# Option 1: Pass directly at construction
+client = COMcheckClient(api_key=os.environ["COM_API_KEY"])
 
 # Option 2: Set later
 client = COMcheckClient()
-client.set_api_key("your-api-key")
+client.set_api_key(os.environ["COM_API_KEY"])
 ```
 
 ## Basic Workflow

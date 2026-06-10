@@ -285,7 +285,10 @@ class COMcheckClient:
             session_id: The session ID returned by :meth:`start_run_simulation`.
 
         Returns:
-            A dict containing ``sessionId``, ``status``, and optional ``message``.
+            A dict containing ``sessionId``, ``status``, and optional
+            ``message``. ``status`` is one of the values defined in
+            :class:`comcheck_api.types.SimulationStatus`. Terminal
+            values are ``"SUCCESS"`` and ``"FAILED"``.
 
         Raises:
             COMCheckSimulationError: If the status cannot be retrieved.
@@ -295,7 +298,7 @@ class COMcheckClient:
             raise COMCheckSimulationError(
                 f"Failed to get simulation status for session {session_id}"
             )
-        return status_response.data.model_dump(mode="python")
+        return status_response.data.model_dump(mode="json")
 
     def get_simulation_result(self, session_id: str) -> Dict[str, Any]:
         """Get the result metrics of a completed simulation.

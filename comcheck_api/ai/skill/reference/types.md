@@ -4,18 +4,24 @@ All types are Pydantic models. Import from `comcheck_api.types`.
 
 ## Top-level project model
 
-`ComBuilding` is the root project model. It contains:
+`ComBuilding` is the root project model. **All top-level fields are
+lowercase camelCase** (no `Project`/`Control`/`Envelope` PascalCase
+aliases exist).
 
 | Field | Type | Purpose |
 |---|---|---|
-| `Project` | `Project` | Project metadata: title, address, owner |
-| `Location` | `Location` | State, city, climate zone |
-| `Envelope` | `Envelope` | Roofs, walls, floors, windows, doors, skylights, thermal bridges |
-| `WholeBldgUse` | `list[WholeBldgUse]` | Building area zones (with interior lighting) |
-| `HVAC` | `HVAC` | Mechanical systems |
-| `Lighting` | `Lighting` | Exterior + interior lighting |
-| `Renewable` | `Renewable` | Renewable energy systems |
-| `Control` | `Control` | Energy code (CEZ_IECC2018, CEZ_90_1_2022, etc.) |
+| `project` | `Project` | Project metadata. Title is `project.project.projectTitle`; address fields use `projectAddress` / `projectCity` / etc. |
+| `location` | `Location` | State, city, climate zone. |
+| `envelope` | `Envelope` | Roofs (`roof[]`), AG walls (`agWall[]`), BG walls (`bgWall[]`), floors, windows, doors, skylights. |
+| `lighting` | `Lighting` | Holds `wholeBldgUse[]` — the **building areas / zones**. Also holds exterior lighting fields. |
+| `hvac` | `HVAC` | Mechanical systems. |
+| `renewable` | `Renewable` | Renewable energy systems. |
+| `control` | `Control` | Energy code (`control.code`, e.g. `CEZ_IECC2018`, `CEZ_90_1_2022`). |
+
+Building areas (`WholeBldgUse`) are **not top-level** — they live
+under `lighting.wholeBldgUse[]`. Use
+`ba_ops.get_building_area_keys_from_project(project)` to enumerate
+them.
 
 ## Envelope component models
 
@@ -35,8 +41,11 @@ All types are Pydantic models. Import from `comcheck_api.types`.
 
 | Model | Purpose |
 |---|---|
-| `WholeBldgUse` | One building area / zone. Has `key`, `areaDescription`, `InteriorLightingSpace`. |
+| `WholeBldgUse` | One building area / zone. Lives in `project.lighting.wholeBldgUse[]`. Has `key`, `areaDescription`, `floorArea`, `ceilingHeight`, `interiorLightingSpace`, etc. |
 | `InteriorLightingSpace` | Lighting configuration for one area. |
+
+Every envelope component has a `bldgUseKey` field that ties it to
+one of these area keys.
 
 ## HVAC
 
@@ -50,18 +59,24 @@ All types are Pydantic models. Import from `comcheck_api.types`.
 
 ## Enums (StrEnum)
 
+Always set typed fields with members from the matching `*Options`
+enum imported from `comcheck_api.types`. Setting them as raw strings
+"works" but emits `PydanticSerializationUnexpectedValue` warnings
+on every serialize.
+
 Common ones:
 
 | Enum | Examples |
 |---|---|
 | `EnergyCodeOptions` | `CEZ_IECC2018`, `CEZ_IECC2021`, `CEZ_90_1_2019`, `CEZ_90_1_2022` |
-| `ProjectTypeOptions` | `NEW_CONSTRUCTION`, `RETROFIT` |
+| `OrientationOptions` | `NORTH`, `EAST`, `SOUTH`, `WEST`, plus diagonals and `UNSPECIFIED_ORIENTATION` |
 | `WallTypeOptions` | (see source for full set) |
-| `GlazingMaterialTypeOptions` | (see source for full set) |
-| `DoorTypeOptions` | (see source for full set) |
+| `SimulationStatus` | Known: `INITIALIZING`, `GENERATING_BASELINE`, `GENERATING_PROPOSED`, `RUNNING_SIMULATIONS`, `CALCULATING_RESULTS`, `EVALUATING`, `SUCCESS`, `FAILED`. Catalog is **not exhaustive** — only `SUCCESS`/`FAILED` are guaranteed terminal. |
 
-For exhaustive enum values, check `comcheck_api/types/` source — these
-change with code revisions and are too long to enumerate here.
+For exhaustive enum values, use
+`comcheck_api.lookup_type("WallTypeOptions")` (or any other enum
+name) — that's the live source of truth and stays in sync with the
+installed SDK.
 
 ## Tips
 

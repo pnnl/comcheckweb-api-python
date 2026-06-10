@@ -208,7 +208,7 @@ class COMCheckApiService:
                 f"/compliance/start-run-simulation", json=project_data
             )
             response.raise_for_status()
-            return RunSimulationResponse.model_construct(**response.json())
+            return RunSimulationResponse.model_validate(response.json())
         except Exception as error:
             self._handle_api_error(error)
 
@@ -231,7 +231,7 @@ class COMCheckApiService:
                 f"/compliance/get-status-simulation?sessionId={session_id}"
             )
             response.raise_for_status()
-            return SimulationStatusResponse.model_construct(**response.json())
+            return SimulationStatusResponse.model_validate(response.json())
         except Exception as error:
             self._handle_api_error(error)
 
@@ -254,7 +254,7 @@ class COMCheckApiService:
                 f"/compliance/get-result-simulation?sessionId={session_id}"
             )
             response.raise_for_status()
-            return SimulationResultResponse.model_construct(**response.json())
+            return SimulationResultResponse.model_validate(response.json())
         except Exception as error:
             self._handle_api_error(error)
 

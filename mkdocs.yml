@@ -1,6 +1,6 @@
 site_name: COMcheck API - Python Client
 site_description: Type-safe Python client for the PNNL COMcheck Web API
-repo_url: https://github.com/pnnl-int/comcheckweb-api-python
+repo_url: https://github.com/pnnl/comcheckweb-api-python
 docs_dir: docs_site
 
 theme:

@@ -16,17 +16,47 @@ Quickly useful notes:
 
 ### 1. Obtain an API Key
 
-Get your API key from [COMcheck Web](https://comcheck.energycode.pnl.gov):
+Get a Personal Access Token from the new
+[COMcheck Web site](https://comcheck.energycode.pnl.gov):
 
-1. Log in to your COMcheck Web account
-2. Navigate to **Settings → Developer Setting**
-3. Generate and copy your API key
+1. Log in (or register a new account if you don't have one).
+2. Click your **username** in the left-side navigation.
+3. From the menu that appears, choose **Settings**.
+4. Click **Developer Setting** to open the Personal Access Token
+   page.
+5. Click **Generate**, then immediately copy the token.
 
-> **Note:** The Developer Setting feature is currently under development.
+> **Important:** the token is shown **only once**. Save it somewhere
+> safe (a password manager, your `.env`, etc.) before leaving the
+> page. If you lose it, generate a new one — the old one will stop
+> working.
 
 ### 2. Configure the API Key
 
-For detailed setup instructions, see the [Getting Started](https://pnnl-int.github.io/comcheckweb-api-python/getting-started/) guide.
+Create a `.env` file at the root of your project and add:
+
+```
+COM_API_KEY=<your-api-key-here>
+```
+
+The SDK does **not** auto-load this — you read it yourself and pass
+it to the client. With `python-dotenv` this is two lines:
+
+```python
+import os
+from dotenv import load_dotenv
+from comcheck_api import COMcheckClient
+
+load_dotenv()
+client = COMcheckClient(api_key=os.environ["COM_API_KEY"])
+```
+
+(`client.set_api_key(api_key)` is the equivalent post-construction
+setter if you'd rather defer.)
+
+For more detail, see the
+[Getting Started](https://pnnl.github.io/comcheckweb-api-python/getting-started/)
+guide.
 
 ### 3. Install the Package
 
@@ -39,7 +69,7 @@ pip install comcheckweb-api-python
 - **Simulation only:** You can use the simulation features directly without creating a project on COMcheck Web.
 - **Updating a project:** You must first create the project under your account on [COMcheck Web](https://comcheck.energycode.pnl.gov) before using this package to update it. Project creation is not yet supported through this package.
 
-For detailed usage examples and API reference, see the [documentation](https://pnnl-int.github.io/comcheckweb-api-python/).
+For detailed usage examples and API reference, see the [documentation](https://pnnl.github.io/comcheckweb-api-python/).
 
 ## Introspection helpers
 
@@ -67,7 +97,7 @@ if not result.ok:
         print(err.loc, err.msg)
 ```
 
-See [`api/introspection`](https://pnnl-int.github.io/comcheckweb-api-python/api/introspection/)
+See [`api/introspection`](https://pnnl.github.io/comcheckweb-api-python/api/introspection/)
 in the docs for the full reference.
 
 ## AI integration: the Claude Skill
@@ -105,7 +135,7 @@ pass `--global` (writes to `~/.claude/skills/comcheck-api/`).
 Clone the repository and follow the commands below to set up developer tooling.
 
 ```bash
-git clone https://github.com/pnnl-int/comcheckweb-api-python.git
+git clone https://github.com/pnnl/comcheckweb-api-python.git
 cd comcheckweb-api-python
 uv sync
 ```
