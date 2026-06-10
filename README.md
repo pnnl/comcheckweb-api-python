@@ -100,13 +100,13 @@ if not result.ok:
 See [`api/introspection`](https://pnnl.github.io/comcheckweb-api-python/api/introspection/)
 in the docs for the full reference.
 
-## AI integration: the Claude Skill
+## AI integration: the bundled Skill
 
-A bundled Claude Skill teaches Claude how to use this SDK correctly —
+A bundled Skill teaches AI coding agents how to use this SDK correctly —
 operation modules, default templates, the simulation polling loop,
 common pitfalls. The Skill folder lives at
 [`comcheck_api/ai/skill/`](comcheck_api/ai/skill/) and ships in the
-wheel.
+wheel. It works with both **Claude Code** and **OpenAI Codex CLI**.
 
 ### Setup in your own repo
 
@@ -129,6 +129,27 @@ with `--force` after upgrading the package to refresh the skill.
 
 To install globally for every Claude session instead of per-project,
 pass `--global` (writes to `~/.claude/skills/comcheck-api/`).
+
+### Setup for OpenAI Codex
+
+Codex implements the same open agent-skills standard, so the same
+Skill folder works — only the install location differs. Codex scans
+`.agents/skills` from the working directory up to the repository root.
+Pass `--codex` to install there:
+
+```bash
+# Run this once in the root of the project that consumes comcheck_api:
+comcheck-api install-skill --codex
+```
+
+This writes the Skill into `.agents/skills/comcheck-api/`. Commit that
+folder so teammates get the same guidance, and Codex will load
+`SKILL.md` (plus the reference docs and `validate_code.py` on demand)
+whenever a task matches. Re-run with `--force` after upgrading the
+package to refresh it.
+
+To install for every Codex session instead of per-project, pass
+`--global` (writes to `~/.agents/skills/comcheck-api/`).
 
 ## Development
 
