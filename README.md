@@ -9,7 +9,7 @@ This repository contains the COMcheckWeb API Python package. It provides tools a
 - This project uses `uv` (configured in `pyproject.toml`) for dependency and workspace management. The `tool.uv` settings in `pyproject.toml` control workspace members and local sources.
 
 Quickly useful notes:
-- If you reference this package from other workspace packages, keep the `tool.uv.sources` entry that maps `comcheckweb-api-python = { workspace = true }` so `uv` resolves it to the local workspace copy.
+- If you reference this package from other workspace packages, keep the `tool.uv.sources` entry that maps `comcheck_api = { workspace = true }` so `uv` resolves it to the local workspace copy.
 - For a single-package repo you can also rely on `members = ["."]` and omit additional sources, but leaving the explicit source entry is harmless and makes intent clear.
 
 ## Usage
@@ -61,7 +61,7 @@ guide.
 ### 3. Install the Package
 
 ```bash
-pip install comcheckweb-api-python
+pip install comcheck-api
 ```
 
 ### 4. Start Using the Package
