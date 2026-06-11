@@ -8,6 +8,33 @@ version = "1.0.0"
 description = "COMcheck Web API Python Client"
 readme = "README.md"
 requires-python = ">=3.12"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Yanyan Zhu", email = "yanyan.zhu@pnnl.gov" },
+]
+maintainers = [
+    { name = "Yanyan Zhu", email = "yanyan.zhu@pnnl.gov" },
+    { name = "Weili Xu", email = "weili.xu@pnnl.gov" },
+]
+keywords = [
+    "comcheck",
+    "compliance",
+    "simulation",
+    "building",
+    "ashrae 90.1",
+    "IECC",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed",
+]
 dependencies = [
     "httpx>=0.27.0",
     "jsonschema>=4.23.0",
@@ -15,6 +42,11 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "types-jsonschema>=4.23.0",
 ]
+
+[project.urls]
+Homepage = "https://pnnl.github.io/comcheckweb-api-python/"
+Documentation = "https://pnnl.github.io/comcheckweb-api-python/"
+Repository = "https://github.com/pnnl/comcheckweb-api-python"
 
 [project.scripts]
 comcheck-api = "comcheck_api.cli:main"
