@@ -7,7 +7,7 @@ description: Use this skill when the user is writing Python code that uses
   mentions of COMcheck/ASHRAE 90.1/IECC compliance, or requests to
   validate building energy code compliance.
 
-  NOTE: implemented surface area is the `COMcheckClient` user
+  NOTE implemented surface area is the `COMcheckClient` user
   methods (`list_projects`, `get_project`, `update_project`,
   `start_run_simulation`, `get_simulation_status`,
   `get_simulation_result`, `set_api_key`) plus the project-mutation
