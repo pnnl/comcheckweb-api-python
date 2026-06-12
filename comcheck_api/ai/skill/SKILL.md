@@ -8,7 +8,7 @@ description: Use this skill when the user is writing Python code that uses
   validate building energy code compliance.
 ---
 
-# COMcheck API Python Client Skill
+# COMcheck API Python Package Skill
 
 ## When to use this skill
 

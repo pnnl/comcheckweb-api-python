@@ -1,4 +1,4 @@
-"""COMcheckWeb API - Python client for programmatic building energy code compliance.
+"""COMcheck API — Python Package for programmatic building energy code compliance.
 
 This package provides a type-safe, automated interface to the U.S. Department of
 Energy's COMcheck Web API for building energy code compliance verification.
