@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "comcheck_api"
-version = "1.0.0"
+version = "1.0.1"
 description = "COMcheck API Python Package"
 readme = "README.md"
 requires-python = ">=3.12"
