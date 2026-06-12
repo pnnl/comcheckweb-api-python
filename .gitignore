@@ -58,3 +58,6 @@ testprojectJson/
 site/
 
 .claude
+
+# Build artifacts
+dist/
