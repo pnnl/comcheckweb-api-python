@@ -1,4 +1,4 @@
-# COMcheck API - Python Client
+# COMcheck API — Python Package
 
 Type-safe Python client for the PNNL's [COMcheck Web](https://comcheck.energycode.pnl.gov/) for building energy code compliance verification.
 

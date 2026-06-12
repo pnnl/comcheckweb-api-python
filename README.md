@@ -1,6 +1,6 @@
-# COMcheckWeb API — Python Package
+# COMcheck API — Python Package
 
-This repository contains the COMcheckWeb API Python package. It provides tools and scripts for working with the COMcheckWeb API and is intended to be used as a Python package maintained with `uv` for package management.
+This repository contains the COMcheck API Python package. It provides a type-safe Python client for working with the COMcheck API and is intended to be used as a Python package maintained with `uv` for package management.
 
 **Requirements:**
 - Python: `>=3.12`
