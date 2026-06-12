@@ -1,6 +1,6 @@
 # COMcheck API — Python Package
 
-This repository contains the COMcheck API Python package. It provides a type-safe Python client for working with the COMcheck API and is intended to be used as a Python package maintained with `uv` for package management.
+A type-safe Python package for the [COMcheck Web API](https://comcheck.energycode.pnl.gov) — PNNL's hosted service for commercial building energy-code (ASHRAE 90.1 / IECC) compliance. Use it to build COMcheck projects, run compliance simulations, and read results from Python over the live API. Requires a free Personal Access Token (see below). The package is maintained with `uv`.
 
 **Requirements:**
 - Python: `>=3.12`
