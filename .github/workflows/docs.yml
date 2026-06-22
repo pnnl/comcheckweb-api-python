@@ -50,7 +50,9 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      # Canonical public URL; deploy-pages' page_url output reports GitHub's
+      # internal *.pages.github.io alias for org repos, so hardcode it.
+      url: https://pnnl.github.io/comcheckweb-api-python/
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
