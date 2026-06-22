@@ -2,7 +2,7 @@
 
 Automated test suite for the COMcheck API Python client using pytest.
 
-For ad-hoc manual testing during development, see the [scripts/](../scripts/) directory.
+For ad-hoc manual testing during development, see the [tools/scripts/](../tools/scripts/) directory.
 
 ## Directory Structure
 
