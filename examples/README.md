@@ -10,9 +10,6 @@ examples/
 ├── client/                           # API client examples
 │   ├── simulation.py                 # Simulation API workflow examples
 │   └── user_functions.py             # User-facing function examples
-├── data_manager/                     # Data manager examples
-│   ├── building_area.py             # Building area manager examples
-│   └── envelope.py                  # Envelope manager examples
 └── project_operations/               # Project operations examples
     ├── building_area_operations.py  # Building area operations
     └── envelope_operations.py       # Envelope operations
@@ -51,36 +48,7 @@ python examples/client/user_functions.py
 
 ---
 
-### 2. Data Manager Examples (`data_manager/`)
-Examples demonstrating data manager functionality.
-
-#### Building Area Manager (`data_manager/building_area.py`)
-Examples for building area manager operations.
-
-**What it demonstrates:**
-- Building area list management
-- Building area data operations
-
-**Usage:**
-```bash
-python examples/data_manager/building_area.py
-```
-
-#### Envelope Manager (`data_manager/envelope.py`)
-Examples for envelope component management.
-
-**What it demonstrates:**
-- Envelope component list management
-- Envelope data operations
-
-**Usage:**
-```bash
-python examples/data_manager/envelope.py
-```
-
----
-
-### 3. Project Operations Examples (`project_operations/`)
+### 2. Project Operations Examples (`project_operations/`)
 Examples demonstrating project operations.
 
 #### Building Area Operations (`project_operations/building_area_operations.py`)
@@ -123,9 +91,8 @@ Creates JSON snapshots in `testProjectJson/` directory showing project state aft
 ## Best Practices
 
 1. **Start with client examples** (`client/`) to understand basic API operations
-2. **Explore data manager examples** (`data_manager/`) to learn about data management
-3. **Use project operations examples** (`project_operations/`) for end-to-end workflows
-4. **Check example output** in `testProjectJson/` to understand the results
+2. **Use project operations examples** (`project_operations/`) for end-to-end workflows
+3. **Check example output** in `testProjectJson/` to understand the results
 
 ---
 
