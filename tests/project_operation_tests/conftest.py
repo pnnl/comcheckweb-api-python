@@ -1,12 +1,13 @@
 from dataclasses import dataclass, field
+import json
 import os
+from pathlib import Path
 from typing import Callable, Optional
 import uuid
 
 import pytest
 
 from comcheck_api.client import COMcheckClient
-from comcheck_api.utilities.common import export_to_json
 from comcheck_api.types.core_types import *
 from comcheck_api.utilities.project_utilities import get_id_from_component
 from comcheck_api.project_operations import project_building_area_operations
@@ -19,37 +20,32 @@ from tests.project_operation_tests.assertions.components import (
     assert_component_updated,
 )
 
-
-@pytest.fixture(scope="session")
-def api_key() -> str:
-    key = os.getenv("COM_API_KEY")
-    if not key:
-        pytest.skip("COM_API_KEY is not set in environment variables.")
-    return key
+# Committed sample project used to build the offline `project` fixture so the
+# operation tests run without a live API call. Live round-trips against the
+# real server are opt-in via `--integration` (see `maybe_apply_and_reload`).
+SAMPLE_PROJECT_PATH = Path(__file__).parent.parent / "test_data" / "sample_project.json"
 
 
 @pytest.fixture(scope="session")
-def client(api_key: str) -> COMcheckClient:
+def client() -> COMcheckClient:
+    """Client for the operation tests.
+
+    Without ``--integration`` the tests never hit the network, so a real API
+    key is optional; we set it when present so ``--integration`` runs can reach
+    the live server.
+    """
     c = COMcheckClient()
-    c.set_api_key(api_key)
+    key = os.getenv("COM_API_KEY")
+    if key:
+        c.set_api_key(key)
     return c
 
 
 @pytest.fixture(scope="session")
-def project_id(client: COMcheckClient) -> str:
-    projects = client.list_projects()
-    if not projects or not (project_id := projects[0].get("_id")):
-        pytest.skip("No projects found for integration tests.")
-    # Export initial project state once
-    test_project_json = client.get_project(project_id, mode="json")
-    os.makedirs("testProjectJson", exist_ok=True)
-    export_to_json(test_project_json, "testProjectJson/initialProject.json")
-    return project_id
-
-
-@pytest.fixture(scope="session")
-def project(client: COMcheckClient, project_id: str):
-    project = client.get_project(project_id)
+def project(client: COMcheckClient) -> ComBuilding:
+    """Load the project model from the committed sample JSON (offline)."""
+    data = json.loads(SAMPLE_PROJECT_PATH.read_text())
+    project = client._parse_data(data, "python")
     assert project is not None
     return project
 
