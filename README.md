@@ -207,7 +207,7 @@ This is a publicly available library maintained by PNNL. While the code is open 
 If you encounter bugs or have questions:
 - Open an issue on GitHub for bug reports
 - Check the [examples/](examples/) directory for usage guidance
-- Review the [documentation](docs/) for detailed information
+- Review the [documentation](https://pnnl.github.io/comcheckweb-api-python/) for detailed information
 
 **Note:** Issues are welcome, but pull requests from external contributors will not be accepted.
 
