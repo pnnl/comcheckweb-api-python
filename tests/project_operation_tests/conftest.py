@@ -8,6 +8,7 @@ import uuid
 import pytest
 
 from comcheck_api.client import COMcheckClient
+from comcheck_api.utilities.common import export_to_json
 from comcheck_api.types.core_types import *
 from comcheck_api.utilities.project_utilities import get_id_from_component
 from comcheck_api.project_operations import project_building_area_operations
@@ -42,10 +43,25 @@ def client() -> COMcheckClient:
 
 
 @pytest.fixture(scope="session")
-def project(client: COMcheckClient) -> ComBuilding:
-    """Load the project model from the committed sample JSON (offline)."""
-    data = json.loads(SAMPLE_PROJECT_PATH.read_text())
-    project = client._parse_data(data, "python")
+def project(request, client: COMcheckClient) -> ComBuilding:
+    """Project model under test.
+
+    With ``--integration`` this pulls a live project from the API (and snapshots
+    it to ``testProjectJson/initialProject.json``) so the operations write back
+    to a real project. Otherwise it loads the committed sample JSON offline.
+    """
+    if request.config.getoption("--integration"):
+        projects = client.list_projects()
+        if not projects or not (project_id := projects[0].get("_id")):
+            pytest.skip("No projects found for integration tests.")
+        snapshot = client.get_project(project_id, mode="json")
+        os.makedirs("testProjectJson", exist_ok=True)
+        export_to_json(snapshot, "testProjectJson/initialProject.json")
+        project = client.get_project(project_id)
+    else:
+        data = json.loads(SAMPLE_PROJECT_PATH.read_text())
+        project = client._parse_data(data, "python")
+
     assert project is not None
     return project
 
