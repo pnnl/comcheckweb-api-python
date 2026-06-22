@@ -1,9 +1,13 @@
 name: Deploy Documentation
 
+# Docs deploy only when a public version ships: after the "Publish to PyPI"
+# workflow finishes successfully, or on a manual run. Routine pushes to main
+# (and work on develop) do NOT update the public site.
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Publish to PyPI"]
+    types: [completed]
+  workflow_dispatch:        # allow manual rebuilds
 
 permissions:
   contents: read
@@ -17,6 +21,10 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Only build on a successful publish, or when triggered manually.
+    if: >
+      github.event_name == 'workflow_dispatch'
+      || github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v4
 
