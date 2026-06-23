@@ -2,12 +2,12 @@
 
 Manual testing scripts for ad-hoc development and debugging of the COMcheck API client. Use these for quick, interactive testing when adding new features or investigating API behavior.
 
-For automated tests with assertions, see the [tests/](../tests/) directory.
+For automated tests with assertions, see the [tests/](../../tests/) directory.
 
 ## Directory Structure
 
 ```
-scripts/
+tools/scripts/
 ├── README.md
 ├── main.py                                          # Script runner (runs all *_script.py files)
 ├── script_test_data.py                              # Shared test data (envelope, building area)
@@ -29,22 +29,22 @@ scripts/
 Run all scripts:
 
 ```bash
-python scripts/main.py
+python tools/scripts/main.py
 ```
 
 Run a single script:
 
 ```bash
-python scripts/comcheck_client_tests/user_function_script.py
-python scripts/comcheck_client_tests/simulation_script.py
-python scripts/project_operations_tests/building_area_operations_script.py
-python scripts/project_operations_tests/envelope_operations_script.py
+python tools/scripts/comcheck_client_tests/user_function_script.py
+python tools/scripts/comcheck_client_tests/simulation_script.py
+python tools/scripts/project_operations_tests/building_area_operations_script.py
+python tools/scripts/project_operations_tests/envelope_operations_script.py
 ```
 
 Some scripts support running individual tests by number:
 
 ```bash
-python scripts/project_operations_tests/envelope_operations_script.py 3
+python tools/scripts/project_operations_tests/envelope_operations_script.py 3
 ```
 
 ## Output
@@ -53,9 +53,9 @@ Scripts export JSON results to a `testProjectJson/` directory for manual inspect
 
 ## Scripts vs Tests
 
-| | `scripts/` | `tests/` |
+| | `tools/scripts/` | `tests/` |
 |---|---|---|
 | **Purpose** | Ad-hoc manual testing during development | Automated tests with assertions |
 | **When to use** | Exploring API behavior, debugging, adding new features | Validating correctness, CI, regression testing |
 | **Output** | Prints and JSON files for manual inspection | Pass/fail via pytest |
-| **Runner** | `python scripts/main.py` or run individually | `pytest` |
+| **Runner** | `python tools/scripts/main.py` or run individually | `pytest` |

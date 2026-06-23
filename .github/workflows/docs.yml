@@ -1,9 +1,13 @@
 name: Deploy Documentation
 
+# Docs deploy only when a public version ships: after the "Publish to PyPI"
+# workflow finishes successfully, or on a manual run. Routine pushes to main
+# (and work on develop) do NOT update the public site.
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Publish to PyPI"]
+    types: [completed]
+  workflow_dispatch:        # allow manual rebuilds
 
 permissions:
   contents: read
@@ -17,11 +21,15 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Only build on a successful publish, or when triggered manually.
+    if: >
+      github.event_name == 'workflow_dispatch'
+      || github.event.workflow_run.conclusion == 'success'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v8.2.0
 
       - name: Set up Python
         run: uv python install 3.12
@@ -33,7 +41,7 @@ jobs:
         run: uv run mkdocs build
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
@@ -42,8 +50,10 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      # Canonical public URL; deploy-pages' page_url output reports GitHub's
+      # internal *.pages.github.io alias for org repos, so hardcode it.
+      url: https://pnnl.github.io/comcheckweb-api-python/
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

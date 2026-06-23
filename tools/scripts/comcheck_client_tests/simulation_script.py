@@ -4,7 +4,7 @@ import copy
 import os
 import sys
 
-from scripts.script_test_data import TEST_BUILDING_AREA, TEST_PROJECT_ENVELOPE
+from tools.scripts.script_test_data import TEST_BUILDING_AREA, TEST_PROJECT_ENVELOPE
 
 # Add comcheck_api to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))

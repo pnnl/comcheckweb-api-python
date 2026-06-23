@@ -145,6 +145,32 @@ Pass `--global` to install into the user-global skills dirs
 (`~/.claude/skills/` and/or `~/.agents/skills/`) for every session
 instead of per-project.
 
+## Support
+
+This is a publicly available library maintained by PNNL. While the code is open source and free to use, **external contributions are not accepted** at this time.
+
+### Reporting Issues
+
+If you encounter bugs or have questions:
+- Open an issue on GitHub for bug reports
+- Check the [examples/](examples/) directory for usage guidance
+- Review the [documentation](https://pnnl.github.io/comcheckweb-api-python/) for detailed information
+
+**Note:** Issues are welcome, but pull requests from external contributors will not be accepted.
+
+## License
+
+See the `LICENSE` file at the repository root for license details.
+
+See the [`DISCLAIMER.md`](DISCLAIMER.md) file for the warranty and
+liability disclaimer.
+
+---
+
+> **Note:** The sections below are for the PNNL team that maintains this
+> package. External contributions and pull requests are not accepted, so
+> this tooling is not required to *use* the published package.
+
 ## Development
 
 Clone the repository and follow the commands below to set up developer tooling.
@@ -197,20 +223,3 @@ uv run mkdocs build
 # Fail on warnings (good before committing)
 uv run mkdocs build --strict
 ```
-
-## Support
-
-This is a publicly available library maintained by PNNL. While the code is open source and free to use, **external contributions are not accepted** at this time.
-
-### Reporting Issues
-
-If you encounter bugs or have questions:
-- Open an issue on GitHub for bug reports
-- Check the [examples/](examples/) directory for usage guidance
-- Review the [documentation](docs/) for detailed information
-
-**Note:** Issues are welcome, but pull requests from external contributors will not be accepted.
-
-## License
-
-See the `LICENSE` file at the repository root for license details.

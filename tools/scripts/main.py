@@ -2,7 +2,7 @@ import subprocess
 from pathlib import Path
 
 
-def run_scripts(base_dir: str = "scripts"):
+def run_scripts(base_dir: str = "tools/scripts"):
     base_path = Path(base_dir)
 
     if not base_path.exists():
