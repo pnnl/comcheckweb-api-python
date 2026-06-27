@@ -311,16 +311,16 @@ class COMcheckClient:
             floors = project.envelope.floor
             for wall in ag_Walls:
                 for uvalue in updated_assembly_uvalues.get("agWall", []):
-                    if wall.assemblyType == uvalue["description"]:
+                    if wall.assemblyType == uvalue["description"] or wall.description == uvalue["description"]:
                         wall.effectiveUFactor = float(uvalue["propUValue"])
                         wall.propUValue = float(uvalue["propUValue"])
             for roof in roofs:
                 for uvalue in updated_assembly_uvalues.get("roof", []):
-                    if roof.assemblyType == uvalue["description"]:
+                    if roof.assemblyType == uvalue["description"] or roof.description == uvalue["description"]:
                         roof.propUValue = float(uvalue["propUValue"])
             for floor in floors:
                 for uvalue in updated_assembly_uvalues.get("floor", []):
-                    if floor.assemblyType == uvalue["description"]:
+                    if floor.assemblyType == uvalue["description"] or floor.description == uvalue["description"]:
                         floor.propUValue = float(uvalue["propUValue"])
 
         project_data = project.model_dump(mode="json", exclude_unset=True)
