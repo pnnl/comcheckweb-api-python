@@ -244,6 +244,38 @@ class COMcheckClient:
             return ComBuilding(**data)
         return data
 
+    def assemblie_uvalues(self, project: ComBuilding) -> Any:
+        """
+
+        Args:
+            project:
+
+        Returns:
+
+        """
+        logger = logging.getLogger(__name__)
+        # update assemblies uvalue
+        energy_code = str(project.control.code)
+        envelope_data = project.envelope.model_dump(mode="json", exclude_unset=True)
+
+        def fill_empty_description(assemblies: list[dict]) -> list[dict]:
+            for assembly in assemblies:
+                if not assembly.get("description", ""):
+                    assembly["description"] = assembly.get("assemblyType")
+            return assemblies
+
+        # need to refactor this part to ensure the data integrity
+        reformatted_envelope_data = {
+            "agWall": fill_empty_description(envelope_data["agWall"]),
+            "roof": fill_empty_description(envelope_data["roof"]),
+            "skylight": fill_empty_description(envelope_data["skylight"]),
+            "window": fill_empty_description(envelope_data["window"]),
+            "door": fill_empty_description(envelope_data["door"]),
+            "floor": fill_empty_description(envelope_data["floor"])
+        }
+        assemblie_uvalue = self._service.assemblies_uvalue(reformatted_envelope_data, energy_code)
+        return assemblie_uvalue
+
     def start_run_simulation(
         self, project: ComBuilding, project_id: Optional[int] = None
     ) -> str:
@@ -268,7 +300,11 @@ class COMcheckClient:
 
         if project_id:
             logger.info("Updating project: %s", project_id)
-            self.update_project(str(project_id), project)
+            project = self.update_project(str(project_id), project)
+        else:
+            # update assemblies uvalue in the project
+            assemblie_uvalue = self.assemblie_uvalues(project)
+            # Need to glue this back to the assemblies in the project before dump for simulation
 
         project_data = project.model_dump(mode="json", exclude_unset=True)
         run_result = self._service.start_run_simulation(project_data)

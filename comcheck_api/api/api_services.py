@@ -187,6 +187,31 @@ class COMCheckApiService:
         except Exception as error:
             self._handle_api_error(error)
 
+    def assemblies_uvalue(self, envelope_data: Dict[str, Any], energy_code) -> Dict[str, Any]:
+        """get assemblies u values
+
+            Args:
+                envelope_data: The envelope data to send in the request body
+                energy_code: The energy code for the api end point path
+
+            Returns:
+                RunSimulationResponse with session information
+
+            Raises:
+                COMCheckHTTPError: If the API returns an error status
+                COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post(
+                f"/{energy_code}/assemblies/uvalues", json=envelope_data
+            )
+            response.raise_for_status()
+            # may need validation here.
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
     def start_run_simulation(
         self, project_data: Dict[str, Any]
     ) -> RunSimulationResponse:
