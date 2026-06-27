@@ -264,11 +264,6 @@ class COMcheckClient:
                     assembly["description"] = assembly.get("assemblyType")
             return assemblies
 
-        def transform_floor(floors: list[dict]) -> list[dict]:
-            for floor in floors:
-                floor.pop('slabFullInsulBelowMinRValue', None)
-            return floors
-
         # need to refactor this part to ensure the data integrity
         reformatted_envelope_data = {
             "agWall": fill_empty_description(envelope_data["agWall"]),
@@ -276,7 +271,7 @@ class COMcheckClient:
             "skylight": fill_empty_description(envelope_data["skylight"]),
             "window": fill_empty_description(envelope_data["window"]),
             "door": fill_empty_description(envelope_data["door"]),
-            "floor": transform_floor(fill_empty_description(envelope_data["floor"]))
+            "floor": fill_empty_description(envelope_data["floor"])
         }
         assemblie_uvalue = self._service.assemblies_uvalue(reformatted_envelope_data, energy_code)
         return assemblie_uvalue["data"]
