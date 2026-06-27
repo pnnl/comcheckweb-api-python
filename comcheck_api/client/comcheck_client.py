@@ -244,6 +244,43 @@ class COMcheckClient:
             return ComBuilding(**data)
         return data
 
+    def assemblie_uvalues(self, project: ComBuilding) -> Any:
+        """
+
+        Args:
+            project:
+
+        Returns:
+
+        """
+        logger = logging.getLogger(__name__)
+        # update assemblies uvalue
+        energy_code = str(project.control.code)
+        envelope_data = project.envelope.model_dump(mode="json", exclude_unset=True)
+
+        def fill_empty_description(assemblies: list[dict]) -> list[dict]:
+            for assembly in assemblies:
+                if not assembly.get("description", ""):
+                    assembly["description"] = assembly.get("assemblyType")
+            return assemblies
+
+        def transform_floor(floors: list[dict]) -> list[dict]:
+            for floor in floors:
+                floor.pop('slabFullInsulBelowMinRValue', None)
+            return floors
+
+        # need to refactor this part to ensure the data integrity
+        reformatted_envelope_data = {
+            "agWall": fill_empty_description(envelope_data["agWall"]),
+            "roof": fill_empty_description(envelope_data["roof"]),
+            "skylight": fill_empty_description(envelope_data["skylight"]),
+            "window": fill_empty_description(envelope_data["window"]),
+            "door": fill_empty_description(envelope_data["door"]),
+            "floor": transform_floor(fill_empty_description(envelope_data["floor"]))
+        }
+        assemblie_uvalue = self._service.assemblies_uvalue(reformatted_envelope_data, energy_code)
+        return assemblie_uvalue["data"]
+
     def start_run_simulation(
         self, project: ComBuilding, project_id: Optional[int] = None
     ) -> str:
@@ -266,9 +303,30 @@ class COMcheckClient:
         """
         logger = logging.getLogger(__name__)
 
+        project_data = None
         if project_id:
             logger.info("Updating project: %s", project_id)
-            self.update_project(str(project_id), project)
+            project = self.update_project(str(project_id), project)
+        else:
+            # update assemblies uvalue in the project
+            updated_assembly_uvalues = self.assemblie_uvalues(project)
+            # still missing
+            ag_Walls = project.envelope.agWall
+            roofs = project.envelope.roof
+            floors = project.envelope.floor
+            for wall in ag_Walls:
+                for uvalue in updated_assembly_uvalues.get("agWall", []):
+                    if wall.assemblyType == uvalue["description"]:
+                        wall.effectiveUFactor = float(uvalue["propUValue"])
+                        wall.propUValue = float(uvalue["propUValue"])
+            for roof in roofs:
+                for uvalue in updated_assembly_uvalues.get("roof", []):
+                    if roof.assemblyType == uvalue["description"]:
+                        roof.propUValue = float(uvalue["propUValue"])
+            for floor in floors:
+                for uvalue in updated_assembly_uvalues.get("floor", []):
+                    if floor.assemblyType == uvalue["description"]:
+                        floor.propUValue = float(uvalue["propUValue"])
 
         project_data = project.model_dump(mode="json", exclude_unset=True)
         run_result = self._service.start_run_simulation(project_data)
