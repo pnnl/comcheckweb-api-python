@@ -4,7 +4,10 @@
 and return either Pydantic models, primitives, or raw dicts depending on the operation."""
 
 import logging
+import os
 from typing import Any, Dict, List, Literal, Optional, Union, overload
+
+import httpx
 
 from comcheck_api.api import COMCheckApiService
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
@@ -271,10 +274,92 @@ class COMcheckClient:
             "skylight": fill_empty_description(envelope_data["skylight"]),
             "window": fill_empty_description(envelope_data["window"]),
             "door": fill_empty_description(envelope_data["door"]),
-            "floor": fill_empty_description(envelope_data["floor"])
+            "floor": fill_empty_description(envelope_data["floor"]),
         }
-        assemblie_uvalue = self._service.assemblies_uvalue(reformatted_envelope_data, energy_code)
+        assemblie_uvalue = self._service.assemblies_uvalue(
+            reformatted_envelope_data, energy_code
+        )
         return assemblie_uvalue["data"]
+
+    def check_compliance(self, project: ComBuilding) -> Any:
+        """Check code compliance for a project.
+
+        Args:
+            project: The project data to evaluate.
+
+        Returns:
+            The compliance results payload returned by the API.
+        """
+        project_data = project.model_dump(mode="json", exclude_unset=True)
+        response = self._service.check_compliance(project_data)
+        return response.get("data")
+
+    def check_requirements(self, project: ComBuilding) -> Any:
+        """Check the applicable requirements for a project.
+
+        Args:
+            project: The project data to evaluate.
+
+        Returns:
+            The requirements payload returned by the API.
+        """
+        project_data = project.model_dump(mode="json", exclude_unset=True)
+        response = self._service.check_requirements(project_data)
+        return response.get("data")
+
+    def generate_report(
+        self,
+        project: ComBuilding,
+        envelope: bool = True,
+        extlighting: bool = True,
+        intlighting: bool = True,
+        mechanical: bool = True,
+        download: bool = False,
+        download_dir: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Generate a PDF report for a project.
+
+        The report PDF is stored in S3; the API returns a presigned URL to
+        download it. The URL is short-lived (expires within a few minutes).
+
+        This method does not open the report in a browser — as a library it
+        returns the report metadata and lets the caller decide what to do
+        (e.g. ``webbrowser.open(report["url"])``, stream it onward, or save it
+        via *download*).
+
+        Args:
+            project: The project data to generate a report for.
+            envelope: Whether to include the envelope section in the report.
+            extlighting: Whether to include the exterior lighting section.
+            intlighting: Whether to include the interior lighting section.
+            mechanical: Whether to include the mechanical section.
+            download: When ``True``, fetch the PDF from the presigned URL and
+                save it using the server-provided ``fileName``.
+            download_dir: Directory to save the PDF into when *download* is
+                ``True``. Defaults to the user's ``~/Downloads`` folder.
+
+        Returns:
+            The report metadata dict with ``url`` (the presigned S3 URL),
+            ``expires``, and ``fileName``.
+        """
+        report_data = {
+            "building": project.model_dump(mode="json", exclude_unset=True),
+            "envelope": envelope,
+            "extlighting": extlighting,
+            "intlighting": intlighting,
+            "mechanical": mechanical,
+        }
+        response = self._service.generate_report(report_data)
+        if response and download:
+            if download_dir is None:
+                download_dir = os.path.join(os.path.expanduser("~"), "Downloads")
+            os.makedirs(download_dir, exist_ok=True)
+            pdf_response = httpx.get(response["url"], timeout=60.0)
+            pdf_response.raise_for_status()
+            output_path = os.path.join(download_dir, response["fileName"])
+            with open(output_path, "wb") as f:
+                f.write(pdf_response.content)
+        return response
 
     def start_run_simulation(
         self, project: ComBuilding, project_id: Optional[int] = None
@@ -312,7 +397,7 @@ class COMcheckClient:
             for wall in ag_Walls:
                 for uvalue in updated_assembly_uvalues.get("agWall", []):
                     if wall.assemblyType == uvalue["description"]:
-                        wall.effectiveUFactor = float(uvalue["propUValue"])
+                        wall.effectiveUFactor = float(uvalue["effectiveUFactor"])
                         wall.propUValue = float(uvalue["propUValue"])
             for roof in roofs:
                 for uvalue in updated_assembly_uvalues.get("roof", []):

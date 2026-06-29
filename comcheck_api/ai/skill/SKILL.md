@@ -150,9 +150,11 @@ print(result["performanceRating"])
   `COMcheckClient` user methods (`list_projects`, `get_project`,
   `update_project`, `start_run_simulation`, `get_simulation_status`,
   `get_simulation_result`, `set_api_key`) are fully supported and
-  fine to use. If asked for an unsupported mutation area, tell the
-  user it's not implemented and offer building-area / envelope /
-  simulation instead. Confirm operation scope with
+  fine to use. The compliance/report client methods
+  (`check_compliance`, `check_requirements`, `generate_report`) are
+  also fully supported. If asked for an unsupported mutation area,
+  tell the user it's not implemented and offer building-area /
+  envelope / simulation instead. Confirm operation scope with
   `comcheck_api.list_operations()` (only `building_area` and
   `envelope` groups exist).
 
@@ -230,6 +232,38 @@ else:
     raise TimeoutError(f"Simulation {session_id} did not complete in 5 min")
 ```
 
+### Checking compliance/requirements and generating a report
+
+These are synchronous (no polling). All three take a `ComBuilding`
+directly.
+
+```python
+# Per-category compliance status
+compliance = client.check_compliance(project)
+if compliance["mandatoryRequirementsMet"]:
+    ...
+
+# Applicable requirements
+requirements = client.check_requirements(project)
+
+# PDF report — returns {url, expires, fileName}. The url is a short-lived
+# presigned S3 URL (expires within minutes); don't cache it.
+report = client.generate_report(project)
+
+# Download the PDF (saves using the server fileName; default dir is ~/Downloads)
+report = client.generate_report(project, download=True)
+report = client.generate_report(project, download=True, download_dir="./out")
+
+# Toggle report sections (all default to True)
+report = client.generate_report(
+    project, envelope=True, intlighting=True, extlighting=False, mechanical=True
+)
+```
+
+`generate_report` deliberately does **not** open a browser — it's a
+library, so it returns metadata and lets the caller decide
+(`webbrowser.open(report["url"])`).
+
 ## Gotchas
 
 - **Field names are lowercase camelCase**, not PascalCase.
@@ -281,5 +315,7 @@ else:
 - For Pydantic model field-level details → read `reference/types.md`.
 - For the simulation start/poll/fetch flow → read
   `reference/simulation.md`.
+- For compliance checks, requirements, and PDF report generation →
+  read `reference/compliance.md`.
 - To validate generated code against a mocked client → run
   `scripts/validate_code.py`.
