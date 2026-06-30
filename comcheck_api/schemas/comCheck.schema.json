@@ -7,6 +7,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -212,6 +213,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -255,6 +257,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -285,6 +288,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -457,6 +461,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -607,6 +612,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -644,6 +650,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -655,6 +662,7 @@
                     "$comment": "This needs to be unique across all ag walls."
                 },
                 "assemblyType": {
+                    "readOnly": true,
                     "description": "The type of the component",
                     "type": "string",
                     "default": "Exterior Wall",
@@ -935,6 +943,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -945,9 +954,11 @@
                     "default": ""
                 },
                 "assemblyType": {
+                    "readOnly": true,
                     "description": "The type of the component",
                     "type": "string",
                     "default": "Basement",
+                    "pattern": "^Basement$",
                     "$comment": "This shall always be 'Basement'"
                 },
                 "bldgUseKey": {
@@ -1154,6 +1165,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -1187,6 +1199,7 @@
                     "$comment": "This data is used for reference - no actual impact on calculations."
                 },
                 "assemblyType": {
+                    "readOnly": true,
                     "description": "The type of the component",
                     "type": "string",
                     "default": "Window",
@@ -1394,6 +1407,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -1409,6 +1423,7 @@
                     "default": ""
                 },
                 "assemblyType": {
+                    "readOnly": true,
                     "description": "The type of the component",
                     "type": "string",
                     "default": "Door",
@@ -1653,6 +1668,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -1668,6 +1684,7 @@
                     "default": ""
                 },
                 "assemblyType": {
+                    "readOnly": true,
                     "description": "The type of the component",
                     "type": "string",
                     "default": "Skylight",
@@ -1877,6 +1894,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -1888,6 +1906,7 @@
                     "$comment": "This needs to be unique across all ag walls."
                 },
                 "assemblyType": {
+                    "readOnly": true,
                     "description": "The type of the component",
                     "type": "string",
                     "default": "Roof",
@@ -2084,6 +2103,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -2093,6 +2113,7 @@
                     "type": ["string", "null"]
                 },
                 "assemblyType": {
+                    "readOnly": true,
                     "description": "The type of the component",
                     "type": "string",
                     "$comment": "This shall always be 'Roof'"
@@ -2222,6 +2243,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -2259,6 +2281,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -2292,6 +2315,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -2382,6 +2406,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -2467,6 +2492,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -2511,6 +2537,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -2634,6 +2661,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -2695,6 +2723,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -2858,6 +2887,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": "integer"
                 },
@@ -2950,6 +2980,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -3161,6 +3192,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -3330,6 +3362,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -3389,6 +3422,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -3466,6 +3500,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -3510,6 +3545,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -3612,6 +3648,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -3786,6 +3823,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -3871,6 +3909,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -3906,6 +3945,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -3957,6 +3997,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
@@ -3973,6 +4014,7 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "readOnly": true,
                     "description": "Scope-unique reference identifier for instances of this data group.",
                     "type": ["string", "integer"],
                     "$comment": "All id data elements are shown as required so that every data group can be explcitly identified."
