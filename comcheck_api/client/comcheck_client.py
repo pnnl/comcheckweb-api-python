@@ -247,39 +247,46 @@ class COMcheckClient:
             return ComBuilding(**data)
         return data
 
-    def assemblie_uvalues(self, project: ComBuilding) -> Any:
-        """
+    def update_uvalues(self, project: ComBuilding) -> ComBuilding:
+        """Calculate assembly u-values and update the project in place.
+
+        Sends the full envelope to the u-value endpoint and writes the returned
+        values back onto the matching ``agWall``, ``bgWall``, ``roof``, and
+        ``floor`` components (matched by ``assemblyType``). Only these assembly
+        types receive calculated u-values; ``effectiveUFactor`` applies to
+        ``agWall`` only.
 
         Args:
-            project:
+            project: The project whose envelope u-values should be refreshed.
 
         Returns:
-
+            The same ``project`` instance, with u-values updated.
         """
-        logger = logging.getLogger(__name__)
-        # update assemblies uvalue
         energy_code = str(project.control.code)
         envelope_data = project.envelope.model_dump(mode="json", exclude_unset=True)
+        updated_assembly_uvalues = self._service.assemblies_uvalue(
+            envelope_data, energy_code
+        )["data"]
 
-        def fill_empty_description(assemblies: list[dict]) -> list[dict]:
-            for assembly in assemblies:
-                if not assembly.get("description", ""):
-                    assembly["description"] = assembly.get("assemblyType")
-            return assemblies
+        for wall in project.envelope.agWall:
+            for uvalue in updated_assembly_uvalues.get("agWall", []):
+                if wall.assemblyType == uvalue["assemblyType"]:
+                    wall.effectiveUFactor = float(uvalue["effectiveUFactor"])
+                    wall.propUValue = float(uvalue["propUValue"])
+        for wall in project.envelope.bgWall:
+            for uvalue in updated_assembly_uvalues.get("bgWall", []):
+                if wall.assemblyType == uvalue["assemblyType"]:
+                    wall.propUValue = float(uvalue["propUValue"])
+        for roof in project.envelope.roof:
+            for uvalue in updated_assembly_uvalues.get("roof", []):
+                if roof.assemblyType == uvalue["assemblyType"]:
+                    roof.propUValue = float(uvalue["propUValue"])
+        for floor in project.envelope.floor:
+            for uvalue in updated_assembly_uvalues.get("floor", []):
+                if floor.assemblyType == uvalue["assemblyType"]:
+                    floor.propUValue = float(uvalue["propUValue"])
 
-        # need to refactor this part to ensure the data integrity
-        reformatted_envelope_data = {
-            "agWall": fill_empty_description(envelope_data["agWall"]),
-            "roof": fill_empty_description(envelope_data["roof"]),
-            "skylight": fill_empty_description(envelope_data["skylight"]),
-            "window": fill_empty_description(envelope_data["window"]),
-            "door": fill_empty_description(envelope_data["door"]),
-            "floor": fill_empty_description(envelope_data["floor"]),
-        }
-        assemblie_uvalue = self._service.assemblies_uvalue(
-            reformatted_envelope_data, energy_code
-        )
-        return assemblie_uvalue["data"]
+        return project
 
     def check_compliance(self, project: ComBuilding) -> Any:
         """Check code compliance for a project.
@@ -383,30 +390,12 @@ class COMcheckClient:
         """
         logger = logging.getLogger(__name__)
 
-        project_data = None
+        # Always refresh the calculated assembly u-values before simulating.
+        project = self.update_uvalues(project)
+
         if project_id:
             logger.info("Updating project: %s", project_id)
             project = self.update_project(str(project_id), project)
-        else:
-            # update assemblies uvalue in the project
-            updated_assembly_uvalues = self.assemblie_uvalues(project)
-            # still missing
-            ag_Walls = project.envelope.agWall
-            roofs = project.envelope.roof
-            floors = project.envelope.floor
-            for wall in ag_Walls:
-                for uvalue in updated_assembly_uvalues.get("agWall", []):
-                    if wall.assemblyType == uvalue["description"]:
-                        wall.effectiveUFactor = float(uvalue["effectiveUFactor"])
-                        wall.propUValue = float(uvalue["propUValue"])
-            for roof in roofs:
-                for uvalue in updated_assembly_uvalues.get("roof", []):
-                    if roof.assemblyType == uvalue["description"]:
-                        roof.propUValue = float(uvalue["propUValue"])
-            for floor in floors:
-                for uvalue in updated_assembly_uvalues.get("floor", []):
-                    if floor.assemblyType == uvalue["description"]:
-                        floor.propUValue = float(uvalue["propUValue"])
 
         project_data = project.model_dump(mode="json", exclude_unset=True)
         run_result = self._service.start_run_simulation(project_data)

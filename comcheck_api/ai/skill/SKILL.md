@@ -57,6 +57,13 @@ Triggers:
   `get_simulation_result`. See `comcheck_api.types.SimulationStatus`
   for known lifecycle values (the catalog isn't exhaustive — only
   the terminal pair is guaranteed stable).
+- **U-values are calculated server-side**: `update_uvalues(project)`
+  fetches the proposed/effective u-values for the envelope and writes
+  them back onto the matching `agWall`, `bgWall`, `roof`, and `floor`
+  assemblies (only these get calculated u-values; `effectiveUFactor`
+  is `agWall`-only). `start_run_simulation` calls this automatically,
+  so you rarely call it directly — use it only when you need refreshed
+  u-values on a project outside the simulation flow.
 
 ## Quick start
 
@@ -148,8 +155,9 @@ print(result["performanceRating"])
   editable through `project_building_area_operations`; the per-
   activity lighting nested under `activityUse[]` is not. The
   `COMcheckClient` user methods (`list_projects`, `get_project`,
-  `update_project`, `start_run_simulation`, `get_simulation_status`,
-  `get_simulation_result`, `set_api_key`) are fully supported and
+  `update_project`, `update_uvalues`, `start_run_simulation`,
+  `get_simulation_status`, `get_simulation_result`, `set_api_key`)
+  are fully supported and
   fine to use. The compliance/report client methods
   (`check_compliance`, `check_requirements`, `generate_report`) are
   also fully supported. If asked for an unsupported mutation area,

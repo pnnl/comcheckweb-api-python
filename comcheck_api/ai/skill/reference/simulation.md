@@ -43,7 +43,8 @@ client = COMcheckClient(api_key="...")
 
 | Method | Returns | Purpose |
 |---|---|---|
-| `client.start_run_simulation(project, project_id=None)` | `str` (session ID) | Kick off the simulation. If `project_id` is provided, the project is also saved/updated. |
+| `client.start_run_simulation(project, project_id=None)` | `str` (session ID) | Kick off the simulation. Always refreshes the envelope u-values first (via `update_uvalues`). If `project_id` is provided, the project is also saved/updated. |
+| `client.update_uvalues(project)` | `ComBuilding` | Calculate assembly u-values and write them back onto the project's `agWall`, `bgWall`, `roof`, and `floor` assemblies (matched by `assemblyType`). Mutates and returns the same project. Called automatically by `start_run_simulation`. |
 | `client.get_simulation_status(session_id)` | `dict` | Current status. Fields: `sessionId`, `status` (see the Status values table above), optional `message`. |
 | `client.get_simulation_result(session_id)` | `dict` | Final result. Fields: `sessionId`, `performanceRating`, `energyCreditPerformanceRating`, `proposedBpf`, `baselineBpf`. |
 

@@ -63,6 +63,30 @@ When you pass a `project_id`, the client saves the project via
 session_id = client.start_run_simulation(project, project_id="your-project-id")
 ```
 
+## Envelope u-values
+
+`start_run_simulation` always refreshes the calculated envelope u-values
+before submitting, by calling `update_uvalues(project)`. This fetches the
+proposed/effective u-values for the envelope assemblies and writes them
+back onto the matching `agWall`, `bgWall`, `roof`, and `floor` components
+(matched by `assemblyType`). Only these assembly types receive calculated
+u-values, and `effectiveUFactor` applies to `agWall` only.
+
+You normally don't need to call it yourself, but it's available when you
+want refreshed u-values on a project outside the simulation flow:
+
+```python
+project = client.update_uvalues(project)
+```
+
+!!! warning "Each assembly needs a construction type"
+    The engine classifies an assembly by its construction-type field
+    (`roofType`, `wallType`, …) to calculate its u-value. If that field is
+    missing or null, the engine returns an `"Other"` classification with a
+    `propUValue` of `0.0`, and the result won't match your assembly — so its
+    u-value is silently left unchanged. The default templates set these
+    fields; keep them populated if you build an assembly by hand.
+
 ## Simulation status
 
 `get_simulation_status` returns a dict with:

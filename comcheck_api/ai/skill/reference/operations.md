@@ -99,3 +99,24 @@ roof.cavityRValue = 38.0
 roof.orientation = OrientationOptions.UNSPECIFIED_ORIENTATION
 project = env_ops.add_roof_to_project(project, area_key, roof)
 ```
+
+## U-value calculation requires a construction type
+
+When `update_uvalues` (or `start_run_simulation`) recalculates assembly
+u-values, the engine needs a valid construction-type field to classify
+each assembly — `roofType` for roofs, `wallType` for walls, etc. If it's
+missing or null, the engine falls back to an `"Other"` classification,
+returns a `propUValue` of `0.0`, and the response comes back with
+`assemblyType: "Other"` instead of the value you sent. Because the client
+matches results back by `assemblyType`, an `"Other"` result won't match
+your assembly and its u-value is silently left unchanged.
+
+The default templates set these fields (e.g. `roofType=ABOVE_DECK_ROOF`),
+so this only bites when you build an assembly by hand or clear the type.
+Keep the construction-type field populated:
+
+```python
+from comcheck_api.types import RoofTypeOptions
+
+roof.roofType = RoofTypeOptions.ABOVE_DECK_ROOF   # don't leave this null
+```
