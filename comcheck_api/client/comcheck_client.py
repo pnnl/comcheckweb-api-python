@@ -4,7 +4,10 @@
 and return either Pydantic models, primitives, or raw dicts depending on the operation."""
 
 import logging
+import os
 from typing import Any, Dict, List, Literal, Optional, Union, overload
+
+import httpx
 
 from comcheck_api.api import COMCheckApiService
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
@@ -244,6 +247,127 @@ class COMcheckClient:
             return ComBuilding(**data)
         return data
 
+    def update_uvalues(self, project: ComBuilding) -> ComBuilding:
+        """Calculate assembly u-values and update the project in place.
+
+        Sends the full envelope to the u-value endpoint and writes the returned
+        values back onto the matching ``agWall``, ``bgWall``, ``roof``, and
+        ``floor`` components (matched by ``assemblyType``). Only these assembly
+        types receive calculated u-values; ``effectiveUFactor`` applies to
+        ``agWall`` only.
+
+        Args:
+            project: The project whose envelope u-values should be refreshed.
+
+        Returns:
+            The same ``project`` instance, with u-values updated.
+        """
+        energy_code = str(project.control.code)
+        envelope_data = project.envelope.model_dump(mode="json", exclude_unset=True)
+        updated_assembly_uvalues = self._service.assemblies_uvalue(
+            envelope_data, energy_code
+        )["data"]
+
+        for wall in project.envelope.agWall:
+            for uvalue in updated_assembly_uvalues.get("agWall", []):
+                if wall.assemblyType == uvalue["assemblyType"]:
+                    wall.effectiveUFactor = float(uvalue["effectiveUFactor"])
+                    wall.propUValue = float(uvalue["propUValue"])
+        for wall in project.envelope.bgWall:
+            for uvalue in updated_assembly_uvalues.get("bgWall", []):
+                if wall.assemblyType == uvalue["assemblyType"]:
+                    wall.propUValue = float(uvalue["propUValue"])
+        for roof in project.envelope.roof:
+            for uvalue in updated_assembly_uvalues.get("roof", []):
+                if roof.assemblyType == uvalue["assemblyType"]:
+                    roof.propUValue = float(uvalue["propUValue"])
+        for floor in project.envelope.floor:
+            for uvalue in updated_assembly_uvalues.get("floor", []):
+                if floor.assemblyType == uvalue["assemblyType"]:
+                    floor.propUValue = float(uvalue["propUValue"])
+
+        return project
+
+    def check_UA_compliance(self, project: ComBuilding) -> Any:
+        """Check UA path compliance for a project.
+
+        Args:
+            project: The project data to evaluate.
+
+        Returns:
+            The compliance results payload returned by the API.
+        """
+        project_data = project.model_dump(mode="json", exclude_unset=True)
+        response = self._service.check_UA_compliance(project_data)
+        return response.get("data")
+
+    def check_requirements(self, project: ComBuilding) -> Any:
+        """Check the applicable requirements for a project.
+
+        Args:
+            project: The project data to evaluate.
+
+        Returns:
+            The requirements payload returned by the API.
+        """
+        project_data = project.model_dump(mode="json", exclude_unset=True)
+        response = self._service.check_requirements(project_data)
+        return response.get("data")
+
+    def generate_report(
+        self,
+        project: ComBuilding,
+        envelope: bool = True,
+        extlighting: bool = True,
+        intlighting: bool = True,
+        mechanical: bool = True,
+        download: bool = False,
+        download_dir: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Generate a PDF report for a project.
+
+        The report PDF is stored in S3; the API returns a presigned URL to
+        download it. The URL is short-lived (expires within a few minutes).
+
+        This method does not open the report in a browser — as a library it
+        returns the report metadata and lets the caller decide what to do
+        (e.g. ``webbrowser.open(report["url"])``, stream it onward, or save it
+        via *download*).
+
+        Args:
+            project: The project data to generate a report for.
+            envelope: Whether to include the envelope section in the report.
+            extlighting: Whether to include the exterior lighting section.
+            intlighting: Whether to include the interior lighting section.
+            mechanical: Whether to include the mechanical section.
+            download: When ``True``, fetch the PDF from the presigned URL and
+                save it using the server-provided ``fileName``.
+            download_dir: Directory to save the PDF into when *download* is
+                ``True``. Defaults to the user's ``~/Downloads`` folder.
+
+        Returns:
+            The report metadata dict with ``url`` (the presigned S3 URL),
+            ``expires``, and ``fileName``.
+        """
+        report_data = {
+            "building": project.model_dump(mode="json", exclude_unset=True),
+            "envelope": envelope,
+            "extlighting": extlighting,
+            "intlighting": intlighting,
+            "mechanical": mechanical,
+        }
+        response = self._service.generate_report(report_data)
+        if response and download:
+            if download_dir is None:
+                download_dir = os.path.join(os.path.expanduser("~"), "Downloads")
+            os.makedirs(download_dir, exist_ok=True)
+            pdf_response = httpx.get(response["url"], timeout=60.0)
+            pdf_response.raise_for_status()
+            output_path = os.path.join(download_dir, response["fileName"])
+            with open(output_path, "wb") as f:
+                f.write(pdf_response.content)
+        return response
+
     def start_run_simulation(
         self, project: ComBuilding, project_id: Optional[int] = None
     ) -> str:
@@ -266,9 +390,12 @@ class COMcheckClient:
         """
         logger = logging.getLogger(__name__)
 
+        # Always refresh the calculated assembly u-values before simulating.
+        project = self.update_uvalues(project)
+
         if project_id:
             logger.info("Updating project: %s", project_id)
-            self.update_project(str(project_id), project)
+            project = self.update_project(str(project_id), project)
 
         project_data = project.model_dump(mode="json", exclude_unset=True)
         run_result = self._service.start_run_simulation(project_data)

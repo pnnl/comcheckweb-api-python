@@ -187,6 +187,102 @@ class COMCheckApiService:
         except Exception as error:
             self._handle_api_error(error)
 
+    def assemblies_uvalue(
+        self, envelope_data: Dict[str, Any], energy_code
+    ) -> Dict[str, Any]:
+        """get assemblies u values
+
+        Args:
+            envelope_data: The envelope data to send in the request body
+            energy_code: The energy code for the api end point path
+
+        Returns:
+            RunSimulationResponse with session information
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post(
+                f"/{energy_code}/assemblies/uvalues", json=envelope_data
+            )
+            response.raise_for_status()
+            # may need validation here.
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
+    def check_UA_compliance(self, project_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Check UA path compliance for a project.
+
+        Args:
+            project_data: The project data to send in the request body
+
+        Returns:
+            API response data as dictionary
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post("/compliance", json=project_data)
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
+    def check_requirements(self, project_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Check requirements for a project.
+
+        Args:
+            project_data: The project data to send in the request body
+
+        Returns:
+            API response data as dictionary
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post("/requirements", json=project_data)
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
+    def generate_report(self, report_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate a PDF report for a project.
+
+        The API stores the generated PDF in S3 and returns a presigned URL
+        to download it.
+
+        Args:
+            report_data: The report request body, containing ``building`` (the
+                project data) and the ``envelope``, ``extlighting``,
+                ``intlighting``, and ``mechanical`` section flags.
+
+        Returns:
+            API response as a dictionary with ``url`` (the presigned S3 URL),
+            ``expires``, and ``fileName``
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post("/report", json=report_data)
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
     def start_run_simulation(
         self, project_data: Dict[str, Any]
     ) -> RunSimulationResponse:

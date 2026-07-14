@@ -9,6 +9,7 @@ examples/
 ├── README.md                          # This file
 ├── client/                           # API client examples
 │   ├── simulation.py                 # Simulation API workflow examples
+│   ├── compliance_and_report.py      # Compliance, requirements & report examples
 │   └── user_functions.py             # User-facing function examples
 └── project_operations/               # Project operations examples
     ├── building_area_operations.py  # Building area operations
@@ -31,6 +32,19 @@ Demonstrates the simulation workflow for running compliance checks.
 **Usage:**
 ```bash
 python examples/client/simulation.py
+```
+
+#### Compliance & Report Examples (`client/compliance_and_report.py`)
+Demonstrates compliance checks, requirements lookup, and PDF report generation.
+
+**What it demonstrates:**
+- `check_UA_compliance()` - Checking code compliance for a project
+- `check_requirements()` - Retrieving applicable requirements
+- `generate_report()` - Generating a PDF report (presigned S3 URL, optional download)
+
+**Usage:**
+```bash
+python examples/client/compliance_and_report.py
 ```
 
 #### User Function Examples (`client/user_functions.py`)

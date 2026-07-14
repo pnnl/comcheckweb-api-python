@@ -61,6 +61,7 @@ nav:
   - Types Guide: types-guide.md
   - COMcheckClient: api/client.md
   - Simulation: api/simulation.md
+  - Compliance & Reports: api/compliance.md
   - Project Operations:
       - Building Area: api/operations/building-area.md
       - Envelope: api/operations/envelope.md
