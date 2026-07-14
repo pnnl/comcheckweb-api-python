@@ -214,8 +214,8 @@ class COMCheckApiService:
         except Exception as error:
             self._handle_api_error(error)
 
-    def check_compliance(self, project_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Check compliance for a project.
+    def check_UA_compliance(self, project_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Check UA path compliance for a project.
 
         Args:
             project_data: The project data to send in the request body

@@ -38,7 +38,7 @@ python examples/client/simulation.py
 Demonstrates compliance checks, requirements lookup, and PDF report generation.
 
 **What it demonstrates:**
-- `check_compliance()` - Checking code compliance for a project
+- `check_UA_compliance()` - Checking code compliance for a project
 - `check_requirements()` - Retrieving applicable requirements
 - `generate_report()` - Generating a PDF report (presigned S3 URL, optional download)
 

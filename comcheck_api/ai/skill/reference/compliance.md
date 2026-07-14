@@ -11,11 +11,11 @@ client = COMcheckClient(api_key="...")
 
 | Method | Returns | Purpose |
 |---|---|---|
-| `client.check_compliance(project)` | `dict` | Per-category compliance status for the project. |
+| `client.check_UA_compliance(project)` | `dict` | Per-category compliance status for the project. |
 | `client.check_requirements(project)` | `dict` | The applicable requirements for the project. |
 | `client.generate_report(project, ...)` | `dict` | Generate a PDF report; returns `{url, expires, fileName}`. |
 
-## check_compliance
+## check_UA_compliance
 
 Returns a dict with a top-level `mandatoryRequirementsMet` flag and a
 status object for each category:
@@ -27,7 +27,7 @@ status object for each category:
 - `energyCreditStatus`
 
 ```python
-compliance = client.check_compliance(project)
+compliance = client.check_UA_compliance(project)
 if compliance["mandatoryRequirementsMet"]:
     ...
 ```
@@ -35,7 +35,7 @@ if compliance["mandatoryRequirementsMet"]:
 ## check_requirements
 
 Returns the applicable requirements payload for the project. Like
-`check_compliance`, it's a single synchronous call — no polling.
+`check_UA_compliance`, it's a single synchronous call — no polling.
 
 ```python
 requirements = client.check_requirements(project)

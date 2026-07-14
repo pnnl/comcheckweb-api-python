@@ -17,7 +17,7 @@ project = PROJECT_TEMPLATE.model_copy(deep=True)
 project.control.code = EnergyCodeOptions.CEZ_90_1_2022
 
 # Example 1: Check code compliance for the project
-compliance = client.check_compliance(project)
+compliance = client.check_UA_compliance(project)
 print(f"Compliance: {compliance}")
 
 # Example 2: Check the applicable requirements for the project

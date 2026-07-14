@@ -5,7 +5,7 @@ and a PDF report generator.
 
 ## Check compliance
 
-`check_compliance(project)` evaluates a project against its energy code and
+`check_UA_compliance(project)` evaluates a project against its energy code and
 returns the per-category compliance status.
 
 ```python
@@ -15,7 +15,7 @@ from comcheck_api.defaults import get_default_project_template
 client = COMcheckClient(api_key="your-key")
 project = get_default_project_template()
 
-compliance = client.check_compliance(project)
+compliance = client.check_UA_compliance(project)
 # {
 #   "mandatoryRequirementsMet": ...,
 #   "envelopeStatus": {...}, "interiorLightingStatus": {...},

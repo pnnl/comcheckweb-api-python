@@ -288,8 +288,8 @@ class COMcheckClient:
 
         return project
 
-    def check_compliance(self, project: ComBuilding) -> Any:
-        """Check code compliance for a project.
+    def check_UA_compliance(self, project: ComBuilding) -> Any:
+        """Check UA path compliance for a project.
 
         Args:
             project: The project data to evaluate.
@@ -298,7 +298,7 @@ class COMcheckClient:
             The compliance results payload returned by the API.
         """
         project_data = project.model_dump(mode="json", exclude_unset=True)
-        response = self._service.check_compliance(project_data)
+        response = self._service.check_UA_compliance(project_data)
         return response.get("data")
 
     def check_requirements(self, project: ComBuilding) -> Any:

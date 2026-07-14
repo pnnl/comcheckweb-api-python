@@ -159,7 +159,7 @@ print(result["performanceRating"])
   `get_simulation_status`, `get_simulation_result`, `set_api_key`)
   are fully supported and
   fine to use. The compliance/report client methods
-  (`check_compliance`, `check_requirements`, `generate_report`) are
+  (`check_UA_compliance`, `check_requirements`, `generate_report`) are
   also fully supported. If asked for an unsupported mutation area,
   tell the user it's not implemented and offer building-area /
   envelope / simulation instead. Confirm operation scope with
@@ -247,7 +247,7 @@ directly.
 
 ```python
 # Per-category compliance status
-compliance = client.check_compliance(project)
+compliance = client.check_UA_compliance(project)
 if compliance["mandatoryRequirementsMet"]:
     ...
 
