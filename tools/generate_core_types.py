@@ -37,6 +37,7 @@ result = subprocess.run(
         "--use-default",  # Use default values from the schema
         "--field-constraints",  # Generate validation constraints (e.g., max_length, minItems)
         "--use-annotated",  # Best practice for Pydantic V2 validations
+        "--use-frozen-field",
     ],
     check=False,
 )
