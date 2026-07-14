@@ -147,13 +147,12 @@ print(result["performanceRating"])
   bypass the validation logic in the operation modules. Always go
   through `project_envelope_operations` and
   `project_building_area_operations` instead.
-- Don't add, update, or remove interior lighting (the
-  `activityUse[]` fixtures), exterior lighting (`exteriorUse[]`,
-  `fixtureSchedule[]`), HVAC/mechanical, or renewable-energy
-  components — no operations exist for them. The whole-building
-  `interiorLightingSpace` singleton on each `WholeBldgUse` *is*
-  editable through `project_building_area_operations`; the per-
-  activity lighting nested under `activityUse[]` is not. The
+- Don't add, update, or remove `fixtureSchedule[]`, HVAC/mechanical, or
+  renewable-energy components — no operations exist for them yet.
+  Interior lighting (`activityUse[]`) and exterior lighting
+  (`exteriorUse[]`) **are** supported via
+  `project_interior_lighting_operations` and
+  `project_exterior_lighting_operations` (see below). The
   `COMcheckClient` user methods (`list_projects`, `get_project`,
   `update_project`, `update_uvalues`, `start_run_simulation`,
   `get_simulation_status`, `get_simulation_result`, `set_api_key`)
@@ -238,6 +237,77 @@ while time.time() < deadline:
     time.sleep(5)
 else:
     raise TimeoutError(f"Simulation {session_id} did not complete in 5 min")
+```
+
+### Adding interior lighting (ActivityUse + fixtures)
+
+Interior lighting lives under `wholeBldgUse[i].activityUse[]`.  Use
+`project_interior_lighting_operations` — there are no fixture-level ops;
+edit the `activityUse`'s `interiorLightingSpace.fixture[]` and pass the
+whole `activityUse` through `update_interior_lighting_space_in_project`.
+
+```python
+from comcheck_api import project_interior_lighting_operations as il_ops
+from comcheck_api.defaults import get_default_interior_lighting_space_template, get_default_fixture_template
+from comcheck_api.types.core_types import ActivityTypeOptions, LightingTypeOptions
+
+fixture = get_default_fixture_template()
+fixture.description = "Recessed LED"
+fixture.lightingType = LightingTypeOptions.LED
+fixture.fixtureWattage = 20.0
+fixture.quantity = 10
+
+activity_use = get_default_interior_lighting_space_template()
+activity_use.areaDescription = "Open Office"
+activity_use.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE
+activity_use.interiorLightingSpace = activity_use.interiorLightingSpace.model_copy(
+    deep=True, update={"fixture": [fixture]}
+)
+project = il_ops.add_interior_lighting_space_to_project(project, area_key, activity_use)
+
+# Update a field — fixtures are preserved unless you also pass interiorLightingSpace
+project = il_ops.update_interior_lighting_space_in_project(
+    project, area_key, "Open Office", {"floorArea": 2500.0}
+)
+
+# Remove
+project = il_ops.remove_interior_lighting_space_from_project(project, area_key, "Open Office")
+```
+
+### Adding exterior lighting (ExteriorUse + zone type)
+
+Exterior lighting lives under `lighting.exteriorUse[]`.  Set a real zone type
+first, then add `ExteriorUse` items with fixtures inline.
+
+```python
+from comcheck_api import project_exterior_lighting_operations as el_ops
+from comcheck_api.defaults import get_default_exterior_lighting_area_template, get_default_fixture_template
+from comcheck_api.types.core_types import ExteriorLightingZoneTypeOptions, ExteriorUseTypeOptions
+
+# Must set zone type before exterior compliance can be evaluated.
+# EXT_ZONE_UNSPECIFIED raises ValueError; a raw string raises TypeError.
+project = el_ops.set_exterior_lighting_zone_type_in_project(
+    project, ExteriorLightingZoneTypeOptions.EXT_ZONE_NEIGHBORHOOD_BUS_DISTRICT
+)
+
+fixture = get_default_fixture_template()
+fixture.description = "Parking LED"
+fixture.fixtureWattage = 150.0
+fixture.quantity = 8
+
+exterior_use = get_default_exterior_lighting_area_template()
+exterior_use.areaDescription = "Main Parking Area"
+exterior_use.exteriorType = ExteriorUseTypeOptions.EXTERIOR_PARKING_AREA
+exterior_use.exteriorLightingSpace = exterior_use.exteriorLightingSpace.model_copy(
+    deep=True, update={"fixture": [fixture]}
+)
+project = el_ops.add_exterior_lighting_area_to_project(project, exterior_use)
+
+# Adding while zone is EXT_ZONE_UNSPECIFIED emits UserWarning (not an error)
+project = el_ops.update_exterior_lighting_area_in_project(
+    project, "Main Parking Area", {"useQuantity": 6000.0}
+)
+project = el_ops.remove_exterior_lighting_area_from_project(project, "Main Parking Area")
 ```
 
 ### Checking compliance/requirements and generating a report

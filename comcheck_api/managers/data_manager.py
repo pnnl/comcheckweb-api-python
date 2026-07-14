@@ -182,7 +182,6 @@ class DataManager(Generic[T]):
             or not isinstance(current, str)
             or current
             in {getattr(existing, self._identifier, None) for existing in self._data}
-            or (not current.startswith(self._id_prefix))
         )
 
         if not needs_new_identifier:
@@ -344,7 +343,9 @@ def get_model_info(model_class: Type[BaseModel]) -> IdInfo | None:
         or ``None`` if the class is not registered.
     """
     from comcheck_api.types.core_types import (
+        ActivityUse,
         Door,
+        ExteriorUse,
         Roof,
         Window,
         BgWall,
@@ -356,6 +357,8 @@ def get_model_info(model_class: Type[BaseModel]) -> IdInfo | None:
     )
 
     MODEL_TO_ID_INFO = {
+        ActivityUse: IdInfo(identifier="areaDescription", id_prefix="Space"),
+        ExteriorUse: IdInfo(identifier="areaDescription", id_prefix="Ext Area"),
         Door: IdInfo(identifier="assemblyType", id_prefix="Door:Door"),
         Roof: IdInfo(identifier="assemblyType", id_prefix="Roof:Roof"),
         Window: IdInfo(identifier="assemblyType", id_prefix="Window:Window"),

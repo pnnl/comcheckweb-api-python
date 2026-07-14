@@ -58,6 +58,8 @@ from . import defaults
 from .project_operations import (
     project_building_area_operations,
     project_envelope_operations,
+    project_exterior_lighting_operations,
+    project_interior_lighting_operations,
 )
 
 # Introspection helpers
@@ -87,6 +89,8 @@ __all__ = [
     # Project Operations
     "project_building_area_operations",
     "project_envelope_operations",
+    "project_exterior_lighting_operations",
+    "project_interior_lighting_operations",
     # Introspection
     "list_operations",
     "lookup_type",

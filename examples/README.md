@@ -82,6 +82,34 @@ python examples/project_operations/building_area_operations.py
 - `testProjectJson/buildingAreaAddedProject.json`
 - `testProjectJson/buildingAreaUpdatedProject.json`
 
+#### Interior Lighting Operations (`project_operations/interior_lighting_operations.py`)
+Demonstrates adding and managing interior lighting (ActivityUse) in a project.
+
+**What it demonstrates:**
+- `add_interior_lighting_space_to_project()` - Adding an ActivityUse with fixtures pre-populated
+- `update_interior_lighting_space_in_project()` - Updating fields and adding/removing fixtures
+- `remove_interior_lighting_space_from_project()` - Removing an ActivityUse and its fixtures
+- `get_interior_lighting_space_keys_from_project()` - Listing activity uses in a building area
+
+**Usage:**
+```bash
+python examples/project_operations/interior_lighting_operations.py
+```
+
+#### Exterior Lighting Operations (`project_operations/exterior_lighting_operations.py`)
+Demonstrates setting the exterior lighting zone type and managing ExteriorUse items with fixtures.
+
+**What it demonstrates:**
+- `set_exterior_lighting_zone_type_in_project()` - Setting the project-level zone type
+- `add_exterior_lighting_area_to_project()` - Adding an ExteriorUse with fixtures pre-populated
+- `update_exterior_lighting_area_in_project()` - Updating fields and adding/removing fixtures
+- `remove_exterior_lighting_area_from_project()` - Removing an ExteriorUse and its fixtures
+
+**Usage:**
+```bash
+python examples/project_operations/exterior_lighting_operations.py
+```
+
 #### Envelope Operations (`project_operations/envelope_operations.py`)
 Comprehensive examples for all envelope operations including assemblies and nested components. This script demonstrates the complete workflow of adding and updating envelope components in a COMcheck project.
 
