@@ -1,12 +1,56 @@
 # Compliance & Reports
 
-Beyond running a full simulation, the client exposes lighter-weight checks
-and a PDF report generator.
+## UA path vs. full compliance
 
-## Check compliance
+For ASHRAE 90.1-based codes (and state codes derived from them), there are two
+distinct compliance checks:
 
-`check_UA_compliance(project)` evaluates a project against its energy code and
-returns the per-category compliance status.
+| Check | Method | What it covers |
+|---|---|---|
+| UA path | `check_UA_compliance` | Envelope trade-off path only — fast, synchronous |
+| Full compliance | `check_UA_compliance` → simulation | All systems (envelope, lighting, mechanical, renewables) |
+
+Use `check_UA_compliance` alone when you only need to verify the envelope
+trade-off path. For a complete compliance determination — or to generate an
+official report — run the UA check first, and if it passes, launch the full
+simulation.
+
+## Full compliance workflow
+
+```python
+import time
+from comcheck_api import COMcheckClient
+from comcheck_api.defaults import get_default_project_template
+from comcheck_api.types import SimulationStatus
+
+client = COMcheckClient(api_key="your-key")
+project = get_default_project_template()
+
+# Step 1: UA path check
+ua = client.check_UA_compliance(project)
+if not ua or not ua.get("mandatoryRequirementsMet"):
+    print("UA path failed — full simulation not needed.")
+else:
+    # Step 2: Full simulation
+    session_id = client.start_run_simulation(project)
+    while True:
+        status = client.get_simulation_status(session_id)
+        if status["status"] == SimulationStatus.SUCCESS:
+            result = client.get_simulation_result(session_id)
+            print(f"Full compliance result: {result}")
+            break
+        if status["status"] == SimulationStatus.FAILED:
+            print(f"Simulation failed: {status.get('message')}")
+            break
+        time.sleep(5)
+```
+
+See [Simulation](simulation.md) for details on polling and result fields.
+
+## Check UA path compliance
+
+`check_UA_compliance(project)` evaluates the project's envelope assemblies
+against the UA trade-off path and returns the per-category compliance status.
 
 ```python
 from comcheck_api import COMcheckClient
