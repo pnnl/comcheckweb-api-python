@@ -15,6 +15,28 @@ trade-off path. For a complete compliance determination — or to generate an
 official report — run the UA check first, and if it passes, launch the full
 simulation.
 
+## Check UA path compliance
+
+`check_UA_compliance(project)` evaluates the project's envelope assemblies
+against the UA trade-off path and returns the per-category compliance status.
+
+```python
+from comcheck_api import COMcheckClient
+from comcheck_api.defaults import get_default_project_template
+
+client = COMcheckClient(api_key="your-key")
+project = get_default_project_template()
+
+compliance = client.check_UA_compliance(project)
+print(compliance)
+# {
+#   "mandatoryRequirementsMet": ...,
+#   "envelopeStatus": {...}, "interiorLightingStatus": {...},
+#   "exteriorLightingStatus": {...}, "renewableStatus": {...},
+#   "energyCreditStatus": {...},
+# }
+```
+
 ## Full compliance workflow
 
 ```python
@@ -28,8 +50,9 @@ project = get_default_project_template()
 
 # Step 1: UA path check
 ua = client.check_UA_compliance(project)
+print(ua)  # inspect the UA compliance result
 if not ua or not ua.get("mandatoryRequirementsMet"):
-    print("UA path failed — full simulation not needed.")
+    print("UA path failed.")
 else:
     # Step 2: Full simulation
     session_id = client.start_run_simulation(project)
@@ -46,27 +69,6 @@ else:
 ```
 
 See [Simulation](simulation.md) for details on polling and result fields.
-
-## Check UA path compliance
-
-`check_UA_compliance(project)` evaluates the project's envelope assemblies
-against the UA trade-off path and returns the per-category compliance status.
-
-```python
-from comcheck_api import COMcheckClient
-from comcheck_api.defaults import get_default_project_template
-
-client = COMcheckClient(api_key="your-key")
-project = get_default_project_template()
-
-compliance = client.check_UA_compliance(project)
-# {
-#   "mandatoryRequirementsMet": ...,
-#   "envelopeStatus": {...}, "interiorLightingStatus": {...},
-#   "exteriorLightingStatus": {...}, "renewableStatus": {...},
-#   "energyCreditStatus": {...},
-# }
-```
 
 ## Check requirements
 
