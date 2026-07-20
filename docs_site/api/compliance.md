@@ -1,6 +1,6 @@
 # Compliance & Reports
 
-## UA path vs. full compliance
+## UA path vs. ASHRAE 90.1 Compliance Check
 
 For ASHRAE 90.1-based codes (and state codes derived from them), there are two
 distinct compliance checks:
@@ -8,7 +8,7 @@ distinct compliance checks:
 | Check | Method | What it covers |
 |---|---|---|
 | UA path | `check_UA_compliance` | Envelope trade-off path only — fast, synchronous |
-| Full compliance | `check_UA_compliance` → simulation | All systems (envelope, lighting, mechanical, renewables) |
+| ASHRAE 90.1 Compliance Check | `check_UA_compliance` → simulation | All systems (envelope, lighting, mechanical, renewables) |
 
 Use `check_UA_compliance` alone when you only need to verify the envelope
 trade-off path. For a complete compliance determination — or to generate an
@@ -37,7 +37,7 @@ print(compliance)
 # }
 ```
 
-## Full compliance workflow
+## ASHRAE 90.1 Compliance Check workflow
 
 ```python
 import time
@@ -60,7 +60,7 @@ else:
         status = client.get_simulation_status(session_id)
         if status["status"] == SimulationStatus.SUCCESS:
             result = client.get_simulation_result(session_id)
-            print(f"Full compliance result: {result}")
+            print(f"ASHRAE 90.1 Compliance Check result: {result}")
             break
         if status["status"] == SimulationStatus.FAILED:
             print(f"Simulation failed: {status.get('message')}")
