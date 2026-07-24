@@ -1,7 +1,7 @@
 """Example of using COMcheck API client compliance, requirements, and report functions.
 
-UA path vs. full compliance
-----------------------------
+UA path vs. ASHRAE 90.1 Compliance Check
+----------------------------------------
 ASHRAE 90.1-based codes (and state codes derived from it) require TWO checks to
 establish full envelope compliance:
 
@@ -15,7 +15,7 @@ establish full envelope compliance:
      complete code compliance determination is needed.
 
 If your project only needs to verify the envelope trade-off path, Example 1 is
-sufficient.  If you need a full compliance determination (e.g. to generate an
+sufficient.  If you need an ASHRAE 90.1 Compliance Check determination (e.g. to generate an
 official report), run Example 1 first; if it passes, proceed with Example 6.
 """
 
@@ -67,7 +67,7 @@ report = client.generate_report(project, download=True, download_dir="./reports"
 if report:
     print(f"Saved report to ./reports/{report['fileName']}")
 
-# Example 6: Full compliance check (ASHRAE 90.1-based codes)
+# Example 6: ASHRAE 90.1 Compliance Check (ASHRAE 90.1-based codes)
 # For a complete compliance determination, first verify the UA path passes,
 # then run the full simulation.
 ua_result = client.check_UA_compliance(project)
@@ -80,7 +80,7 @@ else:
         status = client.get_simulation_status(session_id)
         if status["status"] == SimulationStatus.SUCCESS:
             result = client.get_simulation_result(session_id)
-            print(f"Full compliance result: {result}")
+            print(f"ASHRAE 90.1 Compliance Check result: {result}")
             break
         if status["status"] == SimulationStatus.FAILED:
             print(f"Simulation failed: {status.get('message')}")

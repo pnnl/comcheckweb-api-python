@@ -12,6 +12,18 @@ Quickly useful notes:
 - If you reference this package from other workspace packages, keep the `tool.uv.sources` entry that maps `comcheck_api = { workspace = true }` so `uv` resolves it to the local workspace copy.
 - For a single-package repo you can also rely on `members = ["."]` and omit additional sources, but leaving the explicit source entry is harmless and makes intent clear.
 
+## Where to get it
+
+The source code is hosted on GitHub at:
+https://github.com/pnnl/comcheckweb-api-python
+
+Binary installers for the latest released version are available at the
+[Python Package Index (PyPI)](https://pypi.org/project/comcheck-api).
+
+```sh
+pip install comcheck-api
+```
+
 ## Usage
 
 ### 1. Obtain an API Key

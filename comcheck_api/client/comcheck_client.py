@@ -10,12 +10,11 @@ from typing import Any, Dict, List, Literal, Optional, Union, overload
 import httpx
 
 from comcheck_api.api import COMCheckApiService
-from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
 from comcheck_api.exceptions import (
     COMCheckProjectNotFoundError,
     COMCheckSimulationError,
 )
-from comcheck_api.types.core_types import ComBuilding, InteriorLightingSpace
+from comcheck_api.types.core_types import ComBuilding
 
 Mode = Literal["python", "json"]
 
@@ -111,14 +110,6 @@ class COMcheckClient:
         """
         resp = self._service.get_project(project_id)
         data = resp.get("data")
-        if data is not None:
-            for building_area in data["lighting"]["wholeBldgUse"]:
-                building_area["interiorLightingSpace"] = {
-                    **DEFAULT_BUILDING_AREA.interiorLightingSpace.model_dump(
-                        mode="json", exclude_unset=True
-                    )
-                }
-
         return self._parse_data(data, mode)
 
     def list_projects(self) -> List[Dict[str, Any]]:
@@ -130,6 +121,22 @@ class COMcheckClient:
         return self._service.get_project_list().get("data", [])
 
     # TODO: return of update_project should be ComBuilding
+    @overload
+    def update_project(
+        self,
+        project_id: str,
+        project_data: ComBuilding,
+        mode: Literal["python"] = "python",
+    ) -> Optional["ComBuilding"]: ...
+
+    @overload
+    def update_project(
+        self,
+        project_id: str,
+        project_data: ComBuilding,
+        mode: Literal["json"],
+    ) -> Optional[Dict[str, Any]]: ...
+
     def update_project(
         self,
         project_id: str,
@@ -178,14 +185,6 @@ class COMcheckClient:
         ]:
             project_data_json[section]["id"] = old_project[section]["id"]
         project_data_json["id"] = old_project["id"]
-
-        # Ensure each building area has interiorLightingSpace initialized
-        for building_area in project_data_json["lighting"]["wholeBldgUse"]:
-            building_area["interiorLightingSpace"] = {
-                **DEFAULT_BUILDING_AREA.interiorLightingSpace.model_dump(
-                    mode="json", exclude_unset=True
-                )
-            }
 
         # TODO: need to verify if other componets also need to remove None IDs (auto-generated through pydantic )
         # Remove None IDs from envelope components

@@ -9,6 +9,7 @@ from comcheck_api.defaults import get_default_project_template
 load_dotenv()
 client = COMcheckClient()
 api_key = os.getenv("COM_API_KEY") or "your-api-key-here"
+client.set_api_key(api_key)
 
 # Example 1: List all projects
 projects = client.list_projects()
