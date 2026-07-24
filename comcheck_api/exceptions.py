@@ -20,7 +20,10 @@ class COMCheckHTTPError(COMCheckAPIError):
         """
         self.status_code = status_code
         self.response_data = response_data
-        super().__init__(f"HTTP {status_code}: {message}")
+        detail = f"HTTP {status_code}: {message}"
+        if response_data:
+            detail += f" — {response_data}"
+        super().__init__(detail)
 
 
 class COMCheckValidationError(COMCheckAPIError):

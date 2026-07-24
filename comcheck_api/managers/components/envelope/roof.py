@@ -4,9 +4,6 @@ from typing import cast
 
 from comcheck_api.types.core_types import Roof, Skylight
 from comcheck_api.managers.data_manager import DataManager
-from comcheck_api.utilities.envelope_utilities import generate_assembly
-
-from .skylight import SkylightListManager
 
 
 class RoofListManager(DataManager[Roof]):
@@ -15,6 +12,7 @@ class RoofListManager(DataManager[Roof]):
     This manager handles Roof assemblies and their nested skylights,
     with automatic unique assemblyType generation.
     """
+
     model_type = Roof
 
     def add_new_skylight(self, roof: Roof, skylight: Skylight) -> Roof:

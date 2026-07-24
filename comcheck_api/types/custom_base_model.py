@@ -1,11 +1,6 @@
 import logging
 import re
-from typing import (
-    Any,
-    Optional,
-    TypeVar,
-    get_type_hints,
-)
+from typing import Any, Optional, TypeVar
 
 from pydantic.main import _model_construction
 from pydantic import BaseModel
@@ -82,7 +77,7 @@ class CustomBaseModel(BaseModel):
         )
 
         current_subcomponents = self._get_subcomponent_list(subcomponent_name)
-        subcomponent_manager = DataManager[subcomponent_type](
+        subcomponent_manager: DataManager = DataManager(
             initial_data=current_subcomponents, model_type=subcomponent_type
         )
 
@@ -116,7 +111,7 @@ class CustomBaseModel(BaseModel):
         )
 
         current_subcomponents = self._get_subcomponent_list(subcomponent_name)
-        subcomponent_manager = DataManager[subcomponent_type](
+        subcomponent_manager: DataManager = DataManager(
             initial_data=current_subcomponents, model_type=subcomponent_type
         )
 
@@ -157,7 +152,7 @@ class CustomBaseModel(BaseModel):
         )
 
         current_subcomponents = self._get_subcomponent_list(subcomponent_name)
-        subcomponent_manager = DataManager[subcomponent_type](
+        subcomponent_manager: DataManager = DataManager(
             initial_data=current_subcomponents, model_type=subcomponent_type
         )
 
