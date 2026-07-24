@@ -6,7 +6,20 @@ import random
 from pathlib import Path
 from typing import Any
 
+from pydantic import BaseModel
+
 logger = logging.getLogger(__name__)
+
+
+def _json_default(obj: Any) -> Any:
+    """Fallback serializer for objects ``json.dumps`` can't handle natively.
+
+    Pydantic models (e.g. ``ComBuilding``) are dumped in JSON mode so enums,
+    aliases, and nested models serialize the same way the API expects.
+    """
+    if isinstance(obj, BaseModel):
+        return obj.model_dump(mode="json", exclude_unset=True)
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
 
 def get_random_number(min_value: int = 0, max_value: int = 100) -> int:
@@ -36,7 +49,9 @@ def export_to_json(data: Any, output_file: str | Path | None = None) -> str:
         Exception: If there's an error exporting data to JSON.
     """
     try:
-        json_data = json.dumps(data, indent=2, ensure_ascii=False)
+        json_data = json.dumps(
+            data, indent=2, ensure_ascii=False, default=_json_default
+        )
 
         if output_file:
             output_path = Path(output_file).resolve()

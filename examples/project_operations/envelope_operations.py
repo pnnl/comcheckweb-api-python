@@ -35,14 +35,21 @@ updated_project = project_envelope_operations.add_roof_to_project(
     project, building_area_key, new_roof
 )
 project_id = str(updated_project.id)
-client.update_project(project_id, updated_project)
+# update_project is synchronous and returns the refreshed project. Reassign
+# `project` so the next example builds on the saved state instead of the stale
+# copy fetched above (otherwise each update would overwrite the previous one).
+project = client.update_project(project_id, updated_project)
+if not project:
+    raise ValueError("Project not found after update")
 
 # Example 2: Add an above-grade wall
 new_ag_wall = get_default_ag_wall_template()
 updated_project = project_envelope_operations.add_ag_wall_to_project(
     project, building_area_key, new_ag_wall
 )
-client.update_project(project_id, updated_project)
+project = client.update_project(project_id, updated_project)
+if not project:
+    raise ValueError("Project not found after update")
 
 # Example 3: Add a window to a wall
 new_window = get_default_window_template()
@@ -52,7 +59,9 @@ ag_wall = project.envelope.agWall[0]
 updated_project = project_envelope_operations.add_window_to_project(
     project, building_area_key, new_window, ag_wall
 )
-client.update_project(project_id, updated_project)
+project = client.update_project(project_id, updated_project)
+if not project:
+    raise ValueError("Project not found after update")
 
 # Example 4: Add a thermal bridge
 updated_project = project_envelope_operations.add_thermal_bridge_to_project(
@@ -61,4 +70,6 @@ updated_project = project_envelope_operations.add_thermal_bridge_to_project(
     ag_wall,
     thermal_bridge_type=ThermalBridgeTypeOptions.THERMAL_BRIDGE_OTHER,
 )
-client.update_project(project_id, updated_project)
+project = client.update_project(project_id, updated_project)
+if not project:
+    raise ValueError("Project not found after update")

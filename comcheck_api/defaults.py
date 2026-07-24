@@ -1,6 +1,7 @@
 """Module for project default templates/values."""
 
 import copy
+from uuid import uuid4
 
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
 from comcheck_api.constants.envelope_constants import (
@@ -35,12 +36,15 @@ def get_default_building_area_template():
     """Return a deep copy of the default :class:`~comcheck_api.types.core_types.WholeBldgUse` template.
 
     Defaults to an *Automotive Facility* with 1 000 sq ft floor area
-    and interior lighting space initialized.
+    and interior lighting space initialized.  Each call gets a fresh unique
+    ``key`` so multiple areas can be added to a project without colliding.
 
     Returns:
         A new ``WholeBldgUse`` instance.
     """
-    return copy.deepcopy(DEFAULT_BUILDING_AREA)
+    area = copy.deepcopy(DEFAULT_BUILDING_AREA)
+    area.key = str(uuid4())
+    return area
 
 
 def get_default_roof_template():
