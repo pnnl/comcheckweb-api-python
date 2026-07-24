@@ -76,16 +76,23 @@ project = el_ops.update_exterior_lighting_area_in_project(
 print("ExteriorUse updated: useQuantity → 6000.0")
 
 # ── Step 5: Add a second fixture by updating the lighting space ───────────────
-exterior_uses = project.get_by_path("lighting.exteriorUse")
-eu = next(e for e in exterior_uses if e.areaDescription == "Main Parking Area")
-existing_fixtures = list(eu.exteriorLightingSpace.fixture or [])
+# Use direct attribute access (not get_by_path, which returns Any) so
+# `exterior_use` keeps its real type for editor autocomplete and type checking.
+if not project.lighting or not project.lighting.exteriorUse:
+    raise ValueError("Project has no exterior uses (exteriorUse)")
+exterior_use = next(
+    exterior_use
+    for exterior_use in project.lighting.exteriorUse
+    if exterior_use.areaDescription == "Main Parking Area"
+)
+existing_fixtures = list(exterior_use.exteriorLightingSpace.fixture or [])
 
 new_fixture = get_default_fixture_template()
 new_fixture.description = "Entrance LED"
 new_fixture.fixtureWattage = 80.0
 new_fixture.quantity = 2
 
-updated_space = eu.exteriorLightingSpace.model_copy(
+updated_space = exterior_use.exteriorLightingSpace.model_copy(
     deep=True,
     update={"fixture": existing_fixtures + [new_fixture]},
 )

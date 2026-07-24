@@ -192,8 +192,8 @@ def get_exterior_lighting_area_keys_from_project(project: ComBuilding) -> list[d
         return []
     return [
         {
-            "areaDescription": getattr(eu, "areaDescription", None),
-            "exteriorType": getattr(eu, "exteriorType", None),
+            "areaDescription": getattr(exterior_use, "areaDescription", None),
+            "exteriorType": getattr(exterior_use, "exteriorType", None),
         }
-        for eu in exterior_uses
+        for exterior_use in exterior_uses
     ]

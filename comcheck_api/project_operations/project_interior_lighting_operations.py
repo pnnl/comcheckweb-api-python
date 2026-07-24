@@ -22,7 +22,8 @@ def _find_building_area(project: ComBuilding, building_area_key: str):
     """Return the WholeBldgUse with the given key, or raise."""
     whole_use = project.get_by_path("lighting.wholeBldgUse") or []
     area = next(
-        (a for a in whole_use if getattr(a, "key", None) == building_area_key), None
+        (area for area in whole_use if getattr(area, "key", None) == building_area_key),
+        None,
     )
     if area is None:
         raise ValueError(
@@ -167,7 +168,8 @@ def get_interior_lighting_space_keys_from_project(
         return []
 
     area = next(
-        (a for a in whole_use if getattr(a, "key", None) == building_area_key), None
+        (area for area in whole_use if getattr(area, "key", None) == building_area_key),
+        None,
     )
     if area is None:
         return []
@@ -175,8 +177,8 @@ def get_interior_lighting_space_keys_from_project(
     activity_uses = getattr(area, "activityUse", []) or []
     return [
         {
-            "areaDescription": getattr(au, "areaDescription", None),
-            "activityType": getattr(au, "activityType", None),
+            "areaDescription": getattr(activity_use, "areaDescription", None),
+            "activityType": getattr(activity_use, "activityType", None),
         }
-        for au in activity_uses
+        for activity_use in activity_uses
     ]

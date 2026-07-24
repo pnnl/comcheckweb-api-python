@@ -72,18 +72,28 @@ project = il_ops.update_interior_lighting_space_in_project(
 print("ActivityUse updated: floorArea → 2500.0")
 
 # ── Step 5: Add a second fixture by updating the lighting space ───────────────
-# Retrieve current activityUse to get the existing fixtures
-whole_use = project.get_by_path("lighting.wholeBldgUse")
-ba = next(a for a in whole_use if a.key == area_key)
-au = next(au for au in ba.activityUse if au.areaDescription == "Open Office")
-existing_fixtures = list(au.interiorLightingSpace.fixture or [])
+# Retrieve current activityUse to get the existing fixtures.
+# Use direct attribute access (not get_by_path, which returns Any) so
+# `building_area`, `activity_use`, etc. keep their real types for editor
+# autocomplete and type checking.
+if not project.lighting or not project.lighting.wholeBldgUse:
+    raise ValueError("Project has no building areas (wholeBldgUse)")
+building_area = next(
+    area for area in project.lighting.wholeBldgUse if area.key == area_key
+)
+activity_use = next(
+    activity_use
+    for activity_use in building_area.activityUse
+    if activity_use.areaDescription == "Open Office"
+)
+existing_fixtures = list(activity_use.interiorLightingSpace.fixture or [])
 
 new_fixture = get_default_fixture_template()
 new_fixture.description = "Pendant LED"
 new_fixture.fixtureWattage = 35.0
 new_fixture.quantity = 4
 
-updated_space = au.interiorLightingSpace.model_copy(
+updated_space = activity_use.interiorLightingSpace.model_copy(
     deep=True,
     update={"fixture": existing_fixtures + [new_fixture]},
 )

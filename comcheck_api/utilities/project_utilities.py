@@ -30,7 +30,8 @@ def _require_activity_use(
         raise ValueError("No building areas (wholeBldgUse) found in project.")
 
     area = next(
-        (a for a in whole_use if getattr(a, "key", None) == building_area_key), None
+        (area for area in whole_use if getattr(area, "key", None) == building_area_key),
+        None,
     )
     if area is None:
         raise ValueError(
@@ -39,7 +40,8 @@ def _require_activity_use(
 
     activity_uses = getattr(area, "activityUse", []) or []
     if not any(
-        getattr(au, "areaDescription", None) == area_description for au in activity_uses
+        getattr(activity_use, "areaDescription", None) == area_description
+        for activity_use in activity_uses
     ):
         raise ValueError(
             f"ActivityUse with areaDescription '{area_description}' "
@@ -54,7 +56,8 @@ def _require_exterior_use(project: ComBuilding, area_description: str) -> None:
         raise ValueError("No exterior uses (lighting.exteriorUse) found in project.")
 
     if not any(
-        getattr(eu, "areaDescription", None) == area_description for eu in exterior_uses
+        getattr(exterior_use, "areaDescription", None) == area_description
+        for exterior_use in exterior_uses
     ):
         raise ValueError(
             f"ExteriorUse with areaDescription '{area_description}' "
