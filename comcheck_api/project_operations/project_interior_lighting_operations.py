@@ -14,15 +14,15 @@ from typing import Any
 from comcheck_api.constants.interior_lighting_constants import (
     DEFAULT_INTERIOR_LIGHTING_SPACE_AREA,
 )
-from comcheck_api.types.core_types import ActivityUse, ComBuilding
+from comcheck_api.types.core_types import ActivityUse, ComBuilding, WholeBldgUse
 from comcheck_api.utilities.project_utilities import _require_activity_use
 
 
-def _find_building_area(project: ComBuilding, building_area_key: str):
+def _find_building_area(project: ComBuilding, building_area_key: str) -> WholeBldgUse:
     """Return the WholeBldgUse with the given key, or raise."""
-    whole_use = project.get_by_path("lighting.wholeBldgUse") or []
+    whole_use = project.lighting.wholeBldgUse if project.lighting else []
     area = next(
-        (area for area in whole_use if getattr(area, "key", None) == building_area_key),
+        (area for area in whole_use if area.key == building_area_key),
         None,
     )
     if area is None:

@@ -7,7 +7,7 @@ from comcheck_api.types.core_types import (
 )
 
 DEFAULT_EXTERIOR_LIGHTING_AREA: ExteriorUse = ExteriorUse(
-    areaDescription="Ext Area 1",
+    areaDescription="Ext Area 1",  # identifier for the exterior area
     exteriorType=ExteriorUseTypeOptions.EXTERIOR_PARKING_AREA,
     isTradable=True,
     powerDensity=0.0,

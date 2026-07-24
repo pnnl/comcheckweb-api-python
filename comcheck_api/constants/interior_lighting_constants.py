@@ -8,10 +8,9 @@ from comcheck_api.types.core_types import (
     LightingTypeOptions,
 )
 
-# key is a placeholder — callers must set it to the parent WholeBldgUse.key
 DEFAULT_INTERIOR_LIGHTING_SPACE_AREA: ActivityUse = ActivityUse(
-    key="__unset__",
-    areaDescription="Space 1",
+    key="__unset__",  # key is a placeholder — callers must set it to the parent WholeBldgUse.key
+    areaDescription="Space 1",  # identifier for the ActivityUse within its parent WholeBldgUse
     activityType=ActivityTypeOptions.ACTIVITY_COMMON_OFFICE,
     floorArea=1000.0,
     ceilingHeight=9.0,
