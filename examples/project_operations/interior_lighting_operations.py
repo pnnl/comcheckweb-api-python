@@ -37,6 +37,7 @@ from comcheck_api.utilities.common import export_to_json
 load_dotenv()
 client = COMcheckClient()
 client.set_api_key(os.getenv("COM_API_KEY") or "your-api-key-here")
+# TODO: building area description should be unique within a project, interior lighting spcaes seems using the descriptions as key, instead of the key field.
 
 
 def normalize_numeric_nulls(model):
