@@ -96,9 +96,10 @@ class COMCheckApiService:
 
         if isinstance(error, httpx.HTTPStatusError):
             logger.error(
-                "HTTP error occurred: %s (Status: %s)",
-                error,
+                "HTTP error occurred (Status: %s): %s\nResponse body: %s",
                 error.response.status_code,
+                error,
+                error.response.text,
                 exc_info=True,
                 extra={
                     "response_data": error.response.text,

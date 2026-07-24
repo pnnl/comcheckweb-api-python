@@ -8,7 +8,9 @@ from typing import (
     Generic,
     List,
     Type,
+    TYPE_CHECKING,
     TypeVar,
+    cast,
 )
 from collections import namedtuple
 
@@ -18,8 +20,15 @@ from comcheck_api.utilities.id_registry import (
     generate_id_with_prefix,
 )
 
-T = TypeVar("T")
-S = TypeVar("S")
+if TYPE_CHECKING:
+    # Imported for typing only — importing at runtime would create a cycle
+    # (custom_base_model imports DataManager).
+    from comcheck_api.types.custom_base_model import CustomBaseModel
+
+# All managed models are CustomBaseModel subclasses, so the item type carries
+# the Pydantic API (model_validate/model_dump/model_fields) plus json_key().
+T = TypeVar("T", bound="CustomBaseModel")
+S = TypeVar("S", bound="CustomBaseModel")
 
 
 class DataManager(Generic[T]):
@@ -35,12 +44,12 @@ class DataManager(Generic[T]):
         schema_path: Path to the JSON schema file (defaults to comCheck.schema.json).
     """
 
-    model_type: Type[BaseModel] | None = None
+    model_type: Type["CustomBaseModel"] | None = None
 
     def __init__(
         self,
         initial_data: list[T] | None = [],
-        model_type: Type[BaseModel] | None = None,
+        model_type: Type["CustomBaseModel"] | None = None,
         schema_path: str | Path = "../schemas/comCheck.schema.json",
     ):
         """Initialize the data manager.
@@ -56,9 +65,11 @@ class DataManager(Generic[T]):
 
         self._initialize_metadata(model_type)
         self._initialize_schema(schema_path)
-        self._initialize_data(initial_data)
+        self._initialize_data(initial_data or [])
 
-    def _initialize_metadata(self, model_type: BaseModel | None = None) -> None:
+    def _initialize_metadata(
+        self, model_type: Type["CustomBaseModel"] | None = None
+    ) -> None:
         """Resolve and store the model type and its ID field information.
 
         Args:
@@ -104,7 +115,7 @@ class DataManager(Generic[T]):
         for item in initial_data:
             self.add_new(item)
 
-    def _validate_item(self, item: T) -> T:
+    def _validate_item(self, item: T | dict[str, Any]) -> T:
         """Validate an item against the JSON schema reference.
 
         Args:
@@ -116,12 +127,14 @@ class DataManager(Generic[T]):
         Raises:
             ValidationError: If validation fails.
         """
+        assert self.model_type is not None  # guaranteed by _initialize_metadata
+        model_instance: "CustomBaseModel"
         if isinstance(item, self.model_type):
             model_instance = item
         else:
             model_instance = self.model_type.model_validate(item)
 
-        return model_instance
+        return cast(T, model_instance)
 
     def _get_identifier_value(self, item: T) -> Any:
         """Extract the identifier value from an item.
@@ -186,7 +199,7 @@ class DataManager(Generic[T]):
         )
 
         if not needs_new_identifier:
-            register_existing_id(current)
+            register_existing_id(cast(str, current))
             return
 
         new_id = generate_id_with_prefix(self._id_prefix)
@@ -214,7 +227,7 @@ class DataManager(Generic[T]):
 
         current_subcomponents: List[S] = getattr(parent, subcomponent_name, [])
 
-        subcomponent_manager = DataManager[subcomponent_type](
+        subcomponent_manager: DataManager[S] = DataManager(
             initial_data=current_subcomponents, model_type=subcomponent_type
         )
 
@@ -285,7 +298,7 @@ class DataManager(Generic[T]):
             raise ValueError(f"Item with {self._identifier} '{id_value}' not found")
 
         # Convert updates to dict if it's a model object
-        updates_dict = (
+        updates_dict: dict[str, Any] = (
             updates.model_dump(mode="json", exclude_unset=True)
             if isinstance(updates, BaseModel)
             else updates

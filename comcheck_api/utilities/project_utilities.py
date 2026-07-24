@@ -37,7 +37,7 @@ def find_component_in_component_list(
         return None
 
     component_type = type(components[0])
-    component_manager = DataManager[component_type](
+    component_manager: DataManager = DataManager(
         initial_data=components, model_type=component_type
     )
 
@@ -46,7 +46,7 @@ def find_component_in_component_list(
 
 def get_id_from_component(
     component: CustomBaseModel,
-) -> str:
+) -> str | None:
     """Retrieve the unique identifier value of a component.
 
     Args:
