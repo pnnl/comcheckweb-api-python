@@ -104,6 +104,7 @@ print(f"Building area added: {area.areaDescription!r} (key={area_key})")
 fixture = get_default_fixture_template()
 fixture.description = "Recessed LED"
 # Todo: update schema fixtureType is required, lightingType is optional.
+# fixtureType is the identifier, lightingType is the type
 fixture.fixtureType = LightingTypeOptions.LED
 fixture.fixtureWattage = 20.0
 fixture.quantity = 10
