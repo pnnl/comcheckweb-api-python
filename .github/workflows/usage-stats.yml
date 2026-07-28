@@ -1,0 +1,55 @@
+name: Usage stats snapshot
+
+# Weekly snapshot of package usage, stored in a PRIVATE GitLab repo so the
+# numbers are never exposed to visitors of this public repo.
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch: {} # allow manual runs
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Collect GitHub traffic + PyPI download stats
+        env:
+          GH_TOKEN: ${{ secrets.GH_TRAFFIC_TOKEN }}
+          REPO: pnnl/comcheckweb-api-python
+          PYPI_PROJECT: comcheck-api # PyPI normalizes comcheck_api -> comcheck-api
+        run: |
+          set -euo pipefail
+          date="$(date -u +%F)"
+
+          # GitHub traffic (requires Administration:read via GH_TRAFFIC_TOKEN)
+          views=$(gh api "repos/$REPO/traffic/views"   --jq '.count')
+          uniques=$(gh api "repos/$REPO/traffic/views"  --jq '.uniques')
+          clones=$(gh api "repos/$REPO/traffic/clones"  --jq '.count')
+          clone_uniques=$(gh api "repos/$REPO/traffic/clones" --jq '.uniques')
+
+          # PyPI downloads (last week, excluding mirrors)
+          pypi_week=$(curl -fsSL "https://pypistats.org/api/packages/$PYPI_PROJECT/recent" \
+            | jq -r '.data.last_week // 0')
+
+          echo "$date,$views,$uniques,$clones,$clone_uniques,$pypi_week" > row.csv
+          echo "Collected: $(cat row.csv)"
+
+      - name: Append to private GitLab stats repo
+        env:
+          GITLAB_STATS_TOKEN: ${{ secrets.GITLAB_STATS_TOKEN }}
+          GITLAB_REPO: gitlab.pnnl.gov/becp/checktool-libraries/comcheck-api-usage-stats.git
+        run: |
+          set -euo pipefail
+          git clone "https://oauth2:${GITLAB_STATS_TOKEN}@${GITLAB_REPO}" stats
+          cd stats
+          if [ ! -f traffic.csv ]; then
+            echo "date,views,unique_visitors,clones,unique_cloners,pypi_downloads_last_week" > traffic.csv
+          fi
+          cat ../row.csv >> traffic.csv
+          git config user.email "actions@github.com"
+          git config user.name "comcheck-usage-stats-bot"
+          git add traffic.csv
+          git commit -m "stats: weekly snapshot $(date -u +%F)"
+          git push
