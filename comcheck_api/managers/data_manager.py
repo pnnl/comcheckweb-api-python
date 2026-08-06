@@ -299,7 +299,7 @@ class DataManager(Generic[T]):
 
         # Convert updates to dict if it's a model object
         updates_dict: dict[str, Any] = (
-            updates.model_dump(mode="json", exclude_unset=True)
+            updates.model_dump(mode="json")
             if isinstance(updates, BaseModel)
             else updates
         )
