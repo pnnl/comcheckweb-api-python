@@ -14,6 +14,7 @@ OUTPUT_TYPES = Path(__file__).parent.parent / "comcheck_api" / "types" / "core_t
 # Ensure output directory exists
 OUTPUT_TYPES.parent.mkdir(parents=True, exist_ok=True)
 
+
 def main():
     """Main function to run the script."""
     # Run the datamodel-codegen command
@@ -40,6 +41,9 @@ def main():
             "--use-default",  # Use default values from the schema
             "--field-constraints",  # Generate validation constraints (e.g., max_length, minItems)
             "--use-annotated",  # Best practice for Pydantic V2 validations
+            "--formatters",
+            "black",
+            "isort",
         ],
         check=False,
     )
@@ -49,6 +53,7 @@ def main():
     else:
         print(f"Generation failed with exit code {result.returncode}", file=sys.stderr)
         sys.exit(result.returncode)
+
 
 if __name__ == "__main__":
     main()
