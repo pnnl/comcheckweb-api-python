@@ -62,3 +62,6 @@ site/
 # Build artifacts
 dist/
 reports/
+
+# Temporary building files
+buildings/*
