@@ -2943,7 +2943,10 @@
                 },
                 "floorArea": {
                     "description": "Whole building use floor area",
-                    "type": "number",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
                     "minimum": 0.0,
                     "unit": "ft2",
                     "$comment": "User shall provide this data"
@@ -2991,13 +2994,19 @@
                 },
                 "allowedWattage": {
                     "description": "Allowed wattage",
-                    "type": "number",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
                     "minimum": 0.0,
                     "unit": "watt"
                 },
                 "proposedWattage": {
                     "description": "Proposed wattage",
-                    "type": "number",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
                     "minimum": 0.0,
                     "unit": "watt",
                     "$comment": "user shall provide this data"
@@ -3072,7 +3081,10 @@
                 },
                 "floorArea": {
                     "description": "Whole building use floor area",
-                    "type": "number",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
                     "minimum": 0.0,
                     "unit": "ft2",
                     "$comment": "User shall provide this data"
@@ -3120,13 +3132,19 @@
                 },
                 "allowedWattage": {
                     "description": "Allowed wattage",
-                    "type": "number",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
                     "minimum": 0.0,
                     "unit": "watt"
                 },
                 "proposedWattage": {
                     "description": "Proposed wattage",
-                    "type": "number",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
                     "minimum": 0.0,
                     "unit": "watt",
                     "$comment": "user shall provide this data"
@@ -3196,7 +3214,10 @@
                 },
                 "powerDensity": {
                     "description": "Internal equipment power density",
-                    "type": "number",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
                     "minimum": 0.0,
                     "unit": "watt/ft2",
                     "$comment": "Engine calculated value"
@@ -3211,7 +3232,10 @@
                 },
                 "useQuantity": {
                     "description": "The take-off quantity of the exterior use",
-                    "type": "number"
+                    "type": [
+                        "number",
+                        "null"
+                    ]
                 },
                 "exteriorLightingSpace": {
                     "description": "Exterior lighting space",
@@ -3349,31 +3373,46 @@
                 },
                 "primaryDaylight": {
                     "description": "Daylighting on the primary sidelight area",
-                    "type": "number",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
                     "minimum": 0.0,
                     "unit": "ft2"
                 },
                 "secondaryDaylight": {
                     "description": "Daylighting on the secondary sidelight area",
-                    "type": "number",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
                     "minimum": 0.0,
                     "unit": "ft2"
                 },
                 "skylightToplight": {
                     "description": "Daylighting on the skylight toplight area",
-                    "type": "number",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
                     "minimum": 0.0,
                     "unit": "ft2"
                 },
                 "roofMonitorToplight": {
                     "description": "Daylighting on the roof monitor top light area",
-                    "type": "number",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
                     "minimum": 0.0,
                     "unit": "ft2"
                 },
                 "decorativeArea": {
                     "description": "The floor area that covered by decorative lightings",
-                    "type": "number",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
                     "minimum": 0.0,
                     "unit": "ft2"
                 },
@@ -3534,7 +3573,10 @@
                 },
                 "fixtureWattage": {
                     "description": "fixture wattage",
-                    "type": "number",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
                     "minimum": 0.0,
                     "unit": "watt"
                 },
@@ -3671,7 +3713,7 @@
             "required": [
                 "description",
                 "quantity",
-                "lightingType",
+                "fixtureType",
                 "lightingControl"
             ],
             "additionalProperties": true
@@ -3681,11 +3723,17 @@
             "properties": {
                 "id": {
                     "description": "Scope-unique reference identifier for instances of this data group.",
-                    "type": "integer"
+                    "type": [
+                        "string",
+                        "integer"
+                    ]
                 },
                 "lightingId": {
                     "description": "Scope-unique reference identifier for instances of the parent lighting group.",
-                    "type": "integer"
+                    "type": [
+                        "string",
+                        "integer"
+                    ]
                 },
                 "scheduleFixtureKey": {
                     "description": "UUID to identify this fixture schedule.",
@@ -3786,7 +3834,6 @@
                 "description",
                 "fixtureType",
                 "fixtureWattage",
-                "lightingType",
                 "scheduleFixtureKey"
             ],
             "additionalProperties": true
