@@ -57,11 +57,8 @@
                 },
                 "isHistoricBuilding": {
                     "description": "Flag to indicate if the building is historic.",
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1
-                    ]
+                    "type": "boolean",
+                    "default": false
                 },
                 "performanceRating": {
                     "description": "Appendix C compliance index",
@@ -4249,18 +4246,16 @@
                 "heatRecovery": {
                     "description": "Flag indicates whether the system has heat recovery feature",
                     "type": [
-                        "integer",
+                        "boolean",
                         "null"
-                    ],
-                    "enum": [0, 1, null]
+                    ]
                 },
                 "heatPumpSimultaneousCoolingAndHeating": {
                     "description": "Flag indicates whether the heat pump can do simultaneous cooling and heating",
                     "type": [
-                        "integer",
+                        "boolean",
                         "null"
-                    ],
-                    "enum": [0, 1, null]
+                    ]
                 },
                 "heatRejection": {
                     "description": "Heat rejection types",
@@ -4318,18 +4313,16 @@
                 "twoPipeSystem": {
                     "description": "Flag identifies if the plant system is a two pipe system",
                     "type": [
-                        "integer",
+                        "boolean",
                         "null"
-                    ],
-                    "enum": [0, 1, null]
+                    ]
                 },
                 "waterloopHeatPump": {
                     "description": "Flag identifies if the plant system is a water loop heat pump",
                     "type": [
-                        "integer",
+                        "boolean",
                         "null"
-                    ],
-                    "enum": [0, 1, null]
+                    ]
                 },
                 "compliancePath": {
                     "description": "Compliance path",
@@ -4603,39 +4596,23 @@
                 },
                 "circulationPump": {
                     "description": "Flag identifies whether the SWH has a circulation pump",
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1
-                    ],
-                    "default": 0
+                    "type": "boolean",
+                    "default": false
                 },
                 "heatTraceTapeInstalled": {
                     "description": "Flag identifies whether the SWH has heat trace tape installed",
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1
-                    ],
-                    "default": 0
+                    "type": "boolean",
+                    "default": false
                 },
                 "combinedSystem": {
                     "description": "Flag identifies whether the SWH is a combined system",
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1
-                    ],
-                    "default": 0
+                    "type": "boolean",
+                    "default": false
                 },
                 "poolSystem": {
                     "description": "Flag identifies whether the SWH is part of pool system",
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1
-                    ],
-                    "default": 0
+                    "type": "boolean",
+                    "default": false
                 },
                 "heatPumpPoolHeater": {
                     "description": "Flag identifies whether the SWH uses heat pump to heat the pool. - Only used when poolSystem is true. False as default",

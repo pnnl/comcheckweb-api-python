@@ -11,7 +11,7 @@ from comcheck_api.types.core_types import (
 DEFAULT_INTERIOR_LIGHTING_SPACE_AREA: ActivityUse = ActivityUse(
     key="__unset__",  # key is a placeholder — callers must set it to the parent WholeBldgUse.key
     areaDescription="Space 1",  # identifier for the ActivityUse within its parent WholeBldgUse
-    activityType=ActivityTypeOptions.ACTIVITY_COMMON_OFFICE,
+    activityType=ActivityTypeOptions.ACTIVITY_COMMON_OFFICE_OPEN,
     floorArea=1000.0,
     ceilingHeight=9.0,
     interiorLightingSpace=InteriorLightingSpace(
@@ -33,6 +33,7 @@ DEFAULT_INTERIOR_LIGHTING_SPACE_AREA: ActivityUse = ActivityUse(
 
 DEFAULT_FIXTURE: Fixture = Fixture(
     description="LED fixture",
+    fixtureType=None,
     lightingType=LightingTypeOptions.LED,
     fixtureWattage=32.0,
     quantity=1,
