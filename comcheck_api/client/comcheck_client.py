@@ -167,7 +167,7 @@ class COMcheckClient:
         if not old_project:
             raise COMCheckProjectNotFoundError(project_id)
 
-        project_data_json = project_data.model_dump(mode="json")
+        project_data_json = project_data.model_dump(mode="json", exclude_unset=True)
 
         # Preserve user project reference
         user_project = old_project["userProject"]
@@ -262,7 +262,7 @@ class COMcheckClient:
             The same ``project`` instance, with u-values updated.
         """
         energy_code = str(project.control.code)
-        envelope_data = project.envelope.model_dump(mode="json")
+        envelope_data = project.envelope.model_dump(mode="json", exclude_unset=True)
         updated_assembly_uvalues = self._service.assemblies_uvalue(
             envelope_data, energy_code
         )["data"]
@@ -296,7 +296,7 @@ class COMcheckClient:
         Returns:
             The compliance results payload returned by the API.
         """
-        project_data = project.model_dump(mode="json")
+        project_data = project.model_dump(mode="json", exclude_unset=True)
         response = self._service.check_UA_compliance(project_data)
         return response.get("data")
 
@@ -309,7 +309,7 @@ class COMcheckClient:
         Returns:
             The requirements payload returned by the API.
         """
-        project_data = project.model_dump(mode="json")
+        project_data = project.model_dump(mode="json", exclude_unset=True)
         response = self._service.check_requirements(project_data)
         return response.get("data")
 
@@ -349,7 +349,7 @@ class COMcheckClient:
             ``expires``, and ``fileName``.
         """
         report_data = {
-            "building": project.model_dump(mode="json"),
+            "building": project.model_dump(mode="json", exclude_unset=True),
             "envelope": envelope,
             "extlighting": extlighting,
             "intlighting": intlighting,
@@ -396,7 +396,7 @@ class COMcheckClient:
             logger.info("Updating project: %s", project_id)
             project = self.update_project(str(project_id), project)
 
-        project_data = project.model_dump(mode="json")
+        project_data = project.model_dump(mode="json", exclude_unset=True)
         run_result = self._service.start_run_simulation(project_data)
         if run_result.data is None:
             raise COMCheckSimulationError(
