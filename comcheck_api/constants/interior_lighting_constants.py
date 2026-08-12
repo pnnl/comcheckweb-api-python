@@ -33,7 +33,7 @@ DEFAULT_INTERIOR_LIGHTING_SPACE_AREA: ActivityUse = ActivityUse(
 
 DEFAULT_FIXTURE: Fixture = Fixture(
     description="LED fixture",
-    fixtureType=None,
+    fixtureType="Fixture 1",
     lightingType=LightingTypeOptions.LED,
     fixtureWattage=32.0,
     quantity=1,

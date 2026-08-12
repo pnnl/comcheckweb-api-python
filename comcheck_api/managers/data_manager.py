@@ -326,7 +326,7 @@ class DataManager(Generic[T]):
         # This will raise Pydantic ValidationError if types don't align
         # Get only the model fields to avoid serializing dynamically added methods
         original_dict = original.model_dump(
-            mode="python", by_alias=False, exclude_unset=True
+            mode="python", by_alias=False
         )
         merged = {**original_dict, **updates_dict}
         try:

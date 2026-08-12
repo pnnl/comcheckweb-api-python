@@ -191,7 +191,7 @@ def test_add_fixture_via_exterior_use_update(project: ComBuilding):
         "Canopy",
         {
             "exteriorLightingSpace": updated_space.model_dump(
-                mode="python", exclude_unset=True
+                mode="python"
             )
         },
     )

@@ -99,7 +99,7 @@ updated_space = eu.exteriorLightingSpace.model_copy(
 project = el_ops.update_exterior_lighting_area_in_project(
     project,
     "Main Parking Area",
-    {"exteriorLightingSpace": updated_space.model_dump(mode="python", exclude_unset=True)},
+    {"exteriorLightingSpace": updated_space.model_dump(mode="python")},
 )
 ```
 

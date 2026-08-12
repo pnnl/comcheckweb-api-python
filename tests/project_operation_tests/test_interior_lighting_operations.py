@@ -130,7 +130,7 @@ def test_add_fixture_via_activity_use_update(project: ComBuilding):
         "Lab",
         {
             "interiorLightingSpace": updated_space.model_dump(
-                mode="python", exclude_unset=True
+                mode="python"
             )
         },
     )

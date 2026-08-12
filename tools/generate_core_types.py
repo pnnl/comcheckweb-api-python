@@ -38,7 +38,6 @@ def main():
             "--use-standard-collections",
             "--use-schema-description",
             "--use-missing-sentinel",
-            "--use-default",  # Use default values from the schema
             "--field-constraints",  # Generate validation constraints (e.g., max_length, minItems)
             "--use-annotated",  # Best practice for Pydantic V2 validations
             "--formatters",

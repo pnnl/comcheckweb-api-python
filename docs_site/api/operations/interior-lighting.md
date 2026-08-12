@@ -102,7 +102,7 @@ project = il_ops.update_interior_lighting_space_in_project(
     project,
     area_key,
     "Open Office",
-    {"interiorLightingSpace": updated_space.model_dump(mode="python", exclude_unset=True)},
+    {"interiorLightingSpace": updated_space.model_dump(mode="python")},
 )
 ```
 

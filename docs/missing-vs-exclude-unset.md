@@ -46,7 +46,7 @@ f.model_dump(exclude_unset=True)  # → {}                    (both dropped)
 update = Roof(roofType=RoofTypeOptions.METAL_ROOF_WITH_THERMAL_BLOCKS)
 
 update.model_dump(mode="json")                     # includes propUValue=0, grossArea=0, ...
-update.model_dump(mode="json", exclude_unset=True) # → {"roofType": "METAL_ROOF_WITH_THERMAL_BLOCKS"}
+update.model_dump(mode="json") # → {"roofType": "METAL_ROOF_WITH_THERMAL_BLOCKS"}
 ```
 
 ## Summary

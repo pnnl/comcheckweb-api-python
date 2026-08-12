@@ -259,7 +259,7 @@ fixture.quantity = 10
 
 activity_use = get_default_interior_lighting_space_template()
 activity_use.areaDescription = "Open Office"
-activity_use.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE
+activity_use.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE_OPEN
 activity_use.interiorLightingSpace = activity_use.interiorLightingSpace.model_copy(
     deep=True, update={"fixture": [fixture]}
 )
