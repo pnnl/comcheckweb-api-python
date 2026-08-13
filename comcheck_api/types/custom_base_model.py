@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import Any, Optional, TypeVar
 
 from pydantic.main import _model_construction
-from pydantic import BaseModel
+from pydantic import BaseModel, model_serializer
 from comcheck_api.managers.data_manager import DataManager
 
 try:
@@ -29,6 +29,12 @@ class CustomBaseModel(BaseModel):
     """
 
     _identifier: str = "id"
+
+    @model_serializer(mode="plain")
+    def _skip_missing_fields(self):
+        if _PYDANTIC_MISSING is None:
+            return self.__dict__
+        return {k: v for k, v in self.__dict__.items() if v is not _PYDANTIC_MISSING}
 
     def __deepcopy__(self, memo=None):
         # MISSING (Sentinel) is not picklable, so copy field-by-field, passing it through as-is.

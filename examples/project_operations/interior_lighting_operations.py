@@ -19,13 +19,6 @@ from comcheck_api import (
     project_interior_lighting_operations as il_ops,
 )
 
-# The library logs API failures via logging.getLogger(__name__) but never
-# configures a handler (as a library shouldn't). Configure logging here so
-# those error logs — including the server's response body — are visible.
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(name)s %(levelname)s %(message)s",
-)
 from comcheck_api.defaults import (
     get_default_interior_lighting_space_template,
     get_default_building_area_template,
@@ -34,56 +27,19 @@ from comcheck_api.defaults import (
 from comcheck_api.types.core_types import ActivityTypeOptions, LightingTypeOptions
 from comcheck_api.utilities.common import export_to_json
 
-load_dotenv()
+load_dotenv(override=True)
 client = COMcheckClient()
 client.set_api_key(os.getenv("COM_API_KEY") or "your-api-key-here")
-# TODO: building area description should be unique within a project, interior lighting spcaes seems using the descriptions as key, instead of the key field.
-
-
-def normalize_numeric_nulls(model):
-    """Default every null numeric field on a model (recursively) to 0.
-
-    The API declares many numeric fields non-nullable but still returns null
-    for them, then rejects those nulls on write. Rather than patch fields one
-    at a time, sweep the whole model tree and set any None-valued int/float
-    field to 0 (integers get 0, floats get 0.0 via Pydantic coercion).
-
-    Because every ``update_project`` returns a freshly-fetched project (which
-    brings the server's nulls back), call this before *each* update, not just
-    once after the initial fetch.
-
-    TODO: schema fix — these fields are typed number/integer but should allow null.
-    """
-    from pydantic import BaseModel
-
-    for name, field in type(model).model_fields.items():
-        value = getattr(model, name, None)
-        annotation = str(field.annotation)
-        if value is None:
-            # Only purely-numeric fields (no str/enum in the union) — this
-            # leaves id-like fields (e.g. "str | int | None") untouched.
-            is_numeric = "int" in annotation or "float" in annotation
-            if is_numeric and "str" not in annotation:
-                setattr(model, name, 0)
-        elif isinstance(value, BaseModel):
-            normalize_numeric_nulls(value)
-        elif isinstance(value, list):
-            for item in value:
-                if isinstance(item, BaseModel):
-                    normalize_numeric_nulls(item)
-    return model
-
 
 # Fetch an existing project so changes can be saved back to the account.
 # (update_project persists to the server; it requires a project that already
 # exists there, so we start from a fetched project rather than a local
 # template.)
-project = client.get_project("43789")
+project = client.get_project("your-project-id")
 if not project:
     raise ValueError("Project not found")
 project_id = str(project.id)
 export_to_json(project, "interior_lighting_operations_before.json")
-normalize_numeric_nulls(project)
 
 
 # ── Step 1: A building area must exist before adding activity uses ────────────
@@ -94,7 +50,7 @@ area_key = area.key
 export_to_json(project, "interior_lighting_operations_after_add_building_area.json")
 print("exported")
 # Persist the new building area to the account.
-normalize_numeric_nulls(project)
+
 project = client.update_project(project_id, project)
 if not project:
     raise ValueError("Project not found after update")
@@ -112,7 +68,7 @@ fixture.quantity = 10
 activity_use = get_default_interior_lighting_space_template()
 activity_use.areaDescription = "Open Office"
 # Todo: check if activityType options are based on energy code, or if they are just generic options.
-activity_use.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE
+activity_use.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE_OPEN
 activity_use.floorArea = 2000.0
 activity_use.interiorLightingSpace = activity_use.interiorLightingSpace.model_copy(
     deep=True, update={"fixture": [fixture]}
@@ -120,7 +76,7 @@ activity_use.interiorLightingSpace = activity_use.interiorLightingSpace.model_co
 
 project = il_ops.add_interior_lighting_space_to_project(project, area_key, activity_use)
 export_to_json(project, "interior_lighting_operations_after_add.json")
-normalize_numeric_nulls(project)
+
 project = client.update_project(project_id, project)
 if not project:
     raise ValueError("Project not found after update")
@@ -137,7 +93,7 @@ project = il_ops.update_interior_lighting_space_in_project(
     "Open Office",
     {"floorArea": 2500.0},
 )
-normalize_numeric_nulls(project)
+
 project = client.update_project(project_id, project)
 if not project:
     raise ValueError("Project not found after update")

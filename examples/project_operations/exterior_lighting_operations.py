@@ -39,61 +39,26 @@ from comcheck_api.types.core_types import (
     LightingTypeOptions,
 )
 
-load_dotenv()
+load_dotenv(override=True)
 client = COMcheckClient()
 client.set_api_key(os.getenv("COM_API_KEY") or "your-api-key-here")
-
-
-def normalize_numeric_nulls(model):
-    """Default every null numeric field on a model (recursively) to 0.
-
-    The API declares many numeric fields non-nullable but still returns null
-    for them, then rejects those nulls on write. Rather than patch fields one
-    at a time, sweep the whole model tree and set any None-valued int/float
-    field to 0 (integers get 0, floats get 0.0 via Pydantic coercion).
-
-    Because every ``update_project`` returns a freshly-fetched project (which
-    brings the server's nulls back), call this before *each* update, not just
-    once after the initial fetch.
-
-    TODO: schema fix — these fields are typed number/integer but should allow null.
-    """
-    from pydantic import BaseModel
-
-    for name, field in type(model).model_fields.items():
-        value = getattr(model, name, None)
-        annotation = str(field.annotation)
-        if value is None:
-            # Only purely-numeric fields (no str/enum in the union) — this
-            # leaves id-like fields (e.g. "str | int | None") untouched.
-            is_numeric = "int" in annotation or "float" in annotation
-            if is_numeric and "str" not in annotation:
-                setattr(model, name, 0)
-        elif isinstance(value, BaseModel):
-            normalize_numeric_nulls(value)
-        elif isinstance(value, list):
-            for item in value:
-                if isinstance(item, BaseModel):
-                    normalize_numeric_nulls(item)
-    return model
-
 
 # Fetch an existing project so changes can be saved back to the account.
 # (update_project persists to the server; it requires a project that already
 # exists there, so we start from a fetched project rather than a local
 # template.)
-project = client.get_project("43789")
+project = client.get_project("your-project-id")
 if not project:
     raise ValueError("Project not found")
 project_id = str(project.id)
-normalize_numeric_nulls(project)
+
 
 # ── Step 1: Set the exterior lighting zone type ───────────────────────────────
 # Must be set to a real zone before exterior compliance can be evaluated.
 project = el_ops.set_exterior_lighting_zone_type_in_project(
     project, ExteriorLightingZoneTypeOptions.EXT_ZONE_NEIGHBORHOOD_BUS_DISTRICT
 )
-normalize_numeric_nulls(project)
+
 project = client.update_project(project_id, project)
 if not project:
     raise ValueError("Project not found after update")
@@ -116,7 +81,7 @@ exterior_use.exteriorLightingSpace = exterior_use.exteriorLightingSpace.model_co
 )
 
 project = el_ops.add_exterior_lighting_area_to_project(project, exterior_use)
-normalize_numeric_nulls(project)
+
 project = client.update_project(project_id, project)
 if not project:
     raise ValueError("Project not found after update")
@@ -132,7 +97,7 @@ project = el_ops.update_exterior_lighting_area_in_project(
     "Main Parking Area",
     {"useQuantity": 6000.0},
 )
-normalize_numeric_nulls(project)
+
 project = client.update_project(project_id, project)
 if not project:
     raise ValueError("Project not found after update")
@@ -168,7 +133,7 @@ project = el_ops.update_exterior_lighting_area_in_project(
         )
     },
 )
-normalize_numeric_nulls(project)
+
 project = client.update_project(project_id, project)
 if not project:
     raise ValueError("Project not found after update")
@@ -178,7 +143,7 @@ print("Second fixture added to Main Parking Area")
 project = el_ops.remove_exterior_lighting_area_from_project(
     project, "Main Parking Area"
 )
-normalize_numeric_nulls(project)
+
 project = client.update_project(project_id, project)
 if not project:
     raise ValueError("Project not found after update")
