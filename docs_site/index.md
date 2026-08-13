@@ -10,9 +10,9 @@ This package is under active development. Here is the current support status for
 |---|---|
 | Building Area | Supported |
 | Envelope (roofs, walls, floors, windows, doors, skylights, thermal bridges) | Supported |
+| Interior Lighting | Supported |
+| Exterior Lighting | Supported |
 | Compliance Simulation | Supported |
-| Interior Lighting | TBD |
-| Exterior Lighting | TBD |
 | Mechanical | TBD |
 | Credits | TBD |
 | Renewable Energy | TBD |
@@ -23,6 +23,7 @@ Operations and data managers for the TBD sections are not yet implemented. The u
 
 - **Type-safe** --- Pydantic models for all API inputs and outputs
 - **Envelope management** --- Roofs, walls, floors, windows, doors, skylights, and thermal bridges
+- **Lighting management** --- Interior lighting (activity uses + fixtures) and exterior lighting (uses, zone type + fixtures)
 - **Compliance simulation** --- Start simulations and retrieve results programmatically
 - **Validation** --- JSON schema validation and Pydantic type checking at every boundary
 
@@ -65,4 +66,4 @@ uv add comcheck_api
 | Module | Description |
 |--------|-------------|
 | [`comcheck_api.client`](api/client.md) | High-level client interface |
-| [`comcheck_api.project_operations`](api/operations/building-area.md) | [Building area](api/operations/building-area.md) and [envelope](api/operations/envelope.md) operations |
+| [`comcheck_api.project_operations`](api/operations/building-area.md) | [Building area](api/operations/building-area.md), [envelope](api/operations/envelope.md), [interior lighting](api/operations/interior-lighting.md), and [exterior lighting](api/operations/exterior-lighting.md) operations |

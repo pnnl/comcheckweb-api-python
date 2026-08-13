@@ -36,7 +36,6 @@ from comcheck_api.defaults import (
 from comcheck_api.types.core_types import (
     ExteriorLightingZoneTypeOptions,
     ExteriorUseTypeOptions,
-    LightingTypeOptions,
 )
 
 load_dotenv(override=True)
@@ -67,7 +66,9 @@ print(f"Zone type set: {project.lighting.exteriorLightingZoneType}")
 # ── Step 2: Add an ExteriorUse with a fixture already populated ───────────────
 fixture = get_default_fixture_template()
 fixture.description = "Parking LED"
-fixture.fixtureType = LightingTypeOptions.LED
+# fixtureType is the required identifier (a description string). lightingType
+# is optional and marked for deprecation, so it is left unset here.
+fixture.fixtureType = "Parking LED"
 fixture.fixtureWattage = 150.0
 fixture.quantity = 8
 
@@ -113,6 +114,8 @@ exterior_use = next(
     for exterior_use in project.lighting.exteriorUse
     if exterior_use.areaDescription == "Main Parking Area"
 )
+if exterior_use.exteriorLightingSpace is None:
+    raise ValueError("ExteriorUse has no exteriorLightingSpace")
 existing_fixtures = list(exterior_use.exteriorLightingSpace.fixture or [])
 
 new_fixture = get_default_fixture_template()
@@ -127,11 +130,7 @@ updated_space = exterior_use.exteriorLightingSpace.model_copy(
 project = el_ops.update_exterior_lighting_area_in_project(
     project,
     "Main Parking Area",
-    {
-        "exteriorLightingSpace": updated_space.model_dump(
-            mode="python", exclude_unset=True
-        )
-    },
+    {"exteriorLightingSpace": updated_space.model_dump(mode="python")},
 )
 
 project = client.update_project(project_id, project)

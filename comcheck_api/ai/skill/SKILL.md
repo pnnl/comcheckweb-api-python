@@ -155,9 +155,8 @@ print(result["performanceRating"])
   `generate_report`) are also fully supported. If asked for an
   unsupported mutation area, tell the user it's not implemented and
   offer building-area / envelope / lighting / simulation instead.
-  Note: `comcheck_api.list_operations()` only enumerates `building_area`
-  and `envelope` groups — lighting operations are not yet registered
-  there but are fully implemented in their respective modules.
+  `comcheck_api.list_operations()` enumerates the `building_area`,
+  `envelope`, `interior_lighting`, and `exterior_lighting` groups.
 
 ## Common patterns
 
@@ -243,11 +242,13 @@ whole `activityUse` through `update_interior_lighting_space_in_project`.
 ```python
 from comcheck_api import project_interior_lighting_operations as il_ops
 from comcheck_api.defaults import get_default_interior_lighting_space_template, get_default_fixture_template
-from comcheck_api.types.core_types import ActivityTypeOptions, LightingTypeOptions
+from comcheck_api.types.core_types import ActivityTypeOptions
 
+# fixtureType is the required identifier (a description string); lightingType
+# is optional and marked for deprecation, so leave it unset.
 fixture = get_default_fixture_template()
 fixture.description = "Recessed LED"
-fixture.lightingType = LightingTypeOptions.LED
+fixture.fixtureType = "Recessed LED"
 fixture.fixtureWattage = 20.0
 fixture.quantity = 10
 

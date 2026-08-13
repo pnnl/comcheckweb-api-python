@@ -42,17 +42,18 @@ from comcheck_api.defaults import (
     get_default_interior_lighting_space_template,
     get_default_fixture_template,
 )
-from comcheck_api.types.core_types import ActivityTypeOptions, LightingTypeOptions
+from comcheck_api.types.core_types import ActivityTypeOptions
 
 # A building area must exist first
 area = get_default_building_area_template()
 project = ba_ops.add_building_area_to_project(project, area)
 area_key = area.key
 
-# Build the fixture
+# Build the fixture. fixtureType is the required identifier (a description
+# string); lightingType is optional and marked for deprecation.
 fixture = get_default_fixture_template()
 fixture.description = "Recessed LED"
-fixture.lightingType = LightingTypeOptions.LED
+fixture.fixtureType = "Recessed LED"
 fixture.fixtureWattage = 20.0
 fixture.quantity = 10
 

@@ -52,11 +52,13 @@ a `TypeError` — always use the enum.
 
 ```python
 from comcheck_api.defaults import get_default_exterior_lighting_area_template, get_default_fixture_template
-from comcheck_api.types.core_types import ExteriorUseTypeOptions, LightingTypeOptions
+from comcheck_api.types.core_types import ExteriorUseTypeOptions
 
+# fixtureType is the required identifier (a description string); lightingType
+# is optional and marked for deprecation.
 fixture = get_default_fixture_template()
 fixture.description = "Parking LED"
-fixture.lightingType = LightingTypeOptions.LED
+fixture.fixtureType = "Parking LED"
 fixture.fixtureWattage = 150.0
 fixture.quantity = 8
 

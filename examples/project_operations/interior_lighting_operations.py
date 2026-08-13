@@ -24,7 +24,7 @@ from comcheck_api.defaults import (
     get_default_building_area_template,
     get_default_fixture_template,
 )
-from comcheck_api.types.core_types import ActivityTypeOptions, LightingTypeOptions
+from comcheck_api.types.core_types import ActivityTypeOptions
 from comcheck_api.utilities.common import export_to_json
 
 load_dotenv(override=True)
@@ -58,9 +58,9 @@ print(f"Building area added: {area.areaDescription!r} (key={area_key})")
 # ── Step 2: Add an ActivityUse with a fixture already populated ───────────────
 fixture = get_default_fixture_template()
 fixture.description = "Recessed LED"
-# Todo: update schema fixtureType is required, lightingType is optional.
-# fixtureType is the identifier, lightingType is the type
-fixture.fixtureType = LightingTypeOptions.LED
+# fixtureType is the required identifier (a description string). lightingType
+# is optional and marked for deprecation, so it is left unset here.
+fixture.fixtureType = "Recessed LED"
 fixture.fixtureWattage = 20.0
 fixture.quantity = 10
 
@@ -113,6 +113,8 @@ activity_use = next(
     for activity_use in building_area.activityUse
     if activity_use.areaDescription == "Open Office"
 )
+if activity_use.interiorLightingSpace is None:
+    raise ValueError("ActivityUse has no interiorLightingSpace")
 existing_fixtures = list(activity_use.interiorLightingSpace.fixture or [])
 
 new_fixture = get_default_fixture_template()
@@ -128,11 +130,7 @@ project = il_ops.update_interior_lighting_space_in_project(
     project,
     area_key,
     "Open Office",
-    {
-        "interiorLightingSpace": updated_space.model_dump(
-            mode="python", exclude_unset=True
-        )
-    },
+    {"interiorLightingSpace": updated_space.model_dump(mode="python")},
 )
 project = client.update_project(project_id, project)
 if not project:
