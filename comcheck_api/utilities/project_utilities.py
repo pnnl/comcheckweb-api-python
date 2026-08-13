@@ -6,6 +6,35 @@ from comcheck_api.types.core_types import ComBuilding
 from comcheck_api.managers.data_manager import DataManager, get_model_info
 
 
+def _require_unique_area_description(
+    project: ComBuilding,
+    area_description: str,
+    exclude_key: str | float | None = None,
+) -> None:
+    """Raise if area_description already exists in wholeBldgUse (case-sensitive).
+
+    Args:
+        project: The project to check.
+        area_description: The description to validate for uniqueness.
+        exclude_key: Skip the WholeBldgUse item with this key (used during updates
+            so the item being edited doesn't conflict with itself).
+
+    Raises:
+        ValueError: If another WholeBldgUse item has the same areaDescription.
+    """
+    whole_use = project.get_by_path("lighting.wholeBldgUse")
+    if not isinstance(whole_use, list):
+        return
+
+    for area in whole_use:
+        if exclude_key is not None and getattr(area, "key", None) == exclude_key:
+            continue
+        if getattr(area, "areaDescription", None) == area_description:
+            raise ValueError(
+                f"areaDescription '{area_description}' already exists in wholeBldgUse."
+            )
+
+
 def _require_building_area(project: ComBuilding, building_area_key: str) -> None:
     """
     Ensure that project.lighting.wholeBldgUse exists and contains the given key.

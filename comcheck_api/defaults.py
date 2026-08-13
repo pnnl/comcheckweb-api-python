@@ -50,7 +50,9 @@ def get_default_building_area_template():
         A new ``WholeBldgUse`` instance.
     """
     area = copy.deepcopy(DEFAULT_BUILDING_AREA)
-    area.key = str(uuid4())
+    uid = str(uuid4())
+    area.key = uid
+    area.areaDescription = f"{DEFAULT_BUILDING_AREA.areaDescription} {uid[:8]}"
     return area
 
 
