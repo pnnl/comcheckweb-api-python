@@ -48,7 +48,6 @@ area.areaDescription = "Main Office 1"
 project = ba_ops.add_building_area_to_project(project, area)
 area_key = area.key
 export_to_json(project, "interior_lighting_operations_after_add_building_area.json")
-print("exported")
 # Persist the new building area to the account.
 
 project = client.update_project(project_id, project)
