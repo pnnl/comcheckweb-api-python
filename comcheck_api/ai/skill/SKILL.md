@@ -30,17 +30,15 @@ Triggers:
   `envelope`, `lighting` (which contains `wholeBldgUse[]` — the
   building areas), `hvac`, `renewable`, and `control` (energy code).
   No `Project`/`Control` PascalCase aliases exist.
-  The fields `hvac`, `renewable`, and the **interior-lighting fixtures
-  inside `activityUse[]`**, plus exterior lighting (`exteriorUse[]`)
-  and the shared `fixtureSchedule[]`, exist on the model but have
-  **no operation functions** — leave them at template defaults. Only
-  `lighting.wholeBldgUse[]` (building areas, including each area's
-  own `interiorLightingSpace` singleton) is mutable, via
-  `project_building_area_operations`.
-- **Operation modules (functional)**: building areas and envelope
-  components are added/updated/removed via free functions in
-  `project_building_area_operations` and `project_envelope_operations`.
-  Each function takes a `ComBuilding` and returns a new `ComBuilding`.
+  The fields `hvac`, `renewable`, and the shared `fixtureSchedule[]`
+  exist on the model but have **no operation functions** — leave them
+  at template defaults. All other mutable areas have dedicated modules.
+- **Operation modules (functional)**: all mutations go through free
+  functions that take a `ComBuilding` and return a new `ComBuilding`:
+  - `project_building_area_operations` — `WholeBldgUse` items
+  - `project_envelope_operations` — roofs, walls, floors, windows, doors, skylights, thermal bridges
+  - `project_interior_lighting_operations` — `ActivityUse` items (interior lighting spaces + fixtures)
+  - `project_exterior_lighting_operations` — `ExteriorUse` items + zone type
 - **Envelope items attach to a building-area key**: every
   `add_*_to_project` envelope function takes
   `(project, building_area_key, new_component)`. Look up the key
@@ -149,21 +147,17 @@ print(result["performanceRating"])
   `project_building_area_operations` instead.
 - Don't add, update, or remove `fixtureSchedule[]`, HVAC/mechanical, or
   renewable-energy components — no operations exist for them yet.
-  Interior lighting (`activityUse[]`) and exterior lighting
-  (`exteriorUse[]`) **are** supported via
-  `project_interior_lighting_operations` and
-  `project_exterior_lighting_operations` (see below). The
-  `COMcheckClient` user methods (`list_projects`, `get_project`,
+  The `COMcheckClient` user methods (`list_projects`, `get_project`,
   `update_project`, `update_uvalues`, `start_run_simulation`,
   `get_simulation_status`, `get_simulation_result`, `set_api_key`)
-  are fully supported and
-  fine to use. The compliance/report client methods
-  (`check_UA_compliance`, `check_requirements`, `generate_report`) are
-  also fully supported. If asked for an unsupported mutation area,
-  tell the user it's not implemented and offer building-area /
-  envelope / simulation instead. Confirm operation scope with
-  `comcheck_api.list_operations()` (only `building_area` and
-  `envelope` groups exist).
+  are fully supported and fine to use. The compliance/report client
+  methods (`check_UA_compliance`, `check_requirements`,
+  `generate_report`) are also fully supported. If asked for an
+  unsupported mutation area, tell the user it's not implemented and
+  offer building-area / envelope / lighting / simulation instead.
+  Note: `comcheck_api.list_operations()` only enumerates `building_area`
+  and `envelope` groups — lighting operations are not yet registered
+  there but are fully implemented in their respective modules.
 
 ## Common patterns
 

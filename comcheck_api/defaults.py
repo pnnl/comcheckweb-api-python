@@ -42,9 +42,10 @@ def get_default_project_template():
 def get_default_building_area_template():
     """Return a deep copy of the default :class:`~comcheck_api.types.core_types.WholeBldgUse` template.
 
-    Defaults to an *Automotive Facility* with 1 000 sq ft floor area
-    and interior lighting space initialized.  Each call gets a fresh unique
-    ``key`` so multiple areas can be added to a project without colliding.
+    Defaults to an *Automotive Facility* with 1 000 sq ft floor area and
+    interior lighting space initialized.  Each call gets a fresh unique ``key``
+    and a unique ``areaDescription`` (UUID suffix appended) so multiple areas
+    can be added to a project without colliding on either field.
 
     Returns:
         A new ``WholeBldgUse`` instance.

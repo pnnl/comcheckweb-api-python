@@ -14,6 +14,12 @@ can be evaluated.  Adding an `ExteriorUse` while the zone is still
 `EXT_ZONE_UNSPECIFIED` emits a `UserWarning` (not an error) so you can build
 up a project incrementally.
 
+## areaDescription uniqueness
+
+`areaDescription` must be unique within `lighting.exteriorUse[]`. It is the
+identifier used by update and remove operations. If missing, a unique value is
+auto-generated with the prefix `"Ext Area"`.
+
 ## Operations
 
 ```python

@@ -11,6 +11,9 @@ one singleton `InteriorLightingSpace` whose `fixture[]` holds the fixtures.
   `ActivityUse` through `update_interior_lighting_space_in_project`.
 - **ActivityUse.key** is always set to the parent `WholeBldgUse.key` — the
   add operation sets this automatically.
+- **`areaDescription` must be unique** within a building area's `activityUse[]`
+  list. It is the identifier used by update and remove operations. If missing,
+  a unique value is auto-generated with the prefix `"Space"`.
 - A building area must exist before adding activity uses — add one with
   `project_building_area_operations.add_building_area_to_project` first.
 
@@ -56,7 +59,7 @@ fixture.quantity = 10
 # Attach the fixture to the activity use before adding
 activity_use = get_default_interior_lighting_space_template()
 activity_use.areaDescription = "Open Office"
-activity_use.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE
+activity_use.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE_OPEN
 activity_use.floorArea = 2000.0
 activity_use.interiorLightingSpace = activity_use.interiorLightingSpace.model_copy(
     deep=True, update={"fixture": [fixture]}
@@ -130,5 +133,5 @@ project = il_ops.remove_interior_lighting_space_from_project(project, area_key, 
 
 ```python
 keys = il_ops.get_interior_lighting_space_keys_from_project(project, area_key)
-# [{"areaDescription": "Open Office", "activityType": "ACTIVITY_COMMON_OFFICE"}, ...]
+# [{"areaDescription": "Open Office", "activityType": "ACTIVITY_COMMON_OFFICE_OPEN"}, ...]
 ```

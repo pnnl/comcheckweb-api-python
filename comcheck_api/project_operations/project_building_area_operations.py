@@ -14,15 +14,18 @@ from comcheck_api.utilities.project_utilities import (
 def add_building_area_to_project(
     project: ComBuilding, new_building_area: WholeBldgUse
 ) -> ComBuilding:
-    """Add a new building area to the project using buildingAreaListManager.
+    """Add a new building area to the project.
 
     Args:
-        project: The project object to modify
-        new_building_area: The building area object to add
+        project: The project object to modify.
+        new_building_area: The building area object to add.
 
     Returns:
-        Updated project object with the building area added
+        Updated project object with the building area added.
 
+    Raises:
+        ValueError: If another building area with the same ``areaDescription``
+            already exists in ``lighting.wholeBldgUse``.
     """
 
     desc = getattr(new_building_area, "areaDescription", None)
@@ -45,16 +48,20 @@ def add_building_area_to_project(
 def update_building_area_in_project(
     project: ComBuilding, building_area_key: str, updates: dict[str, Any] | WholeBldgUse
 ) -> ComBuilding:
-    """Update an existing building area in the project using buildingAreaListManager.
+    """Update an existing building area in the project.
 
     Args:
-        project: The project object to modify
-        building_area_key: The key of the building area to update
-        updates: Partial updates (dict) or full building area object to apply
+        project: The project object to modify.
+        building_area_key: The ``key`` of the building area to update.
+        updates: Partial updates (dict) or full building area object to apply.
 
     Returns:
-        Updated project object with the building area updated
+        Updated project object with the building area updated.
 
+    Raises:
+        ValueError: If ``building_area_key`` is not found, or if ``updates``
+            contains an ``areaDescription`` that already belongs to a different
+            building area in ``lighting.wholeBldgUse``.
     """
     _require_building_area(project, building_area_key)
 
