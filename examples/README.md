@@ -9,7 +9,9 @@ examples/
 ├── README.md                          # This file
 ├── client/                           # API client examples
 │   ├── simulation.py                 # Simulation API workflow examples
+│   ├── assemblies.py                 # Assembly u-value calculation examples
 │   ├── compliance_and_report.py      # Compliance, requirements & report examples
+│   ├── allowed_wattage.py            # Interior lighting allowed-wattage calculation examples
 │   └── user_functions.py             # User-facing function examples
 └── project_operations/               # Project operations examples
     ├── building_area_operations.py  # Building area operations
@@ -45,6 +47,18 @@ Demonstrates compliance checks, requirements lookup, and PDF report generation.
 **Usage:**
 ```bash
 python examples/client/compliance_and_report.py
+```
+
+#### Allowed Wattage Examples (`client/allowed_wattage.py`)
+Demonstrates interior lighting allowed-wattage calculation.
+
+**What it demonstrates:**
+- `calculate_activity_use_allowed_wattage()` - Calculating allowed wattage for a single ActivityUse
+- `calculate_activity_uses_allowed_wattage()` - Calculating allowed wattage for a list of ActivityUse objects
+
+**Usage:**
+```bash
+python examples/client/allowed_wattage.py
 ```
 
 #### User Function Examples (`client/user_functions.py`)

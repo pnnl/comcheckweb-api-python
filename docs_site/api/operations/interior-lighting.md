@@ -136,3 +136,28 @@ project = il_ops.remove_interior_lighting_space_from_project(project, area_key, 
 keys = il_ops.get_interior_lighting_space_keys_from_project(project, area_key)
 # [{"areaDescription": "Open Office", "activityType": "ACTIVITY_COMMON_OFFICE_OPEN"}, ...]
 ```
+
+## Calculating allowed wattage
+
+Allowed wattage is calculated server-side via two `COMcheckClient` methods,
+not the `il_ops` free functions above. Both take the energy code as an
+explicit string (there's no project to pull `control.code` from) — an
+`ActivityUse` alone doesn't carry an energy code:
+
+```python
+energy_code = str(project.control.code)
+
+# Single ActivityUse
+result = client.calculate_activity_use_allowed_wattage(activity_use, energy_code)
+# {"spaceAllowedWattage": 560}
+
+# A list of ActivityUse objects
+results = client.calculate_activity_uses_allowed_wattage(
+    [activity_use, second_activity_use], energy_code
+)
+# {"Open Office": 560, "Conference Room": 610} — keyed by areaDescription
+```
+
+These calls don't mutate the `ActivityUse` objects passed in or write the
+result onto `allowedWattage` — they return the raw calculation payload for
+the caller to use as needed.

@@ -14,7 +14,7 @@ from comcheck_api.exceptions import (
     COMCheckProjectNotFoundError,
     COMCheckSimulationError,
 )
-from comcheck_api.types.core_types import ComBuilding
+from comcheck_api.types.core_types import ActivityUse, ComBuilding
 
 Mode = Literal["python", "json"]
 
@@ -286,6 +286,46 @@ class COMcheckClient:
                     floor.propUValue = float(uvalue["propUValue"])
 
         return project
+
+    def calculate_activity_use_allowed_wattage(
+        self, activity_use: ActivityUse, energy_code: str
+    ) -> Any:
+        """Calculate allowed wattage for a single interior lighting activity use.
+
+        Args:
+            activity_use: The activity use to calculate allowed wattage for.
+            energy_code: The energy code for the api end point path.
+
+        Returns:
+            A dict with the calculated wattage, e.g.
+            ``{"spaceAllowedWattage": 560}``.
+        """
+        activity_use_data = activity_use.model_dump(mode="json")
+        response = self._service.activity_use_allowed_wattage(
+            activity_use_data, energy_code
+        )
+        return response.get("data")
+
+    def calculate_activity_uses_allowed_wattage(
+        self, activity_uses: List[ActivityUse], energy_code: str
+    ) -> Any:
+        """Calculate allowed wattage for a list of interior lighting activity uses.
+
+        Args:
+            activity_uses: The activity uses to calculate allowed wattage for.
+            energy_code: The energy code for the api end point path.
+
+        Returns:
+            A dict keyed by each activity use's ``areaDescription``, e.g.
+            ``{"Test Space": 610}``.
+        """
+        activity_uses_data = [
+            activity_use.model_dump(mode="json") for activity_use in activity_uses
+        ]
+        response = self._service.activity_uses_allowed_wattage(
+            activity_uses_data, energy_code
+        )
+        return response.get("data")
 
     def check_UA_compliance(self, project: ComBuilding) -> Any:
         """Check UA path compliance for a project.

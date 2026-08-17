@@ -124,6 +124,24 @@ Use `get_default_interior_lighting_space_template()` as a starting point.
 `areaDescription` is the identifier — it is unique within a building area's
 `activityUse[]` list and is auto-generated if missing.
 
+Allowed wattage is calculated server-side via two `COMcheckClient` methods,
+not an `il_ops` function:
+
+```python
+energy_code = str(project.control.code)  # ActivityUse alone has no control.code
+
+result = client.calculate_activity_use_allowed_wattage(activity_use, energy_code)
+# {"spaceAllowedWattage": 560}
+
+results = client.calculate_activity_uses_allowed_wattage(
+    [activity_use, second_activity_use], energy_code
+)
+# {"Open Office": 560, "Conference Room": 610} — keyed by areaDescription
+```
+
+Neither call mutates the `ActivityUse` objects or writes onto
+`allowedWattage` — they return the raw calculation payload.
+
 ## Exterior lighting operations
 
 ```python

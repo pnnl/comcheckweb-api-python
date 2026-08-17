@@ -62,6 +62,14 @@ Triggers:
   is `agWall`-only). `start_run_simulation` calls this automatically,
   so you rarely call it directly — use it only when you need refreshed
   u-values on a project outside the simulation flow.
+- **Interior lighting allowed wattage is also calculated server-side**:
+  `calculate_activity_use_allowed_wattage(activity_use, energy_code)` and
+  `calculate_activity_uses_allowed_wattage(activity_uses, energy_code)`
+  take an `ActivityUse` (or a list of them) plus the energy code as an
+  explicit string — `ActivityUse` has no `control.code` of its own. Neither
+  method mutates the input or writes to `allowedWattage`; both return the
+  raw calculation payload (`{"spaceAllowedWattage": ...}` for the single
+  form, `{areaDescription: wattage, ...}` for the list form).
 
 ## Quick start
 
@@ -152,7 +160,9 @@ print(result["performanceRating"])
   `get_simulation_status`, `get_simulation_result`, `set_api_key`)
   are fully supported and fine to use. The compliance/report client
   methods (`check_UA_compliance`, `check_requirements`,
-  `generate_report`) are also fully supported. If asked for an
+  `generate_report`) are also fully supported, as are the allowed-wattage
+  methods (`calculate_activity_use_allowed_wattage`,
+  `calculate_activity_uses_allowed_wattage`). If asked for an
   unsupported mutation area, tell the user it's not implemented and
   offer building-area / envelope / lighting / simulation instead.
   `comcheck_api.list_operations()` enumerates the `building_area`,
@@ -267,6 +277,12 @@ project = il_ops.update_interior_lighting_space_in_project(
 
 # Remove
 project = il_ops.remove_interior_lighting_space_from_project(project, area_key, "Open Office")
+
+# Allowed wattage is calculated server-side via COMcheckClient, not il_ops.
+# energy_code is explicit — ActivityUse has no control.code of its own.
+energy_code = str(project.control.code)
+result = client.calculate_activity_use_allowed_wattage(activity_use, energy_code)
+# {"spaceAllowedWattage": 560}
 ```
 
 ### Adding exterior lighting (ExteriorUse + zone type)
