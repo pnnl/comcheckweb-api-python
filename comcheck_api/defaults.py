@@ -1,8 +1,16 @@
 """Module for project default templates/values."""
 
 import copy
+from uuid import uuid4
 
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
+from comcheck_api.constants.interior_lighting_constants import (
+    DEFAULT_INTERIOR_LIGHTING_SPACE_AREA,
+    DEFAULT_FIXTURE,
+)
+from comcheck_api.constants.exterior_lighting_constants import (
+    DEFAULT_EXTERIOR_LIGHTING_AREA,
+)
 from comcheck_api.constants.envelope_constants import (
     DEFAULT_AG_WALL,
     DEFAULT_BG_WALL,
@@ -34,13 +42,19 @@ def get_default_project_template():
 def get_default_building_area_template():
     """Return a deep copy of the default :class:`~comcheck_api.types.core_types.WholeBldgUse` template.
 
-    Defaults to an *Automotive Facility* with 1 000 sq ft floor area
-    and interior lighting space initialized.
+    Defaults to an *Automotive Facility* with 1 000 sq ft floor area and
+    interior lighting space initialized.  Each call gets a fresh unique ``key``
+    and a unique ``areaDescription`` (UUID suffix appended) so multiple areas
+    can be added to a project without colliding on either field.
 
     Returns:
         A new ``WholeBldgUse`` instance.
     """
-    return copy.deepcopy(DEFAULT_BUILDING_AREA)
+    area = copy.deepcopy(DEFAULT_BUILDING_AREA)
+    uid = str(uuid4())
+    area.key = uid
+    area.areaDescription = f"{DEFAULT_BUILDING_AREA.areaDescription} {uid[:8]}"
+    return area
 
 
 def get_default_roof_template():
@@ -137,6 +151,50 @@ def get_default_thermal_bridge_template():
         A new ``ThermalBridge`` instance.
     """
     return copy.deepcopy(DEFAULT_THERMAL_BRIDGE)
+
+
+def get_default_interior_lighting_space_template():
+    """Return a deep copy of the default interior lighting space template.
+
+    In the COMcheck API schema, an interior lighting space is represented by
+    the :class:`~comcheck_api.types.core_types.ActivityUse` model.  This
+    corresponds to what the COMcheck web app calls an *Interior Lighting Space*.
+
+    The ``key`` field is set to ``"__unset__"`` — pass the template directly to
+    :func:`~comcheck_api.project_operations.project_interior_lighting_operations.add_interior_lighting_space_to_project`,
+    which sets the key to the parent building area automatically.
+
+    Returns:
+        A new :class:`~comcheck_api.types.core_types.ActivityUse` instance.
+    """
+    return copy.deepcopy(DEFAULT_INTERIOR_LIGHTING_SPACE_AREA)
+
+
+def get_default_fixture_template():
+    """Return a deep copy of the default :class:`~comcheck_api.types.core_types.Fixture` template.
+
+    Defaults to an LED fixture at 32 W, quantity 1, with no lighting controls.
+
+    Returns:
+        A new ``Fixture`` instance.
+    """
+    return copy.deepcopy(DEFAULT_FIXTURE)
+
+
+def get_default_exterior_lighting_area_template():
+    """Return a deep copy of the default exterior lighting area template.
+
+    In the COMcheck API schema, an exterior lighting area is represented by
+    the :class:`~comcheck_api.types.core_types.ExteriorUse` model.  This
+    corresponds to what the COMcheck web app calls an *Exterior Lighting Area*.
+
+    Defaults to a parking-area exterior lighting area with 1 000 sq ft quantity
+    and an empty :class:`~comcheck_api.types.core_types.ExteriorLightingSpace`.
+
+    Returns:
+        A new :class:`~comcheck_api.types.core_types.ExteriorUse` instance.
+    """
+    return copy.deepcopy(DEFAULT_EXTERIOR_LIGHTING_AREA)
 
 
 def get_default_fixture_schedule_template():

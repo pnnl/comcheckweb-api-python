@@ -1,7 +1,7 @@
 # Getting Started
 
 !!! note "Supported Sections"
-    Currently, only **Building Area**, **Envelope**, and **Compliance Simulation** operations are fully supported. Interior lighting, exterior lighting, mechanical, credits, and renewable energy sections are planned but not yet implemented. See the [home page](index.md#current-status) for the full status table.
+    Currently, **Building Area**, **Envelope**, **Interior Lighting**, **Exterior Lighting**, and **Compliance Simulation** operations are fully supported. Mechanical, credits, and renewable energy sections are planned but not yet implemented. See the [home page](index.md#current-status) for the full status table.
 
 ## Setup
 
@@ -105,6 +105,7 @@ client.update_project("project-id", project)
 ```python
 import time
 from comcheck_api import COMcheckClient
+from comcheck_api.types import SimulationStatus
 
 client = COMcheckClient(api_key="your-key")
 project = client.get_project("project-id")
@@ -112,12 +113,15 @@ project = client.get_project("project-id")
 # Start simulation
 session_id = client.start_run_simulation(project)
 
-# Poll for completion
+# Poll until terminal — only SUCCESS and FAILED are guaranteed terminal states.
+# Don't poll faster than every 5 seconds.
 while True:
     status = client.get_simulation_status(session_id)
-    if status["status"] == "COMPLETED":
+    if status["status"] == SimulationStatus.SUCCESS:
         break
-    time.sleep(2)
+    if status["status"] == SimulationStatus.FAILED:
+        raise RuntimeError(f"Simulation failed: {status.get('message')}")
+    time.sleep(5)
 
 # Get results
 result = client.get_simulation_result(session_id)

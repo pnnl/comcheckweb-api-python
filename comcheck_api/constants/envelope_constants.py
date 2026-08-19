@@ -50,9 +50,8 @@ DEFAULT_WINDOW: Window = Window.model_validate(
 
 DEFAULT_DOOR: Door = Door.model_validate(
     {
-        "adjacentSpaceBuildingType": None,
         "adjacentSpaceType": None,
-        "allowanceType": None,
+        "allowanceType": "ENV_ALLOWANCE_NONE",
         "altExemptType": None,
         "assemblyType": "Door:Default Door",
         "bldgUseKey": str(uuid4()),
@@ -86,7 +85,7 @@ DEFAULT_DOOR: Door = Door.model_validate(
 DEFAULT_SKYLIGHT: Skylight = Skylight.model_validate(
     {
         "adjacentSpaceType": None,
-        "allowanceType": None,
+        "allowanceType": "ENV_ALLOWANCE_NONE",
         "assemblyType": "Skylight:Default Skylight",
         "bldgUseKey": "",
         "curbType": "NO_CURB_SKYLIGHT",
@@ -113,7 +112,7 @@ DEFAULT_SKYLIGHT: Skylight = Skylight.model_validate(
 DEFAULT_ROOF: Roof = Roof.model_validate(
     {
         "adjacentSpaceType": None,
-        "allowanceType": None,
+        "allowanceType": "ENV_ALLOWANCE_NONE",
         "assemblyType": "Roof:Default Roof",
         "bldgUseKey": str(uuid4()),
         "cavityRValue": 0,
@@ -137,7 +136,7 @@ DEFAULT_ROOF: Roof = Roof.model_validate(
 DEFAULT_FLOOR: Floor = Floor.model_validate(
     {
         "adjacentSpaceType": None,
-        "allowanceType": None,
+        "allowanceType": "ENV_ALLOWANCE_NONE",
         "altExemptType": None,
         "assemblyType": "Floor:Default Floor",
         "bldgUseKey": str(uuid4()),
@@ -163,7 +162,7 @@ DEFAULT_AG_WALL: AgWall = AgWall.model_validate(
         "adjacentSpaceType": None,
         "agWallConstructionDetailsType": "NONE",
         "agWallExteriorFinishDetailsType": None,
-        "allowanceType": None,
+        "allowanceType": "ENV_ALLOWANCE_NONE",
         "assemblyType": "Ext Wall:Default Exterior Wall",
         "bldgUseKey": str(uuid4()),
         "cavityRValue": 20,
@@ -206,9 +205,8 @@ DEFAULT_THERMAL_BRIDGE: ThermalBridge = ThermalBridge.model_validate(
 
 DEFAULT_BG_WALL: BgWall = BgWall.model_validate(
     {
-        "adjacentSpaceBuildingType": None,
         "adjacentSpaceType": None,
-        "allowanceType": None,
+        "allowanceType": "ENV_ALLOWANCE_NONE",
         "altExemptType": None,
         "assemblyType": "Basement:Default Basement",
         "bldgUseKey": "",

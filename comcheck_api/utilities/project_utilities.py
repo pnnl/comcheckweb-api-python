@@ -6,6 +6,35 @@ from comcheck_api.types.core_types import ComBuilding
 from comcheck_api.managers.data_manager import DataManager, get_model_info
 
 
+def _require_unique_area_description(
+    project: ComBuilding,
+    area_description: str,
+    exclude_key: str | float | None = None,
+) -> None:
+    """Raise if area_description already exists in wholeBldgUse (case-sensitive).
+
+    Args:
+        project: The project to check.
+        area_description: The description to validate for uniqueness.
+        exclude_key: Skip the WholeBldgUse item with this key (used during updates
+            so the item being edited doesn't conflict with itself).
+
+    Raises:
+        ValueError: If another WholeBldgUse item has the same areaDescription.
+    """
+    whole_use = project.get_by_path("lighting.wholeBldgUse")
+    if not isinstance(whole_use, list):
+        return
+
+    for area in whole_use:
+        if exclude_key is not None and getattr(area, "key", None) == exclude_key:
+            continue
+        if getattr(area, "areaDescription", None) == area_description:
+            raise ValueError(
+                f"areaDescription '{area_description}' already exists in wholeBldgUse."
+            )
+
+
 def _require_building_area(project: ComBuilding, building_area_key: str) -> None:
     """
     Ensure that project.lighting.wholeBldgUse exists and contains the given key.
@@ -18,6 +47,50 @@ def _require_building_area(project: ComBuilding, building_area_key: str) -> None
     if not any(getattr(area, "key", None) == building_area_key for area in whole_use):
         raise ValueError(
             f"Building area key '{building_area_key}' not found in lighting.wholeBldgUse."
+        )
+
+
+def _require_activity_use(
+    project: ComBuilding, building_area_key: str, area_description: str
+) -> None:
+    """Ensure the given building area contains an activityUse with the given areaDescription."""
+    whole_use = project.get_by_path("lighting.wholeBldgUse")
+    if not isinstance(whole_use, list):
+        raise ValueError("No building areas (wholeBldgUse) found in project.")
+
+    area = next(
+        (area for area in whole_use if getattr(area, "key", None) == building_area_key),
+        None,
+    )
+    if area is None:
+        raise ValueError(
+            f"Building area key '{building_area_key}' not found in lighting.wholeBldgUse."
+        )
+
+    activity_uses = getattr(area, "activityUse", []) or []
+    if not any(
+        getattr(activity_use, "areaDescription", None) == area_description
+        for activity_use in activity_uses
+    ):
+        raise ValueError(
+            f"ActivityUse with areaDescription '{area_description}' "
+            f"not found in building area '{building_area_key}'."
+        )
+
+
+def _require_exterior_use(project: ComBuilding, area_description: str) -> None:
+    """Ensure project.lighting.exteriorUse contains an ExteriorUse with the given areaDescription."""
+    exterior_uses = project.get_by_path("lighting.exteriorUse")
+    if not isinstance(exterior_uses, list):
+        raise ValueError("No exterior uses (lighting.exteriorUse) found in project.")
+
+    if not any(
+        getattr(exterior_use, "areaDescription", None) == area_description
+        for exterior_use in exterior_uses
+    ):
+        raise ValueError(
+            f"ExteriorUse with areaDescription '{area_description}' "
+            f"not found in lighting.exteriorUse."
         )
 
 
@@ -37,7 +110,7 @@ def find_component_in_component_list(
         return None
 
     component_type = type(components[0])
-    component_manager = DataManager[component_type](
+    component_manager: DataManager = DataManager(
         initial_data=components, model_type=component_type
     )
 
@@ -46,7 +119,7 @@ def find_component_in_component_list(
 
 def get_id_from_component(
     component: CustomBaseModel,
-) -> str:
+) -> str | None:
     """Retrieve the unique identifier value of a component.
 
     Args:

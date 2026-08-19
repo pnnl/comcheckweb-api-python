@@ -96,9 +96,10 @@ class COMCheckApiService:
 
         if isinstance(error, httpx.HTTPStatusError):
             logger.error(
-                "HTTP error occurred: %s (Status: %s)",
-                error,
+                "HTTP error occurred (Status: %s): %s\nResponse body: %s",
                 error.response.status_code,
+                error,
+                error.response.text,
                 exc_info=True,
                 extra={
                     "response_data": error.response.text,
@@ -210,6 +211,58 @@ class COMCheckApiService:
             )
             response.raise_for_status()
             # may need validation here.
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
+    def activity_use_allowed_wattage(
+        self, activity_use_data: Dict[str, Any], energy_code: str
+    ) -> Dict[str, Any]:
+        """Calculate allowed wattage for a single interior lighting activity use.
+
+        Args:
+            activity_use_data: The activity use data to send in the request body
+            energy_code: The energy code for the api end point path
+
+        Returns:
+            API response data as dictionary
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post(
+                f"/{energy_code}/activity-use/allowed-wattage", json=activity_use_data
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
+    def activity_uses_allowed_wattage(
+        self, activity_uses_data: list[Dict[str, Any]], energy_code: str
+    ) -> Dict[str, Any]:
+        """Calculate allowed wattage for a list of interior lighting activity uses.
+
+        Args:
+            activity_uses_data: The list of activity use data to send in the request body
+            energy_code: The energy code for the api end point path
+
+        Returns:
+            API response data as dictionary
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post(
+                f"/{energy_code}/activity-uses/allowed-wattage", json=activity_uses_data
+            )
+            response.raise_for_status()
             return response.json()
         except Exception as error:
             self._handle_api_error(error)

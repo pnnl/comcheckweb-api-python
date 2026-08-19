@@ -10,12 +10,11 @@ from typing import Any, Dict, List, Literal, Optional, Union, overload
 import httpx
 
 from comcheck_api.api import COMCheckApiService
-from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
 from comcheck_api.exceptions import (
     COMCheckProjectNotFoundError,
     COMCheckSimulationError,
 )
-from comcheck_api.types.core_types import ComBuilding, InteriorLightingSpace
+from comcheck_api.types.core_types import ActivityUse, ComBuilding
 
 Mode = Literal["python", "json"]
 
@@ -111,14 +110,6 @@ class COMcheckClient:
         """
         resp = self._service.get_project(project_id)
         data = resp.get("data")
-        if data is not None:
-            for building_area in data["lighting"]["wholeBldgUse"]:
-                building_area["interiorLightingSpace"] = {
-                    **DEFAULT_BUILDING_AREA.interiorLightingSpace.model_dump(
-                        mode="json", exclude_unset=True
-                    )
-                }
-
         return self._parse_data(data, mode)
 
     def list_projects(self) -> List[Dict[str, Any]]:
@@ -130,6 +121,22 @@ class COMcheckClient:
         return self._service.get_project_list().get("data", [])
 
     # TODO: return of update_project should be ComBuilding
+    @overload
+    def update_project(
+        self,
+        project_id: str,
+        project_data: ComBuilding,
+        mode: Literal["python"] = "python",
+    ) -> Optional["ComBuilding"]: ...
+
+    @overload
+    def update_project(
+        self,
+        project_id: str,
+        project_data: ComBuilding,
+        mode: Literal["json"],
+    ) -> Optional[Dict[str, Any]]: ...
+
     def update_project(
         self,
         project_id: str,
@@ -160,7 +167,7 @@ class COMcheckClient:
         if not old_project:
             raise COMCheckProjectNotFoundError(project_id)
 
-        project_data_json = project_data.model_dump(mode="json", exclude_unset=True)
+        project_data_json = project_data.model_dump(mode="json")
 
         # Preserve user project reference
         user_project = old_project["userProject"]
@@ -178,14 +185,6 @@ class COMcheckClient:
         ]:
             project_data_json[section]["id"] = old_project[section]["id"]
         project_data_json["id"] = old_project["id"]
-
-        # Ensure each building area has interiorLightingSpace initialized
-        for building_area in project_data_json["lighting"]["wholeBldgUse"]:
-            building_area["interiorLightingSpace"] = {
-                **DEFAULT_BUILDING_AREA.interiorLightingSpace.model_dump(
-                    mode="json", exclude_unset=True
-                )
-            }
 
         # TODO: need to verify if other componets also need to remove None IDs (auto-generated through pydantic )
         # Remove None IDs from envelope components
@@ -263,7 +262,7 @@ class COMcheckClient:
             The same ``project`` instance, with u-values updated.
         """
         energy_code = str(project.control.code)
-        envelope_data = project.envelope.model_dump(mode="json", exclude_unset=True)
+        envelope_data = project.envelope.model_dump(mode="json")
         updated_assembly_uvalues = self._service.assemblies_uvalue(
             envelope_data, energy_code
         )["data"]
@@ -288,6 +287,46 @@ class COMcheckClient:
 
         return project
 
+    def calculate_activity_use_allowed_wattage(
+        self, activity_use: ActivityUse, energy_code: str
+    ) -> Any:
+        """Calculate allowed wattage for a single interior lighting activity use.
+
+        Args:
+            activity_use: The activity use to calculate allowed wattage for.
+            energy_code: The energy code for the api end point path.
+
+        Returns:
+            A dict with the calculated wattage, e.g.
+            ``{"spaceAllowedWattage": 560}``.
+        """
+        activity_use_data = activity_use.model_dump(mode="json")
+        response = self._service.activity_use_allowed_wattage(
+            activity_use_data, energy_code
+        )
+        return response.get("data")
+
+    def calculate_activity_uses_allowed_wattage(
+        self, activity_uses: List[ActivityUse], energy_code: str
+    ) -> Any:
+        """Calculate allowed wattage for a list of interior lighting activity uses.
+
+        Args:
+            activity_uses: The activity uses to calculate allowed wattage for.
+            energy_code: The energy code for the api end point path.
+
+        Returns:
+            A dict keyed by each activity use's ``areaDescription``, e.g.
+            ``{"Test Space": 610}``.
+        """
+        activity_uses_data = [
+            activity_use.model_dump(mode="json") for activity_use in activity_uses
+        ]
+        response = self._service.activity_uses_allowed_wattage(
+            activity_uses_data, energy_code
+        )
+        return response.get("data")
+
     def check_UA_compliance(self, project: ComBuilding) -> Any:
         """Check UA path compliance for a project.
 
@@ -297,7 +336,7 @@ class COMcheckClient:
         Returns:
             The compliance results payload returned by the API.
         """
-        project_data = project.model_dump(mode="json", exclude_unset=True)
+        project_data = project.model_dump(mode="json")
         response = self._service.check_UA_compliance(project_data)
         return response.get("data")
 
@@ -310,7 +349,7 @@ class COMcheckClient:
         Returns:
             The requirements payload returned by the API.
         """
-        project_data = project.model_dump(mode="json", exclude_unset=True)
+        project_data = project.model_dump(mode="json")
         response = self._service.check_requirements(project_data)
         return response.get("data")
 
@@ -350,7 +389,7 @@ class COMcheckClient:
             ``expires``, and ``fileName``.
         """
         report_data = {
-            "building": project.model_dump(mode="json", exclude_unset=True),
+            "building": project.model_dump(mode="json"),
             "envelope": envelope,
             "extlighting": extlighting,
             "intlighting": intlighting,
@@ -397,7 +436,7 @@ class COMcheckClient:
             logger.info("Updating project: %s", project_id)
             project = self.update_project(str(project_id), project)
 
-        project_data = project.model_dump(mode="json", exclude_unset=True)
+        project_data = project.model_dump(mode="json")
         run_result = self._service.start_run_simulation(project_data)
         if run_result.data is None:
             raise COMCheckSimulationError(

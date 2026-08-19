@@ -23,11 +23,15 @@ from pydantic import BaseModel, ConfigDict
 from comcheck_api import (
     project_building_area_operations,
     project_envelope_operations,
+    project_exterior_lighting_operations,
+    project_interior_lighting_operations,
 )
 
 _OP_MODULES = {
     "building_area": project_building_area_operations,
     "envelope": project_envelope_operations,
+    "interior_lighting": project_interior_lighting_operations,
+    "exterior_lighting": project_exterior_lighting_operations,
 }
 
 

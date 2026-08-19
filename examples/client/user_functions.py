@@ -6,9 +6,10 @@ from comcheck_api.client import COMcheckClient
 from comcheck_api.defaults import get_default_project_template
 
 # Initialize client
-load_dotenv()
+load_dotenv(override=True)
 client = COMcheckClient()
 api_key = os.getenv("COM_API_KEY") or "your-api-key-here"
+client.set_api_key(api_key)
 
 # Example 1: List all projects
 projects = client.list_projects()
@@ -25,7 +26,7 @@ if projects:
     project_id = projects[0]["_id"]
     project = client.get_project(project_id)
     print(f"\nProject {project_id} details:")
-    print(f"Name: {getattr(project, 'projectName', 'N/A')}")
+    print(f"Project Title: {getattr(project.project, 'projectTitle', 'N/A')}")
     print(f"Type: {getattr(project, 'projectType', 'N/A')}")
 
 # Example 4: Update a project with default template
