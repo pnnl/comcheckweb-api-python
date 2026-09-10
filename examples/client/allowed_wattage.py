@@ -20,7 +20,7 @@ interior_space.areaDescription = "Open Office"
 interior_space.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE_OPEN
 interior_space.floorArea = 2000.0
 
-result = client.calculate_activity_use_allowed_wattage(interior_space, energy_code)
+result = client.calculate_interior_space_allowed_wattage(interior_space, energy_code)
 print(f"Allowed wattage: {result}")  # e.g. {"spaceAllowedWattage": 560}
 
 # Example 2: Calculate allowed wattage for a list of InteriorSpace objects.
@@ -29,7 +29,7 @@ second_interior_space.areaDescription = "Conference Room"
 second_interior_space.activityType = ActivityTypeOptions.ACTIVITY_COMMON_CONFERENCE_HALL
 second_interior_space.floorArea = 500.0
 
-results = client.calculate_activity_uses_allowed_wattage(
+results = client.calculate_interior_spaces_allowed_wattage(
     [interior_space, second_interior_space], energy_code
 )
 print(

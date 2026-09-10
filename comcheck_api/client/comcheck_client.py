@@ -14,7 +14,8 @@ from comcheck_api.exceptions import (
     COMCheckProjectNotFoundError,
     COMCheckSimulationError,
 )
-from comcheck_api.types.core_types import ActivityUse, ComBuilding
+from comcheck_api.types.common_types import InteriorSpace
+from comcheck_api.types.core_types import ComBuilding
 
 Mode = Literal["python", "json"]
 
@@ -287,14 +288,14 @@ class COMcheckClient:
 
         return project
 
-    def calculate_activity_use_allowed_wattage(
-        self, interior_space: ActivityUse, energy_code: str
+    def calculate_interior_space_allowed_wattage(
+        self, interior_space: InteriorSpace, energy_code: str
     ) -> Any:
         """Calculate allowed wattage for a single interior lighting space.
 
         Args:
-            interior_space: The interior space (``ActivityUse``) to calculate
-                allowed wattage for.
+            interior_space: The interior space (``InteriorSpace``) to
+                calculate allowed wattage for.
             energy_code: The energy code for the api end point path.
 
         Returns:
@@ -302,19 +303,19 @@ class COMcheckClient:
             ``{"spaceAllowedWattage": 560}``.
         """
         interior_space_data = interior_space.model_dump(mode="json")
-        response = self._service.activity_use_allowed_wattage(
+        response = self._service.interior_space_allowed_wattage(
             interior_space_data, energy_code
         )
         return response.get("data")
 
-    def calculate_activity_uses_allowed_wattage(
-        self, interior_spaces: List[ActivityUse], energy_code: str
+    def calculate_interior_spaces_allowed_wattage(
+        self, interior_spaces: List[InteriorSpace], energy_code: str
     ) -> Any:
         """Calculate allowed wattage for a list of interior lighting spaces.
 
         Args:
-            interior_spaces: The interior spaces (``ActivityUse`` objects) to
-                calculate allowed wattage for.
+            interior_spaces: The interior spaces (``InteriorSpace`` objects)
+                to calculate allowed wattage for.
             energy_code: The energy code for the api end point path.
 
         Returns:
@@ -324,7 +325,7 @@ class COMcheckClient:
         interior_spaces_data = [
             interior_space.model_dump(mode="json") for interior_space in interior_spaces
         ]
-        response = self._service.activity_uses_allowed_wattage(
+        response = self._service.interior_spaces_allowed_wattage(
             interior_spaces_data, energy_code
         )
         return response.get("data")

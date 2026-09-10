@@ -6,6 +6,10 @@ model.  Each ExteriorArea lives directly under lighting.exteriorUse[] (no
 parent building area needed) and carries exactly one ExteriorLightingSpace
 whose fixture[] holds the fixtures.
 
+Fixtures themselves can be batch added/updated/removed via
+update_fixtures_in_exterior_area, matched by fixtureType (the
+schema-documented uniqueness key for fixtures within a lighting space).
+
 Zone type
 ---------
 Before exterior compliance can be evaluated, set a real exterior lighting zone
@@ -105,33 +109,22 @@ if not project:
     raise ValueError("Project not found after update")
 print("ExteriorArea updated: useQuantity → 6000.0")
 
-# ── Step 5: Add a second fixture by updating the lighting space ───────────────
-# Use direct attribute access (not get_by_path, which returns Any) so
-# `exterior_area` keeps its real type for editor autocomplete and type checking.
-if not project.lighting or not project.lighting.exteriorUse:
-    raise ValueError("Project has no exterior areas (exteriorUse)")
-exterior_area = next(
-    exterior_area
-    for exterior_area in project.lighting.exteriorUse
-    if exterior_area.areaDescription == "Main Parking Area"
-)
-if exterior_area.exteriorLightingSpace is None:
-    raise ValueError("ExteriorArea has no exteriorLightingSpace")
-existing_fixtures = list(exterior_area.exteriorLightingSpace.fixture or [])
-
+# ── Step 5: Add a second fixture via the batch fixture operation ─────────────
+# update_fixtures_in_exterior_area matches fixtures by fixtureType — upserts
+# either add a new fixture or replace an existing one with the same
+# fixtureType, and remove_fixture_types deletes by fixtureType.  It handles
+# the read-modify-write of exteriorLightingSpace.fixture[] internally, so
+# there's no need to fetch and merge the existing fixture list by hand.
 new_fixture = get_default_fixture_template()
 new_fixture.description = "Entrance LED"
+new_fixture.fixtureType = "Entrance LED"
 new_fixture.fixtureWattage = 80.0
 new_fixture.quantity = 2
 
-updated_space = exterior_area.exteriorLightingSpace.model_copy(
-    deep=True,
-    update={"fixture": existing_fixtures + [new_fixture]},
-)
-project = el_ops.update_exterior_area_in_project(
+project = el_ops.update_fixtures_in_exterior_area(
     project,
     "Main Parking Area",
-    {"exteriorLightingSpace": updated_space.model_dump(mode="python")},
+    upserts=[new_fixture],
 )
 
 project = client.update_project(project_id, project)
@@ -139,7 +132,25 @@ if not project:
     raise ValueError("Project not found after update")
 print("Second fixture added to Main Parking Area")
 
-# ── Step 6: Remove the ExteriorArea ──────────────────────────────────────────
+# ── Step 6: Update the first fixture and remove the second, in one batch ─────
+updated_fixture = get_default_fixture_template()
+updated_fixture.fixtureType = "Parking LED"  # matches the fixture added in Step 2
+updated_fixture.fixtureWattage = 120.0
+updated_fixture.quantity = 10
+
+project = el_ops.update_fixtures_in_exterior_area(
+    project,
+    "Main Parking Area",
+    upserts=[updated_fixture],
+    remove_fixture_types=["Entrance LED"],
+)
+
+project = client.update_project(project_id, project)
+if not project:
+    raise ValueError("Project not found after update")
+print("Parking LED updated to 120.0 W, Entrance LED removed")
+
+# ── Step 7: Remove the ExteriorArea ──────────────────────────────────────────
 project = el_ops.remove_exterior_area_from_project(project, "Main Parking Area")
 
 project = client.update_project(project_id, project)

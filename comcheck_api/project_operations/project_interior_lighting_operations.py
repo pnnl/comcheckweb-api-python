@@ -4,9 +4,12 @@ Manages interior lighting at the InteriorSpace granularity.  In the COMcheck
 API schema, an interior lighting space is represented by the ``ActivityUse``
 model (``lighting.wholeBldgUse[i].activityUse[]``).  Each InteriorSpace carries
 exactly one (singleton) InteriorLightingSpace whose fixture[] holds the
-fixtures.  There are no fixture-level operations — to add, change, or remove a
-fixture, edit the InteriorSpace's interiorLightingSpace.fixture[] list and pass
-the whole InteriorSpace through update_interior_space_in_project.
+fixtures.  Fixtures can be batch added, updated, and/or removed via
+update_fixtures_in_interior_space, matched by fixtureType (the
+schema-documented uniqueness key for fixtures within a lighting space, not
+id).  You can also edit the InteriorSpace's interiorLightingSpace.fixture[]
+list directly and pass the whole InteriorSpace through
+update_interior_space_in_project.
 """
 
 from typing import Any

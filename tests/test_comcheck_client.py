@@ -63,7 +63,7 @@ def test_fetch_single_project(client: COMcheckClient):
         assert True
 
 
-def test_calculate_activity_use_allowed_wattage(client: COMcheckClient):
+def test_calculate_interior_space_allowed_wattage(client: COMcheckClient):
     """Test calculating allowed wattage for a single InteriorSpace."""
     interior_space = get_default_interior_space_template()
     interior_space.areaDescription = "Open Office"
@@ -72,7 +72,7 @@ def test_calculate_activity_use_allowed_wattage(client: COMcheckClient):
     energy_code = str(EnergyCodeOptions.CEZ_90_1_2022)
 
     try:
-        result = client.calculate_activity_use_allowed_wattage(
+        result = client.calculate_interior_space_allowed_wattage(
             interior_space, energy_code
         )
     except COMCheckHTTPError as exc:
@@ -85,7 +85,7 @@ def test_calculate_activity_use_allowed_wattage(client: COMcheckClient):
     assert "spaceAllowedWattage" in result
 
 
-def test_calculate_activity_uses_allowed_wattage(client: COMcheckClient):
+def test_calculate_interior_spaces_allowed_wattage(client: COMcheckClient):
     """Test calculating allowed wattage for a list of InteriorSpace objects."""
     first = get_default_interior_space_template()
     first.areaDescription = "Open Office"
@@ -100,7 +100,7 @@ def test_calculate_activity_uses_allowed_wattage(client: COMcheckClient):
     energy_code = str(EnergyCodeOptions.CEZ_90_1_2022)
 
     try:
-        result = client.calculate_activity_uses_allowed_wattage(
+        result = client.calculate_interior_spaces_allowed_wattage(
             [first, second], energy_code
         )
     except COMCheckHTTPError as exc:

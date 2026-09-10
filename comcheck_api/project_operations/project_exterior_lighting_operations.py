@@ -3,10 +3,12 @@
 Manages exterior lighting at the ExteriorArea granularity.  In the COMcheck
 API schema, an exterior lighting area is represented by the ``ExteriorUse``
 model.  Each ExteriorArea carries exactly one (singleton) ExteriorLightingSpace
-whose fixture[] holds the fixtures.  There are no fixture-level operations —
-to add, change, or remove a fixture, edit the ExteriorArea's
-exteriorLightingSpace.fixture[] list and pass the whole ExteriorArea through
-update_exterior_area_in_project.
+whose fixture[] holds the fixtures.  Fixtures can be batch added, updated,
+and/or removed via update_fixtures_in_exterior_area, matched by fixtureType
+(the schema-documented uniqueness key for fixtures within a lighting space,
+not id).  You can also edit the ExteriorArea's
+exteriorLightingSpace.fixture[] list directly and pass the whole
+ExteriorArea through update_exterior_area_in_project.
 
 Zone type
 ---------

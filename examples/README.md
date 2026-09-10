@@ -53,8 +53,8 @@ python examples/client/compliance_and_report.py
 Demonstrates interior lighting allowed-wattage calculation.
 
 **What it demonstrates:**
-- `calculate_activity_use_allowed_wattage()` - Calculating allowed wattage for a single InteriorSpace
-- `calculate_activity_uses_allowed_wattage()` - Calculating allowed wattage for a list of InteriorSpace objects
+- `calculate_interior_space_allowed_wattage()` - Calculating allowed wattage for a single InteriorSpace
+- `calculate_interior_spaces_allowed_wattage()` - Calculating allowed wattage for a list of InteriorSpace objects
 
 **Usage:**
 ```bash
@@ -101,7 +101,8 @@ Demonstrates adding and managing interior lighting (InteriorSpace) in a project.
 
 **What it demonstrates:**
 - `add_interior_space_to_project()` - Adding an InteriorSpace with fixtures pre-populated
-- `update_interior_space_in_project()` - Updating fields and adding/removing fixtures
+- `update_interior_space_in_project()` - Updating InteriorSpace fields
+- `update_fixtures_in_interior_space()` - Batch adding/updating/removing fixtures, matched by fixtureType
 - `remove_interior_space_from_project()` - Removing an InteriorSpace and its fixtures
 - `get_interior_space_keys_from_project()` - Listing interior spaces in a building area
 
@@ -116,7 +117,8 @@ Demonstrates setting the exterior lighting zone type and managing ExteriorArea i
 **What it demonstrates:**
 - `set_exterior_lighting_zone_type_in_project()` - Setting the project-level zone type
 - `add_exterior_area_to_project()` - Adding an ExteriorArea with fixtures pre-populated
-- `update_exterior_area_in_project()` - Updating fields and adding/removing fixtures
+- `update_exterior_area_in_project()` - Updating ExteriorArea fields
+- `update_fixtures_in_exterior_area()` - Batch adding/updating/removing fixtures, matched by fixtureType
 - `remove_exterior_area_from_project()` - Removing an ExteriorArea and its fixtures
 
 **Usage:**

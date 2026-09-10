@@ -63,8 +63,8 @@ Triggers:
   so you rarely call it directly — use it only when you need refreshed
   u-values on a project outside the simulation flow.
 - **Interior lighting allowed wattage is also calculated server-side**:
-  `calculate_activity_use_allowed_wattage(interior_space, energy_code)` and
-  `calculate_activity_uses_allowed_wattage(interior_spaces, energy_code)`
+  `calculate_interior_space_allowed_wattage(interior_space, energy_code)` and
+  `calculate_interior_spaces_allowed_wattage(interior_spaces, energy_code)`
   take an `InteriorSpace` (or a list of them) plus the energy code as an
   explicit string — `InteriorSpace` has no `control.code` of its own. Neither
   method mutates the input or writes to `allowedWattage`; both return the
@@ -161,8 +161,8 @@ print(result["performanceRating"])
   are fully supported and fine to use. The compliance/report client
   methods (`check_UA_compliance`, `check_requirements`,
   `generate_report`) are also fully supported, as are the allowed-wattage
-  methods (`calculate_activity_use_allowed_wattage`,
-  `calculate_activity_uses_allowed_wattage`). If asked for an
+  methods (`calculate_interior_space_allowed_wattage`,
+  `calculate_interior_spaces_allowed_wattage`). If asked for an
   unsupported mutation area, tell the user it's not implemented and
   offer building-area / envelope / lighting / simulation instead.
   `comcheck_api.list_operations()` enumerates the `building_area`,
@@ -245,9 +245,10 @@ else:
 ### Adding interior lighting (InteriorSpace + fixtures)
 
 Interior lighting lives under `wholeBldgUse[i].activityUse[]`.  Use
-`project_interior_lighting_operations` — there are no fixture-level ops;
-edit the `InteriorSpace`'s `interiorLightingSpace.fixture[]` and pass the
-whole `InteriorSpace` through `update_interior_space_in_project`.
+`project_interior_lighting_operations`.  Fixtures are batch-edited via
+`update_fixtures_in_interior_space`, matched by `fixtureType` (the
+schema-documented uniqueness key for fixtures within a lighting space, not
+`id`).
 
 ```python
 from comcheck_api import project_interior_lighting_operations as il_ops
@@ -275,13 +276,25 @@ project = il_ops.update_interior_space_in_project(
     project, area_key, "Open Office", {"floorArea": 2500.0}
 )
 
+# Batch add/update/remove fixtures in one call, matched by fixtureType
+new_fixture = get_default_fixture_template()
+new_fixture.fixtureType = "Pendant LED"
+new_fixture.fixtureWattage = 35.0
+project = il_ops.update_fixtures_in_interior_space(
+    project,
+    area_key,
+    "Open Office",
+    upserts=[new_fixture],
+    remove_fixture_types=["Recessed LED"],
+)
+
 # Remove
 project = il_ops.remove_interior_space_from_project(project, area_key, "Open Office")
 
 # Allowed wattage is calculated server-side via COMcheckClient, not il_ops.
 # energy_code is explicit — InteriorSpace has no control.code of its own.
 energy_code = str(project.control.code)
-result = client.calculate_activity_use_allowed_wattage(interior_space, energy_code)
+result = client.calculate_interior_space_allowed_wattage(interior_space, energy_code)
 # {"spaceAllowedWattage": 560}
 ```
 
@@ -303,6 +316,7 @@ project = el_ops.set_exterior_lighting_zone_type_in_project(
 
 fixture = get_default_fixture_template()
 fixture.description = "Parking LED"
+fixture.fixtureType = "Parking LED"
 fixture.fixtureWattage = 150.0
 fixture.quantity = 8
 
@@ -318,6 +332,15 @@ project = el_ops.add_exterior_area_to_project(project, exterior_area)
 project = el_ops.update_exterior_area_in_project(
     project, "Main Parking Area", {"useQuantity": 6000.0}
 )
+
+# Batch add/update/remove fixtures in one call, matched by fixtureType
+new_fixture = get_default_fixture_template()
+new_fixture.fixtureType = "Entrance LED"
+new_fixture.fixtureWattage = 80.0
+project = el_ops.update_fixtures_in_exterior_area(
+    project, "Main Parking Area", upserts=[new_fixture]
+)
+
 project = el_ops.remove_exterior_area_from_project(project, "Main Parking Area")
 ```
 

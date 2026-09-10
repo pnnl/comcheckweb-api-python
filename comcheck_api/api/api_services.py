@@ -215,13 +215,13 @@ class COMCheckApiService:
         except Exception as error:
             self._handle_api_error(error)
 
-    def activity_use_allowed_wattage(
-        self, activity_use_data: Dict[str, Any], energy_code: str
+    def interior_space_allowed_wattage(
+        self, interior_space_data: Dict[str, Any], energy_code: str
     ) -> Dict[str, Any]:
-        """Calculate allowed wattage for a single interior lighting activity use.
+        """Calculate allowed wattage for a single interior lighting space.
 
         Args:
-            activity_use_data: The activity use data to send in the request body
+            interior_space_data: The interior space data to send in the request body
             energy_code: The energy code for the api end point path
 
         Returns:
@@ -234,20 +234,20 @@ class COMCheckApiService:
         try:
             client = self._get_client()
             response = client.post(
-                f"/{energy_code}/activity-use/allowed-wattage", json=activity_use_data
+                f"/{energy_code}/activity-use/allowed-wattage", json=interior_space_data
             )
             response.raise_for_status()
             return response.json()
         except Exception as error:
             self._handle_api_error(error)
 
-    def activity_uses_allowed_wattage(
-        self, activity_uses_data: list[Dict[str, Any]], energy_code: str
+    def interior_spaces_allowed_wattage(
+        self, interior_spaces_data: list[Dict[str, Any]], energy_code: str
     ) -> Dict[str, Any]:
-        """Calculate allowed wattage for a list of interior lighting activity uses.
+        """Calculate allowed wattage for a list of interior lighting spaces.
 
         Args:
-            activity_uses_data: The list of activity use data to send in the request body
+            interior_spaces_data: The list of interior space data to send in the request body
             energy_code: The energy code for the api end point path
 
         Returns:
@@ -260,7 +260,8 @@ class COMCheckApiService:
         try:
             client = self._get_client()
             response = client.post(
-                f"/{energy_code}/activity-uses/allowed-wattage", json=activity_uses_data
+                f"/{energy_code}/activity-uses/allowed-wattage",
+                json=interior_spaces_data,
             )
             response.raise_for_status()
             return response.json()

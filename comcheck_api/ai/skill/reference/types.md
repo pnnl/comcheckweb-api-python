@@ -13,7 +13,7 @@ aliases exist).
 | `project` | `Project` | Project metadata. Title is `project.project.projectTitle`; address fields use `projectAddress` / `projectCity` / etc. |
 | `location` | `Location` | State, city, climate zone. |
 | `envelope` | `Envelope` | Roofs (`roof[]`), AG walls (`agWall[]`), BG walls (`bgWall[]`), floors, windows, doors, skylights. |
-| `lighting` | `Lighting` | Holds `wholeBldgUse[]` — the **building areas / zones**. `wholeBldgUse[]` (including each area's `interiorLightingSpace` singleton) is operable; `activityUse[]`, `exteriorUse[]`, and `fixtureSchedule[]` have no operations. |
+| `lighting` | `Lighting` | Holds `wholeBldgUse[]` — the **building areas / zones**. `wholeBldgUse[]` (including each area's `interiorLightingSpace` singleton), `activityUse[]` (interior lighting spaces, plus their fixtures), and `exteriorUse[]` (exterior lighting areas, plus their fixtures) are all operable; `fixtureSchedule[]` has no operations. |
 | `hvac` | `HVAC` | Mechanical systems — no operations; not editable via this SDK. |
 | `renewable` | `Renewable` | Renewable energy systems — no operations; not editable via this SDK. |
 | `control` | `Control` | Energy code (`control.code`, e.g. `CEZ_IECC2018`, `CEZ_90_1_2022`). |
@@ -42,7 +42,7 @@ them.
 | Model | Purpose |
 |---|---|
 | `WholeBldgUse` | One building area / zone. Lives in `project.lighting.wholeBldgUse[]`. Has `key`, `areaDescription`, `floorArea`, `ceilingHeight`, `interiorLightingSpace`, etc. |
-| `InteriorLightingSpace` | Lighting configuration for one area. The singleton attached directly to a `WholeBldgUse` is editable via `update_building_area_in_project`; the same model nested under `activityUse[]` is **not** operable (interior-lighting fixtures live there). |
+| `InteriorLightingSpace` | Lighting configuration for one area. The singleton attached directly to a `WholeBldgUse` is editable via `update_building_area_in_project`; the same model nested under `activityUse[]` (which holds interior-lighting fixtures) is editable via `project_interior_lighting_operations`, including batch fixture edits via `update_fixtures_in_interior_space`. |
 
 Every envelope component has a `bldgUseKey` field that ties it to
 one of these area keys.

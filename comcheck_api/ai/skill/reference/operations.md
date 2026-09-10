@@ -109,15 +109,18 @@ from comcheck_api import project_interior_lighting_operations as il_ops
 ```
 
 Interior lighting spaces are `ActivityUse` objects (aliased as
-`InteriorSpace`) nested under `lighting.wholeBldgUse[i].activityUse[]`. There
-are no fixture-level ops — edit
-`interiorSpace.interiorLightingSpace.fixture[]` and pass the whole
-`InteriorSpace` through `update_interior_space_in_project`.
+`InteriorSpace`) nested under `lighting.wholeBldgUse[i].activityUse[]`.
+Fixtures are batch-edited via `update_fixtures_in_interior_space`, matched
+by `fixtureType` (the schema-documented uniqueness key for fixtures within
+a lighting space, not `id`). You can still edit
+`interiorSpace.interiorLightingSpace.fixture[]` directly and pass the whole
+`InteriorSpace` through `update_interior_space_in_project` if you prefer.
 
 | Function | Purpose |
 |---|---|
 | `add_interior_space_to_project(project, building_area_key, new_interior_space)` | Add an `InteriorSpace` to a building area. `activityUse.key` is auto-set to `building_area_key`. |
 | `update_interior_space_in_project(project, building_area_key, area_description, updates)` | Update an `InteriorSpace` by its `areaDescription`. |
+| `update_fixtures_in_interior_space(project, building_area_key, area_description, upserts=[], remove_fixture_types=[])` | Batch add/update/remove fixtures on an `InteriorSpace`, matched by `fixtureType`. Raises `ValueError` on duplicate `fixtureType`s in `upserts` or an unmatched `remove_fixture_types` entry. |
 | `remove_interior_space_from_project(project, building_area_key, area_description)` | Remove an `InteriorSpace` by its `areaDescription`. |
 | `get_interior_space_keys_from_project(project, building_area_key)` | List `[{areaDescription, activityType}, …]` for a building area. |
 
@@ -131,10 +134,10 @@ not an `il_ops` function:
 ```python
 energy_code = str(project.control.code)  # InteriorSpace alone has no control.code
 
-result = client.calculate_activity_use_allowed_wattage(interior_space, energy_code)
+result = client.calculate_interior_space_allowed_wattage(interior_space, energy_code)
 # {"spaceAllowedWattage": 560}
 
-results = client.calculate_activity_uses_allowed_wattage(
+results = client.calculate_interior_spaces_allowed_wattage(
     [interior_space, second_interior_space], energy_code
 )
 # {"Open Office": 560, "Conference Room": 610} — keyed by areaDescription
@@ -151,15 +154,19 @@ from comcheck_api import project_exterior_lighting_operations as el_ops
 
 Exterior lighting areas are `ExteriorUse` objects (aliased as `ExteriorArea`)
 in `lighting.exteriorUse[]`. Set a real zone type before exterior compliance
-can be evaluated. There are no fixture-level ops — edit
-`exteriorArea.exteriorLightingSpace.fixture[]` and pass the whole
-`ExteriorArea` through `update_exterior_area_in_project`.
+can be evaluated. Fixtures are batch-edited via
+`update_fixtures_in_exterior_area`, matched by `fixtureType` (the
+schema-documented uniqueness key for fixtures within a lighting space, not
+`id`). You can still edit `exteriorArea.exteriorLightingSpace.fixture[]`
+directly and pass the whole `ExteriorArea` through
+`update_exterior_area_in_project` if you prefer.
 
 | Function | Purpose |
 |---|---|
 | `set_exterior_lighting_zone_type_in_project(project, zone_type)` | Set `lighting.exteriorLightingZoneType`. Raises `ValueError` for `EXT_ZONE_UNSPECIFIED`, `TypeError` for non-enum values. |
 | `add_exterior_area_to_project(project, new_exterior_area)` | Add an `ExteriorArea`. Emits `UserWarning` if zone type is still `EXT_ZONE_UNSPECIFIED`. |
 | `update_exterior_area_in_project(project, area_description, updates)` | Update an `ExteriorArea` by its `areaDescription`. |
+| `update_fixtures_in_exterior_area(project, area_description, upserts=[], remove_fixture_types=[])` | Batch add/update/remove fixtures on an `ExteriorArea`, matched by `fixtureType`. Raises `ValueError` on duplicate `fixtureType`s in `upserts` or an unmatched `remove_fixture_types` entry. |
 | `remove_exterior_area_from_project(project, area_description)` | Remove an `ExteriorArea` by its `areaDescription`. |
 | `get_exterior_area_keys_from_project(project)` | List `[{areaDescription, exteriorType}, …]` for the project. |
 
