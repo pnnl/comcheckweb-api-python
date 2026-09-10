@@ -26,8 +26,12 @@ from comcheck_api.types.core_types import (
     ComBuilding,
     ExteriorLightingSpace,
     ExteriorLightingZoneTypeOptions,
+    Fixture,
 )
-from comcheck_api.utilities.project_utilities import _require_exterior_use
+from comcheck_api.utilities.project_utilities import (
+    _require_exterior_use,
+    merge_fixtures,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -176,6 +180,65 @@ def remove_exterior_area_from_project(
         subcomponent_id=area_description,
         subcomponent_name="exteriorUse",
     )
+    return updated_project
+
+
+def update_fixtures_in_exterior_area(
+    project: ComBuilding,
+    area_description: str,
+    upserts: list[Fixture | dict] = [],
+    remove_fixture_types: list[str] = [],
+) -> ComBuilding:
+    """Batch add, update, and/or remove fixtures on an exterior area.
+
+    Fixtures are matched by ``fixtureType`` (the schema-documented uniqueness
+    key for fixtures within a lighting space). Removals are
+    applied first; each upsert then replaces the existing fixture with the
+    same fixtureType, or is appended as new.
+
+    Args:
+        project: The project to modify.
+        area_description: The areaDescription of the ExteriorArea to update.
+        upserts: Fixtures to add or update, matched by fixtureType.
+        remove_fixture_types: fixtureType values of fixtures to remove.
+
+    Returns:
+        Updated project with the ExteriorArea's fixture[] list modified.
+
+    Raises:
+        ValueError: If two upserts share a fixtureType, or a
+            remove_fixture_types entry does not match any current fixture.
+    """
+    _require_exterior_use(project, area_description)
+
+    updated_project = project.model_copy(deep=True)
+    exterior_area = next(
+        area
+        for area in updated_project.lighting.exteriorUse
+        if area.areaDescription == area_description
+    )
+
+    updated_fixtures = merge_fixtures(
+        current_fixtures=exterior_area.exteriorLightingSpace.fixture or [],
+        upserts=upserts,
+        remove_fixture_types=remove_fixture_types,
+    )
+
+    # exteriorLightingSpace must be dumped in full — update_subcomponent_list
+    # merges at the ExteriorArea level, so a partial {"fixture": [...]} dict
+    # would wholesale-replace exteriorLightingSpace and wipe its other fields.
+    updated_space = exterior_area.exteriorLightingSpace.model_copy(
+        deep=True, update={"fixture": updated_fixtures}
+    )
+
+    updated_project.lighting.update_subcomponent_list(
+        subcomponent_updates={
+            "exteriorLightingSpace": updated_space.model_dump(mode="python")
+        },
+        subcomponent_id=area_description,
+        subcomponent_name="exteriorUse",
+    )
+
     return updated_project
 
 

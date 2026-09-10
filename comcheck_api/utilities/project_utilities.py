@@ -2,7 +2,7 @@
 
 from typing import List
 from comcheck_api.types.custom_base_model import CustomBaseModel
-from comcheck_api.types.core_types import ComBuilding
+from comcheck_api.types.core_types import ComBuilding, Fixture
 from comcheck_api.managers.data_manager import DataManager, get_model_info
 
 
@@ -131,3 +131,56 @@ def get_id_from_component(
 
     identifier, _ = get_model_info(type(component))
     return getattr(component, identifier, None)
+
+
+def merge_fixtures(
+    current_fixtures: List[Fixture],
+    upserts: List[Fixture | dict],
+    remove_fixture_types: List[str],
+) -> List[Fixture]:
+    """Apply batched add/update/remove edits to a fixture list, matched by fixtureType.
+
+    fixtureType is the schema-documented uniqueness key for fixtures within a
+    lighting space (Fixture has no populated/enforced ``id``). Removals are
+    applied first, then each upsert either replaces the existing fixture with
+    the same fixtureType or is appended as new.
+
+    Args:
+        current_fixtures: The lighting space's existing fixture[] list.
+        upserts: Fixtures to add or update, matched by fixtureType.
+        remove_fixture_types: fixtureType values of fixtures to remove.
+
+    Returns:
+        The resulting fixture list.
+
+    Raises:
+        ValueError: If two upserts in the same call share a fixtureType, or a
+            remove_fixture_types entry does not match any current fixture.
+    """
+    upserted_fixtures = [
+        fixture if isinstance(fixture, Fixture) else Fixture.model_validate(fixture)
+        for fixture in upserts
+    ]
+
+    upserted_types = [fixture.fixtureType for fixture in upserted_fixtures]
+    duplicate_types = {t for t in upserted_types if upserted_types.count(t) > 1}
+    if duplicate_types:
+        raise ValueError(
+            f"Duplicate fixtureType(s) in upserts: {sorted(duplicate_types)}."
+        )
+
+    current_types = {fixture.fixtureType for fixture in current_fixtures}
+    unknown_removals = set(remove_fixture_types) - current_types
+    if unknown_removals:
+        raise ValueError(
+            f"fixtureType(s) not found for removal: {sorted(unknown_removals)}."
+        )
+
+    remaining_fixtures = [
+        fixture
+        for fixture in current_fixtures
+        if fixture.fixtureType not in remove_fixture_types
+        and fixture.fixtureType not in upserted_types
+    ]
+
+    return remaining_fixtures + upserted_fixtures

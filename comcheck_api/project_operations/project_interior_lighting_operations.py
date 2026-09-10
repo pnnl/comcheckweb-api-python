@@ -15,8 +15,11 @@ from comcheck_api.constants.interior_lighting_constants import (
     DEFAULT_INTERIOR_SPACE_AREA,
 )
 from comcheck_api.types.common_types import InteriorSpace
-from comcheck_api.types.core_types import ComBuilding, WholeBldgUse
-from comcheck_api.utilities.project_utilities import _require_activity_use
+from comcheck_api.types.core_types import ComBuilding, Fixture, WholeBldgUse
+from comcheck_api.utilities.project_utilities import (
+    _require_activity_use,
+    merge_fixtures,
+)
 
 
 def _find_building_area(project: ComBuilding, building_area_key: str) -> WholeBldgUse:
@@ -143,6 +146,66 @@ def remove_interior_space_from_project(
     area = _find_building_area(updated_project, building_area_key)
 
     area.remove_from_subcomponent_list(
+        subcomponent_id=area_description,
+        subcomponent_name="activityUse",
+    )
+
+    return updated_project
+
+
+def update_fixtures_in_interior_space(
+    project: ComBuilding,
+    building_area_key: str,
+    area_description: str,
+    upserts: list[Fixture | dict] = [],
+    remove_fixture_types: list[str] = [],
+) -> ComBuilding:
+    """Batch add, update, and/or remove fixtures on an interior lighting space.
+
+    Fixtures are matched by ``fixtureType`` (the schema-documented uniqueness
+    key for fixtures within a lighting space), not ``id``. Removals are
+    applied first; each upsert then replaces the existing fixture with the
+    same fixtureType, or is appended as new.
+
+    Args:
+        project: The project to modify.
+        building_area_key: Key of the WholeBldgUse that owns this InteriorSpace.
+        area_description: The areaDescription of the InteriorSpace to update.
+        upserts: Fixtures to add or update, matched by fixtureType.
+        remove_fixture_types: fixtureType values of fixtures to remove.
+
+    Returns:
+        Updated project with the InteriorSpace's fixture[] list modified.
+
+    Raises:
+        ValueError: If two upserts share a fixtureType, or a
+            remove_fixture_types entry does not match any current fixture.
+    """
+    _require_activity_use(project, building_area_key, area_description)
+
+    updated_project = project.model_copy(deep=True)
+    area = _find_building_area(updated_project, building_area_key)
+    interior_space = next(
+        space for space in area.activityUse if space.areaDescription == area_description
+    )
+
+    updated_fixtures = merge_fixtures(
+        current_fixtures=interior_space.interiorLightingSpace.fixture or [],
+        upserts=upserts,
+        remove_fixture_types=remove_fixture_types,
+    )
+
+    # interiorLightingSpace must be dumped in full — update_subcomponent_list
+    # merges at the ActivityUse level, so a partial {"fixture": [...]} dict
+    # would wholesale-replace interiorLightingSpace and wipe its other fields.
+    updated_space = interior_space.interiorLightingSpace.model_copy(
+        deep=True, update={"fixture": updated_fixtures}
+    )
+
+    area.update_subcomponent_list(
+        subcomponent_updates={
+            "interiorLightingSpace": updated_space.model_dump(mode="python")
+        },
         subcomponent_id=area_description,
         subcomponent_name="activityUse",
     )

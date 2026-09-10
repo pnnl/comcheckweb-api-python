@@ -195,6 +195,166 @@ def test_fixture_fields_preserved_on_interior_space_update(project: ComBuilding)
 
 
 # ---------------------------------------------------------------------------
+# update_fixtures_in_interior_space (batch)
+# ---------------------------------------------------------------------------
+
+
+def _add_space_with_fixtures(
+    proj: ComBuilding, area_key: str, area_description: str, fixture_types: list[str]
+) -> ComBuilding:
+    interior_space = get_default_interior_space_template()
+    interior_space.areaDescription = area_description
+    fixtures = []
+    for fixture_type in fixture_types:
+        fixture = get_default_fixture_template()
+        fixture.fixtureType = fixture_type
+        fixtures.append(fixture)
+    interior_space.interiorLightingSpace = (
+        interior_space.interiorLightingSpace.model_copy(
+            deep=True, update={"fixture": fixtures}
+        )
+    )
+    return il_ops.add_interior_space_to_project(proj, area_key, interior_space)
+
+
+def _fixture_types(proj: ComBuilding, area_key: str, area_description: str) -> set[str]:
+    whole_use = proj.get_by_path("lighting.wholeBldgUse")
+    area = next(a for a in whole_use if a.key == area_key)
+    ia = next(ia for ia in area.activityUse if ia.areaDescription == area_description)
+    return {f.fixtureType for f in ia.interiorLightingSpace.fixture or []}
+
+
+def test_batch_add_fixtures(project: ComBuilding):
+    proj, area_key = _fresh_project_with_area(project)
+    proj = _add_space_with_fixtures(proj, area_key, "Office", [])
+
+    new_fixture = get_default_fixture_template()
+    new_fixture.fixtureType = "Fixture A"
+
+    result = il_ops.update_fixtures_in_interior_space(
+        proj, area_key, "Office", upserts=[new_fixture]
+    )
+
+    assert _fixture_types(result, area_key, "Office") == {"Fixture A"}
+
+
+def test_batch_update_existing_fixture_by_fixture_type(project: ComBuilding):
+    proj, area_key = _fresh_project_with_area(project)
+    proj = _add_space_with_fixtures(proj, area_key, "Office", ["Fixture A"])
+
+    replacement = get_default_fixture_template()
+    replacement.fixtureType = "Fixture A"
+    replacement.fixtureWattage = 99.0
+
+    result = il_ops.update_fixtures_in_interior_space(
+        proj, area_key, "Office", upserts=[replacement]
+    )
+
+    whole_use = result.get_by_path("lighting.wholeBldgUse")
+    area = next(a for a in whole_use if a.key == area_key)
+    ia = next(ia for ia in area.activityUse if ia.areaDescription == "Office")
+    fixtures = ia.interiorLightingSpace.fixture
+    assert len(fixtures) == 1
+    assert fixtures[0].fixtureWattage == 99.0
+
+
+def test_batch_remove_fixtures(project: ComBuilding):
+    proj, area_key = _fresh_project_with_area(project)
+    proj = _add_space_with_fixtures(
+        proj, area_key, "Office", ["Fixture A", "Fixture B"]
+    )
+
+    result = il_ops.update_fixtures_in_interior_space(
+        proj, area_key, "Office", remove_fixture_types=["Fixture A"]
+    )
+
+    assert _fixture_types(result, area_key, "Office") == {"Fixture B"}
+
+
+def test_batch_add_update_remove_together(project: ComBuilding):
+    proj, area_key = _fresh_project_with_area(project)
+    proj = _add_space_with_fixtures(
+        proj, area_key, "Office", ["Fixture A", "Fixture B"]
+    )
+
+    updated_b = get_default_fixture_template()
+    updated_b.fixtureType = "Fixture B"
+    updated_b.quantity = 10
+    new_c = get_default_fixture_template()
+    new_c.fixtureType = "Fixture C"
+
+    result = il_ops.update_fixtures_in_interior_space(
+        proj,
+        area_key,
+        "Office",
+        upserts=[updated_b, new_c],
+        remove_fixture_types=["Fixture A"],
+    )
+
+    assert _fixture_types(result, area_key, "Office") == {"Fixture B", "Fixture C"}
+
+
+def test_batch_fixture_other_space_fields_preserved(project: ComBuilding):
+    proj, area_key = _fresh_project_with_area(project)
+    proj = _add_space_with_fixtures(proj, area_key, "Office", ["Fixture A"])
+    whole_use = proj.get_by_path("lighting.wholeBldgUse")
+    area = next(a for a in whole_use if a.key == area_key)
+    ia = next(ia for ia in area.activityUse if ia.areaDescription == "Office")
+    ia.interiorLightingSpace.description = "Main office lighting"
+
+    new_fixture = get_default_fixture_template()
+    new_fixture.fixtureType = "Fixture D"
+
+    result = il_ops.update_fixtures_in_interior_space(
+        proj, area_key, "Office", upserts=[new_fixture]
+    )
+
+    whole_use = result.get_by_path("lighting.wholeBldgUse")
+    area = next(a for a in whole_use if a.key == area_key)
+    ia = next(ia for ia in area.activityUse if ia.areaDescription == "Office")
+    assert ia.interiorLightingSpace.description == "Main office lighting"
+
+
+def test_batch_fixture_duplicate_upsert_fixture_types_raises(project: ComBuilding):
+    proj, area_key = _fresh_project_with_area(project)
+    proj = _add_space_with_fixtures(proj, area_key, "Office", [])
+
+    dup1 = get_default_fixture_template()
+    dup1.fixtureType = "Fixture A"
+    dup2 = get_default_fixture_template()
+    dup2.fixtureType = "Fixture A"
+
+    with pytest.raises(ValueError, match="Duplicate fixtureType"):
+        il_ops.update_fixtures_in_interior_space(
+            proj, area_key, "Office", upserts=[dup1, dup2]
+        )
+
+
+def test_batch_fixture_remove_unknown_fixture_type_raises(project: ComBuilding):
+    proj, area_key = _fresh_project_with_area(project)
+    proj = _add_space_with_fixtures(proj, area_key, "Office", ["Fixture A"])
+
+    with pytest.raises(ValueError, match="not found for removal"):
+        il_ops.update_fixtures_in_interior_space(
+            proj, area_key, "Office", remove_fixture_types=["Nonexistent"]
+        )
+
+
+def test_batch_fixture_does_not_mutate_original(project: ComBuilding):
+    proj, area_key = _fresh_project_with_area(project)
+    proj = _add_space_with_fixtures(proj, area_key, "Office", ["Fixture A"])
+
+    new_fixture = get_default_fixture_template()
+    new_fixture.fixtureType = "Fixture B"
+
+    il_ops.update_fixtures_in_interior_space(
+        proj, area_key, "Office", upserts=[new_fixture]
+    )
+
+    assert _fixture_types(proj, area_key, "Office") == {"Fixture A"}
+
+
+# ---------------------------------------------------------------------------
 # Error cases
 # ---------------------------------------------------------------------------
 

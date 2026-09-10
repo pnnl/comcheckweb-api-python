@@ -248,6 +248,167 @@ def test_remove_fixture_by_omitting_from_update(project: ComBuilding):
 
 
 # ---------------------------------------------------------------------------
+# update_fixtures_in_exterior_area (batch)
+# ---------------------------------------------------------------------------
+
+
+def _add_area_with_fixtures(
+    proj: ComBuilding, area_description: str, fixture_types: list[str]
+) -> ComBuilding:
+    ea = get_default_exterior_area_template()
+    ea.areaDescription = area_description
+    fixtures = []
+    for fixture_type in fixture_types:
+        fixture = get_default_fixture_template()
+        fixture.fixtureType = fixture_type
+        fixtures.append(fixture)
+    ea.exteriorLightingSpace = ea.exteriorLightingSpace.model_copy(
+        deep=True, update={"fixture": fixtures}
+    )
+    return el_ops.add_exterior_area_to_project(proj, ea)
+
+
+def _fixture_types(proj: ComBuilding, area_description: str) -> set[str]:
+    exterior_areas = proj.get_by_path("lighting.exteriorUse")
+    area = next(e for e in exterior_areas if e.areaDescription == area_description)
+    return {f.fixtureType for f in area.exteriorLightingSpace.fixture or []}
+
+
+def test_batch_add_fixtures(project: ComBuilding):
+    proj = el_ops.set_exterior_lighting_zone_type_in_project(
+        _fresh(project), ExteriorLightingZoneTypeOptions.EXT_ZONE_RURAL
+    )
+    proj = _add_area_with_fixtures(proj, "Canopy", [])
+
+    new_fixture = get_default_fixture_template()
+    new_fixture.fixtureType = "Fixture A"
+
+    result = el_ops.update_fixtures_in_exterior_area(
+        proj, "Canopy", upserts=[new_fixture]
+    )
+
+    assert _fixture_types(result, "Canopy") == {"Fixture A"}
+
+
+def test_batch_update_existing_fixture_by_fixture_type(project: ComBuilding):
+    proj = el_ops.set_exterior_lighting_zone_type_in_project(
+        _fresh(project), ExteriorLightingZoneTypeOptions.EXT_ZONE_RURAL
+    )
+    proj = _add_area_with_fixtures(proj, "Canopy", ["Fixture A"])
+
+    replacement = get_default_fixture_template()
+    replacement.fixtureType = "Fixture A"
+    replacement.fixtureWattage = 99.0
+
+    result = el_ops.update_fixtures_in_exterior_area(
+        proj, "Canopy", upserts=[replacement]
+    )
+
+    exterior_areas = result.get_by_path("lighting.exteriorUse")
+    area = next(e for e in exterior_areas if e.areaDescription == "Canopy")
+    fixtures = area.exteriorLightingSpace.fixture
+    assert len(fixtures) == 1
+    assert fixtures[0].fixtureWattage == 99.0
+
+
+def test_batch_remove_fixtures(project: ComBuilding):
+    proj = el_ops.set_exterior_lighting_zone_type_in_project(
+        _fresh(project), ExteriorLightingZoneTypeOptions.EXT_ZONE_RURAL
+    )
+    proj = _add_area_with_fixtures(proj, "Canopy", ["Fixture A", "Fixture B"])
+
+    result = el_ops.update_fixtures_in_exterior_area(
+        proj, "Canopy", remove_fixture_types=["Fixture A"]
+    )
+
+    assert _fixture_types(result, "Canopy") == {"Fixture B"}
+
+
+def test_batch_add_update_remove_together(project: ComBuilding):
+    proj = el_ops.set_exterior_lighting_zone_type_in_project(
+        _fresh(project), ExteriorLightingZoneTypeOptions.EXT_ZONE_RURAL
+    )
+    proj = _add_area_with_fixtures(proj, "Canopy", ["Fixture A", "Fixture B"])
+
+    updated_b = get_default_fixture_template()
+    updated_b.fixtureType = "Fixture B"
+    updated_b.quantity = 10
+    new_c = get_default_fixture_template()
+    new_c.fixtureType = "Fixture C"
+
+    result = el_ops.update_fixtures_in_exterior_area(
+        proj,
+        "Canopy",
+        upserts=[updated_b, new_c],
+        remove_fixture_types=["Fixture A"],
+    )
+
+    assert _fixture_types(result, "Canopy") == {"Fixture B", "Fixture C"}
+
+
+def test_batch_fixture_other_space_fields_preserved(project: ComBuilding):
+    proj = el_ops.set_exterior_lighting_zone_type_in_project(
+        _fresh(project), ExteriorLightingZoneTypeOptions.EXT_ZONE_RURAL
+    )
+    proj = _add_area_with_fixtures(proj, "Canopy", ["Fixture A"])
+    exterior_areas = proj.get_by_path("lighting.exteriorUse")
+    area = next(e for e in exterior_areas if e.areaDescription == "Canopy")
+    area.exteriorLightingSpace.description = "Canopy lighting"
+
+    new_fixture = get_default_fixture_template()
+    new_fixture.fixtureType = "Fixture D"
+
+    result = el_ops.update_fixtures_in_exterior_area(
+        proj, "Canopy", upserts=[new_fixture]
+    )
+
+    exterior_areas = result.get_by_path("lighting.exteriorUse")
+    area = next(e for e in exterior_areas if e.areaDescription == "Canopy")
+    assert area.exteriorLightingSpace.description == "Canopy lighting"
+
+
+def test_batch_fixture_duplicate_upsert_fixture_types_raises(project: ComBuilding):
+    proj = el_ops.set_exterior_lighting_zone_type_in_project(
+        _fresh(project), ExteriorLightingZoneTypeOptions.EXT_ZONE_RURAL
+    )
+    proj = _add_area_with_fixtures(proj, "Canopy", [])
+
+    dup1 = get_default_fixture_template()
+    dup1.fixtureType = "Fixture A"
+    dup2 = get_default_fixture_template()
+    dup2.fixtureType = "Fixture A"
+
+    with pytest.raises(ValueError, match="Duplicate fixtureType"):
+        el_ops.update_fixtures_in_exterior_area(proj, "Canopy", upserts=[dup1, dup2])
+
+
+def test_batch_fixture_remove_unknown_fixture_type_raises(project: ComBuilding):
+    proj = el_ops.set_exterior_lighting_zone_type_in_project(
+        _fresh(project), ExteriorLightingZoneTypeOptions.EXT_ZONE_RURAL
+    )
+    proj = _add_area_with_fixtures(proj, "Canopy", ["Fixture A"])
+
+    with pytest.raises(ValueError, match="not found for removal"):
+        el_ops.update_fixtures_in_exterior_area(
+            proj, "Canopy", remove_fixture_types=["Nonexistent"]
+        )
+
+
+def test_batch_fixture_does_not_mutate_original(project: ComBuilding):
+    proj = el_ops.set_exterior_lighting_zone_type_in_project(
+        _fresh(project), ExteriorLightingZoneTypeOptions.EXT_ZONE_RURAL
+    )
+    proj = _add_area_with_fixtures(proj, "Canopy", ["Fixture A"])
+
+    new_fixture = get_default_fixture_template()
+    new_fixture.fixtureType = "Fixture B"
+
+    el_ops.update_fixtures_in_exterior_area(proj, "Canopy", upserts=[new_fixture])
+
+    assert _fixture_types(proj, "Canopy") == {"Fixture A"}
+
+
+# ---------------------------------------------------------------------------
 # get_exterior_area_keys_from_project
 # ---------------------------------------------------------------------------
 
