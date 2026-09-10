@@ -26,14 +26,6 @@ from comcheck_api import (
     COMcheckClient,
     project_exterior_lighting_operations as el_ops,
 )
-
-# The library logs API failures via logging.getLogger(__name__) but never
-# configures a handler (as a library shouldn't). Configure logging here so
-# those error logs — including the server's response body — are visible.
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(name)s %(levelname)s %(message)s",
-)
 from comcheck_api.defaults import (
     get_default_exterior_area_template,
     get_default_fixture_template,
