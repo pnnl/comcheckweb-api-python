@@ -2,9 +2,9 @@
 
 Exterior lighting is managed at the ExteriorArea granularity.  In the COMcheck
 API schema, an exterior lighting area is represented by the ``ExteriorUse``
-model.  Each ExteriorArea lives directly under lighting.exteriorUse[] (no
-parent building area needed) and carries exactly one ExteriorLightingSpace
-whose fixture[] holds the fixtures.
+model, aliased as ExteriorArea.  Each ExteriorArea lives directly under
+lighting.exteriorUse[] (no parent building area needed) and carries exactly
+one ExteriorLightingSpace whose fixture[] holds the fixtures.
 
 Fixtures themselves can be batch added/updated/removed via
 update_fixtures_in_exterior_area, matched by fixtureType (the

@@ -191,7 +191,7 @@ def update_fixtures_in_exterior_area(
     upserts: list[Fixture | dict] = [],
     remove_fixture_types: list[str] = [],
 ) -> ComBuilding:
-    """Batch add, update, and/or remove fixtures on an exterior area.
+    """Batch add, update, and/or remove fixtures on an ExteriorArea.
 
     Fixtures are matched by ``fixtureType`` (the schema-documented uniqueness
     key for fixtures within a lighting space). Removals are

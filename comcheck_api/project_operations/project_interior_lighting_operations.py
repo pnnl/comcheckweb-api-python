@@ -44,10 +44,11 @@ def add_interior_space_to_project(
     building_area_key: str,
     new_interior_space: InteriorSpace,
 ) -> ComBuilding:
-    """Add a new interior lighting space (``ActivityUse``) to a building area.
+    """Add a new InteriorSpace (interior lighting space) to a building area.
 
     Each interior lighting space is stored as an ``ActivityUse`` object in the
-    COMcheck API schema (``lighting.wholeBldgUse[i].activityUse[]``).
+    COMcheck API schema (``lighting.wholeBldgUse[i].activityUse[]``),
+    aliased as :class:`~comcheck_api.types.common_types.InteriorSpace`.
 
     Fixtures and the singleton InteriorLightingSpace are carried inside
     new_interior_space — populate interiorLightingSpace.fixture[] before
@@ -96,7 +97,7 @@ def update_interior_space_in_project(
     area_description: str,
     updates: dict[str, Any] | InteriorSpace,
 ) -> ComBuilding:
-    """Update an existing interior lighting space (``ActivityUse``) in a building area.
+    """Update an existing InteriorSpace (interior lighting space) in a building area.
 
     To add, change, or remove fixtures: set the desired
     interiorLightingSpace.fixture[] on the updates dict (or the full
@@ -132,7 +133,7 @@ def remove_interior_space_from_project(
     building_area_key: str,
     area_description: str,
 ) -> ComBuilding:
-    """Remove an interior lighting space (``ActivityUse``) and its fixtures from a building area.
+    """Remove an InteriorSpace (interior lighting space) and its fixtures from a building area.
 
     Args:
         project: The project to modify.
@@ -219,7 +220,7 @@ def update_fixtures_in_interior_space(
 def get_interior_space_keys_from_project(
     project: ComBuilding, building_area_key: str
 ) -> list[dict]:
-    """Return identifying fields for all interior lighting spaces (``ActivityUse`` items) in a building area.
+    """Return identifying fields for all InteriorSpace items in a building area.
 
     Args:
         project: The project to query.

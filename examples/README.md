@@ -14,8 +14,10 @@ examples/
 │   ├── allowed_wattage.py            # Interior lighting allowed-wattage calculation examples
 │   └── user_functions.py             # User-facing function examples
 └── project_operations/               # Project operations examples
-    ├── building_area_operations.py  # Building area operations
-    └── envelope_operations.py       # Envelope operations
+    ├── building_area_operations.py       # Building area operations
+    ├── envelope_operations.py            # Envelope operations
+    ├── interior_lighting_operations.py   # Interior lighting (InteriorSpace) operations
+    └── exterior_lighting_operations.py   # Exterior lighting (ExteriorArea) operations
 ```
 
 ## Example Categories

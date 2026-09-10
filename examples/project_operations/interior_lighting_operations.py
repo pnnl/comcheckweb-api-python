@@ -2,9 +2,9 @@
 
 Interior lighting is managed at the InteriorSpace granularity.  In the
 COMcheck API schema, an interior lighting space is represented by the
-``ActivityUse`` model.  Each InteriorSpace belongs to a WholeBldgUse (building
-area) and carries exactly one InteriorLightingSpace whose fixture[] holds the
-fixtures.
+``ActivityUse`` model, aliased as InteriorSpace.  Each InteriorSpace belongs
+to a WholeBldgUse (building area) and carries exactly one InteriorLightingSpace
+whose fixture[] holds the fixtures.
 
 Fixtures themselves can be batch added/updated/removed via
 update_fixtures_in_interior_space, matched by fixtureType (the
