@@ -108,19 +108,20 @@ project = env_ops.add_roof_to_project(project, area_key, roof)
 from comcheck_api import project_interior_lighting_operations as il_ops
 ```
 
-Interior lighting spaces are `ActivityUse` objects nested under
-`lighting.wholeBldgUse[i].activityUse[]`. There are no fixture-level ops —
-edit `activityUse.interiorLightingSpace.fixture[]` and pass the whole
-`ActivityUse` through `update_interior_lighting_space_in_project`.
+Interior lighting spaces are `ActivityUse` objects (aliased as
+`InteriorSpace`) nested under `lighting.wholeBldgUse[i].activityUse[]`. There
+are no fixture-level ops — edit
+`interiorSpace.interiorLightingSpace.fixture[]` and pass the whole
+`InteriorSpace` through `update_interior_space_in_project`.
 
 | Function | Purpose |
 |---|---|
-| `add_interior_lighting_space_to_project(project, building_area_key, new_activity_use)` | Add an `ActivityUse` to a building area. `activityUse.key` is auto-set to `building_area_key`. |
-| `update_interior_lighting_space_in_project(project, building_area_key, area_description, updates)` | Update an `ActivityUse` by its `areaDescription`. |
-| `remove_interior_lighting_space_from_project(project, building_area_key, area_description)` | Remove an `ActivityUse` by its `areaDescription`. |
-| `get_interior_lighting_space_keys_from_project(project, building_area_key)` | List `[{areaDescription, activityType}, …]` for a building area. |
+| `add_interior_space_to_project(project, building_area_key, new_interior_space)` | Add an `InteriorSpace` to a building area. `activityUse.key` is auto-set to `building_area_key`. |
+| `update_interior_space_in_project(project, building_area_key, area_description, updates)` | Update an `InteriorSpace` by its `areaDescription`. |
+| `remove_interior_space_from_project(project, building_area_key, area_description)` | Remove an `InteriorSpace` by its `areaDescription`. |
+| `get_interior_space_keys_from_project(project, building_area_key)` | List `[{areaDescription, activityType}, …]` for a building area. |
 
-Use `get_default_interior_lighting_space_template()` as a starting point.
+Use `get_default_interior_space_template()` as a starting point.
 `areaDescription` is the identifier — it is unique within a building area's
 `activityUse[]` list and is auto-generated if missing.
 
@@ -128,18 +129,18 @@ Allowed wattage is calculated server-side via two `COMcheckClient` methods,
 not an `il_ops` function:
 
 ```python
-energy_code = str(project.control.code)  # ActivityUse alone has no control.code
+energy_code = str(project.control.code)  # InteriorSpace alone has no control.code
 
-result = client.calculate_activity_use_allowed_wattage(activity_use, energy_code)
+result = client.calculate_activity_use_allowed_wattage(interior_space, energy_code)
 # {"spaceAllowedWattage": 560}
 
 results = client.calculate_activity_uses_allowed_wattage(
-    [activity_use, second_activity_use], energy_code
+    [interior_space, second_interior_space], energy_code
 )
 # {"Open Office": 560, "Conference Room": 610} — keyed by areaDescription
 ```
 
-Neither call mutates the `ActivityUse` objects or writes onto
+Neither call mutates the `InteriorSpace` objects or writes onto
 `allowedWattage` — they return the raw calculation payload.
 
 ## Exterior lighting operations
@@ -148,21 +149,21 @@ Neither call mutates the `ActivityUse` objects or writes onto
 from comcheck_api import project_exterior_lighting_operations as el_ops
 ```
 
-Exterior lighting spaces are `ExteriorUse` objects in
-`lighting.exteriorUse[]`. Set a real zone type before exterior compliance
+Exterior lighting areas are `ExteriorUse` objects (aliased as `ExteriorArea`)
+in `lighting.exteriorUse[]`. Set a real zone type before exterior compliance
 can be evaluated. There are no fixture-level ops — edit
-`exteriorUse.exteriorLightingSpace.fixture[]` and pass the whole
-`ExteriorUse` through `update_exterior_lighting_area_in_project`.
+`exteriorArea.exteriorLightingSpace.fixture[]` and pass the whole
+`ExteriorArea` through `update_exterior_area_in_project`.
 
 | Function | Purpose |
 |---|---|
 | `set_exterior_lighting_zone_type_in_project(project, zone_type)` | Set `lighting.exteriorLightingZoneType`. Raises `ValueError` for `EXT_ZONE_UNSPECIFIED`, `TypeError` for non-enum values. |
-| `add_exterior_lighting_area_to_project(project, new_exterior_lighting_area)` | Add an `ExteriorUse`. Emits `UserWarning` if zone type is still `EXT_ZONE_UNSPECIFIED`. |
-| `update_exterior_lighting_area_in_project(project, area_description, updates)` | Update an `ExteriorUse` by its `areaDescription`. |
-| `remove_exterior_lighting_area_from_project(project, area_description)` | Remove an `ExteriorUse` by its `areaDescription`. |
-| `get_exterior_lighting_area_keys_from_project(project)` | List `[{areaDescription, exteriorType}, …]` for the project. |
+| `add_exterior_area_to_project(project, new_exterior_area)` | Add an `ExteriorArea`. Emits `UserWarning` if zone type is still `EXT_ZONE_UNSPECIFIED`. |
+| `update_exterior_area_in_project(project, area_description, updates)` | Update an `ExteriorArea` by its `areaDescription`. |
+| `remove_exterior_area_from_project(project, area_description)` | Remove an `ExteriorArea` by its `areaDescription`. |
+| `get_exterior_area_keys_from_project(project)` | List `[{areaDescription, exteriorType}, …]` for the project. |
 
-Use `get_default_exterior_lighting_area_template()` as a starting point.
+Use `get_default_exterior_area_template()` as a starting point.
 `areaDescription` is the identifier — it is unique within `exteriorUse[]`
 and is auto-generated if missing.
 

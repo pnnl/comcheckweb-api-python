@@ -1,14 +1,15 @@
 """Example: exterior lighting operations.
 
-Exterior lighting is managed at the ExteriorUse granularity.  Each ExteriorUse
-lives directly under lighting.exteriorUse[] (no parent building area needed)
-and carries exactly one ExteriorLightingSpace whose fixture[] holds the
-fixtures.
+Exterior lighting is managed at the ExteriorArea granularity.  In the COMcheck
+API schema, an exterior lighting area is represented by the ``ExteriorUse``
+model.  Each ExteriorArea lives directly under lighting.exteriorUse[] (no
+parent building area needed) and carries exactly one ExteriorLightingSpace
+whose fixture[] holds the fixtures.
 
 Zone type
 ---------
 Before exterior compliance can be evaluated, set a real exterior lighting zone
-type on the project.  Adding an ExteriorUse while the zone is still
+type on the project.  Adding an ExteriorArea while the zone is still
 EXT_ZONE_UNSPECIFIED emits a warning — call
 set_exterior_lighting_zone_type_in_project to fix it.
 """
@@ -30,7 +31,7 @@ logging.basicConfig(
     format="%(asctime)s %(name)s %(levelname)s %(message)s",
 )
 from comcheck_api.defaults import (
-    get_default_exterior_lighting_area_template,
+    get_default_exterior_area_template,
     get_default_fixture_template,
 )
 from comcheck_api.types.core_types import (
@@ -63,7 +64,7 @@ if not project:
     raise ValueError("Project not found after update")
 print(f"Zone type set: {project.lighting.exteriorLightingZoneType}")
 
-# ── Step 2: Add an ExteriorUse with a fixture already populated ───────────────
+# ── Step 2: Add an ExteriorArea with a fixture already populated ─────────────
 fixture = get_default_fixture_template()
 fixture.description = "Parking LED"
 # fixtureType is the required identifier (a description string). lightingType
@@ -72,28 +73,28 @@ fixture.fixtureType = "Parking LED"
 fixture.fixtureWattage = 150.0
 fixture.quantity = 8
 
-exterior_use = get_default_exterior_lighting_area_template()
-exterior_use.areaDescription = "Main Parking Area"
-exterior_use.exteriorType = ExteriorUseTypeOptions.EXTERIOR_PARKING_AREA
-exterior_use.useQuantity = 5000.0
-exterior_use.quantityUnits = "sq ft"
-exterior_use.exteriorLightingSpace = exterior_use.exteriorLightingSpace.model_copy(
+exterior_area = get_default_exterior_area_template()
+exterior_area.areaDescription = "Main Parking Area"
+exterior_area.exteriorType = ExteriorUseTypeOptions.EXTERIOR_PARKING_AREA
+exterior_area.useQuantity = 5000.0
+exterior_area.quantityUnits = "sq ft"
+exterior_area.exteriorLightingSpace = exterior_area.exteriorLightingSpace.model_copy(
     deep=True, update={"fixture": [fixture]}
 )
 
-project = el_ops.add_exterior_lighting_area_to_project(project, exterior_use)
+project = el_ops.add_exterior_area_to_project(project, exterior_area)
 
 project = client.update_project(project_id, project)
 if not project:
     raise ValueError("Project not found after update")
-print(f"ExteriorUse added: {exterior_use.areaDescription!r}")
+print(f"ExteriorArea added: {exterior_area.areaDescription!r}")
 
-# ── Step 3: List all exterior uses ────────────────────────────────────────────
-keys = el_ops.get_exterior_lighting_area_keys_from_project(project)
-print(f"Exterior uses: {keys}")
+# ── Step 3: List all exterior areas ───────────────────────────────────────────
+keys = el_ops.get_exterior_area_keys_from_project(project)
+print(f"Exterior areas: {keys}")
 
-# ── Step 4: Update the ExteriorUse (change quantity) ─────────────────────────
-project = el_ops.update_exterior_lighting_area_in_project(
+# ── Step 4: Update the ExteriorArea (change quantity) ────────────────────────
+project = el_ops.update_exterior_area_in_project(
     project,
     "Main Parking Area",
     {"useQuantity": 6000.0},
@@ -102,32 +103,32 @@ project = el_ops.update_exterior_lighting_area_in_project(
 project = client.update_project(project_id, project)
 if not project:
     raise ValueError("Project not found after update")
-print("ExteriorUse updated: useQuantity → 6000.0")
+print("ExteriorArea updated: useQuantity → 6000.0")
 
 # ── Step 5: Add a second fixture by updating the lighting space ───────────────
 # Use direct attribute access (not get_by_path, which returns Any) so
-# `exterior_use` keeps its real type for editor autocomplete and type checking.
+# `exterior_area` keeps its real type for editor autocomplete and type checking.
 if not project.lighting or not project.lighting.exteriorUse:
-    raise ValueError("Project has no exterior uses (exteriorUse)")
-exterior_use = next(
-    exterior_use
-    for exterior_use in project.lighting.exteriorUse
-    if exterior_use.areaDescription == "Main Parking Area"
+    raise ValueError("Project has no exterior areas (exteriorUse)")
+exterior_area = next(
+    exterior_area
+    for exterior_area in project.lighting.exteriorUse
+    if exterior_area.areaDescription == "Main Parking Area"
 )
-if exterior_use.exteriorLightingSpace is None:
-    raise ValueError("ExteriorUse has no exteriorLightingSpace")
-existing_fixtures = list(exterior_use.exteriorLightingSpace.fixture or [])
+if exterior_area.exteriorLightingSpace is None:
+    raise ValueError("ExteriorArea has no exteriorLightingSpace")
+existing_fixtures = list(exterior_area.exteriorLightingSpace.fixture or [])
 
 new_fixture = get_default_fixture_template()
 new_fixture.description = "Entrance LED"
 new_fixture.fixtureWattage = 80.0
 new_fixture.quantity = 2
 
-updated_space = exterior_use.exteriorLightingSpace.model_copy(
+updated_space = exterior_area.exteriorLightingSpace.model_copy(
     deep=True,
     update={"fixture": existing_fixtures + [new_fixture]},
 )
-project = el_ops.update_exterior_lighting_area_in_project(
+project = el_ops.update_exterior_area_in_project(
     project,
     "Main Parking Area",
     {"exteriorLightingSpace": updated_space.model_dump(mode="python")},
@@ -138,15 +139,13 @@ if not project:
     raise ValueError("Project not found after update")
 print("Second fixture added to Main Parking Area")
 
-# ── Step 6: Remove the ExteriorUse ───────────────────────────────────────────
-project = el_ops.remove_exterior_lighting_area_from_project(
-    project, "Main Parking Area"
-)
+# ── Step 6: Remove the ExteriorArea ──────────────────────────────────────────
+project = el_ops.remove_exterior_area_from_project(project, "Main Parking Area")
 
 project = client.update_project(project_id, project)
 if not project:
     raise ValueError("Project not found after update")
-print("ExteriorUse removed: 'Main Parking Area'")
+print("ExteriorArea removed: 'Main Parking Area'")
 
-keys = el_ops.get_exterior_lighting_area_keys_from_project(project)
-print(f"Remaining exterior uses: {keys}")
+keys = el_ops.get_exterior_area_keys_from_project(project)
+print(f"Remaining exterior areas: {keys}")

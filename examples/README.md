@@ -53,8 +53,8 @@ python examples/client/compliance_and_report.py
 Demonstrates interior lighting allowed-wattage calculation.
 
 **What it demonstrates:**
-- `calculate_activity_use_allowed_wattage()` - Calculating allowed wattage for a single ActivityUse
-- `calculate_activity_uses_allowed_wattage()` - Calculating allowed wattage for a list of ActivityUse objects
+- `calculate_activity_use_allowed_wattage()` - Calculating allowed wattage for a single InteriorSpace
+- `calculate_activity_uses_allowed_wattage()` - Calculating allowed wattage for a list of InteriorSpace objects
 
 **Usage:**
 ```bash
@@ -97,13 +97,13 @@ python examples/project_operations/building_area_operations.py
 - `testProjectJson/buildingAreaUpdatedProject.json`
 
 #### Interior Lighting Operations (`project_operations/interior_lighting_operations.py`)
-Demonstrates adding and managing interior lighting (ActivityUse) in a project.
+Demonstrates adding and managing interior lighting (InteriorSpace) in a project.
 
 **What it demonstrates:**
-- `add_interior_lighting_space_to_project()` - Adding an ActivityUse with fixtures pre-populated
-- `update_interior_lighting_space_in_project()` - Updating fields and adding/removing fixtures
-- `remove_interior_lighting_space_from_project()` - Removing an ActivityUse and its fixtures
-- `get_interior_lighting_space_keys_from_project()` - Listing activity uses in a building area
+- `add_interior_space_to_project()` - Adding an InteriorSpace with fixtures pre-populated
+- `update_interior_space_in_project()` - Updating fields and adding/removing fixtures
+- `remove_interior_space_from_project()` - Removing an InteriorSpace and its fixtures
+- `get_interior_space_keys_from_project()` - Listing interior spaces in a building area
 
 **Usage:**
 ```bash
@@ -111,13 +111,13 @@ python examples/project_operations/interior_lighting_operations.py
 ```
 
 #### Exterior Lighting Operations (`project_operations/exterior_lighting_operations.py`)
-Demonstrates setting the exterior lighting zone type and managing ExteriorUse items with fixtures.
+Demonstrates setting the exterior lighting zone type and managing ExteriorArea items with fixtures.
 
 **What it demonstrates:**
 - `set_exterior_lighting_zone_type_in_project()` - Setting the project-level zone type
-- `add_exterior_lighting_area_to_project()` - Adding an ExteriorUse with fixtures pre-populated
-- `update_exterior_lighting_area_in_project()` - Updating fields and adding/removing fixtures
-- `remove_exterior_lighting_area_from_project()` - Removing an ExteriorUse and its fixtures
+- `add_exterior_area_to_project()` - Adding an ExteriorArea with fixtures pre-populated
+- `update_exterior_area_in_project()` - Updating fields and adding/removing fixtures
+- `remove_exterior_area_from_project()` - Removing an ExteriorArea and its fixtures
 
 **Usage:**
 ```bash

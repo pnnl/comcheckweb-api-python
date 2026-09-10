@@ -53,7 +53,7 @@ def _require_building_area(project: ComBuilding, building_area_key: str) -> None
 def _require_activity_use(
     project: ComBuilding, building_area_key: str, area_description: str
 ) -> None:
-    """Ensure the given building area contains an activityUse with the given areaDescription."""
+    """Ensure the given building area contains an interior space (activityUse) with the given areaDescription."""
     whole_use = project.get_by_path("lighting.wholeBldgUse")
     if not isinstance(whole_use, list):
         raise ValueError("No building areas (wholeBldgUse) found in project.")
@@ -67,29 +67,29 @@ def _require_activity_use(
             f"Building area key '{building_area_key}' not found in lighting.wholeBldgUse."
         )
 
-    activity_uses = getattr(area, "activityUse", []) or []
+    interior_spaces = getattr(area, "activityUse", []) or []
     if not any(
-        getattr(activity_use, "areaDescription", None) == area_description
-        for activity_use in activity_uses
+        getattr(interior_space, "areaDescription", None) == area_description
+        for interior_space in interior_spaces
     ):
         raise ValueError(
-            f"ActivityUse with areaDescription '{area_description}' "
+            f"InteriorSpace with areaDescription '{area_description}' "
             f"not found in building area '{building_area_key}'."
         )
 
 
 def _require_exterior_use(project: ComBuilding, area_description: str) -> None:
-    """Ensure project.lighting.exteriorUse contains an ExteriorUse with the given areaDescription."""
-    exterior_uses = project.get_by_path("lighting.exteriorUse")
-    if not isinstance(exterior_uses, list):
+    """Ensure project.lighting.exteriorUse contains an exterior area (ExteriorUse) with the given areaDescription."""
+    exterior_areas = project.get_by_path("lighting.exteriorUse")
+    if not isinstance(exterior_areas, list):
         raise ValueError("No exterior uses (lighting.exteriorUse) found in project.")
 
     if not any(
-        getattr(exterior_use, "areaDescription", None) == area_description
-        for exterior_use in exterior_uses
+        getattr(exterior_area, "areaDescription", None) == area_description
+        for exterior_area in exterior_areas
     ):
         raise ValueError(
-            f"ExteriorUse with areaDescription '{area_description}' "
+            f"ExteriorArea with areaDescription '{area_description}' "
             f"not found in lighting.exteriorUse."
         )
 

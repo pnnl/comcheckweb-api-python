@@ -288,42 +288,44 @@ class COMcheckClient:
         return project
 
     def calculate_activity_use_allowed_wattage(
-        self, activity_use: ActivityUse, energy_code: str
+        self, interior_space: ActivityUse, energy_code: str
     ) -> Any:
-        """Calculate allowed wattage for a single interior lighting activity use.
+        """Calculate allowed wattage for a single interior lighting space.
 
         Args:
-            activity_use: The activity use to calculate allowed wattage for.
+            interior_space: The interior space (``ActivityUse``) to calculate
+                allowed wattage for.
             energy_code: The energy code for the api end point path.
 
         Returns:
             A dict with the calculated wattage, e.g.
             ``{"spaceAllowedWattage": 560}``.
         """
-        activity_use_data = activity_use.model_dump(mode="json")
+        interior_space_data = interior_space.model_dump(mode="json")
         response = self._service.activity_use_allowed_wattage(
-            activity_use_data, energy_code
+            interior_space_data, energy_code
         )
         return response.get("data")
 
     def calculate_activity_uses_allowed_wattage(
-        self, activity_uses: List[ActivityUse], energy_code: str
+        self, interior_spaces: List[ActivityUse], energy_code: str
     ) -> Any:
-        """Calculate allowed wattage for a list of interior lighting activity uses.
+        """Calculate allowed wattage for a list of interior lighting spaces.
 
         Args:
-            activity_uses: The activity uses to calculate allowed wattage for.
+            interior_spaces: The interior spaces (``ActivityUse`` objects) to
+                calculate allowed wattage for.
             energy_code: The energy code for the api end point path.
 
         Returns:
-            A dict keyed by each activity use's ``areaDescription``, e.g.
+            A dict keyed by each interior space's ``areaDescription``, e.g.
             ``{"Test Space": 610}``.
         """
-        activity_uses_data = [
-            activity_use.model_dump(mode="json") for activity_use in activity_uses
+        interior_spaces_data = [
+            interior_space.model_dump(mode="json") for interior_space in interior_spaces
         ]
         response = self._service.activity_uses_allowed_wattage(
-            activity_uses_data, energy_code
+            interior_spaces_data, energy_code
         )
         return response.get("data")
 
