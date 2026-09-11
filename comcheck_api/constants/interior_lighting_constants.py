@@ -8,7 +8,7 @@ from comcheck_api.types.core_types import (
     LightingTypeOptions,
 )
 
-DEFAULT_INTERIOR_LIGHTING_SPACE_AREA: ActivityUse = ActivityUse(
+DEFAULT_INTERIOR_SPACE_AREA: ActivityUse = ActivityUse(
     key="__unset__",  # key is a placeholder — callers must set it to the parent WholeBldgUse.key
     areaDescription="Space 1",  # identifier for the ActivityUse within its parent WholeBldgUse
     activityType=ActivityTypeOptions.ACTIVITY_COMMON_OFFICE_OPEN,

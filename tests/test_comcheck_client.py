@@ -11,7 +11,7 @@ import pytest
 from dotenv import load_dotenv
 
 from comcheck_api.client import COMcheckClient
-from comcheck_api.defaults import get_default_interior_lighting_space_template
+from comcheck_api.defaults import get_default_interior_space_template
 from comcheck_api.exceptions import COMCheckHTTPError
 from comcheck_api.types.core_types import ActivityTypeOptions, EnergyCodeOptions
 
@@ -63,17 +63,17 @@ def test_fetch_single_project(client: COMcheckClient):
         assert True
 
 
-def test_calculate_activity_use_allowed_wattage(client: COMcheckClient):
-    """Test calculating allowed wattage for a single ActivityUse."""
-    activity_use = get_default_interior_lighting_space_template()
-    activity_use.areaDescription = "Open Office"
-    activity_use.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE_OPEN
-    activity_use.floorArea = 2000.0
+def test_calculate_interior_space_allowed_wattage(client: COMcheckClient):
+    """Test calculating allowed wattage for a single InteriorSpace."""
+    interior_space = get_default_interior_space_template()
+    interior_space.areaDescription = "Open Office"
+    interior_space.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE_OPEN
+    interior_space.floorArea = 2000.0
     energy_code = str(EnergyCodeOptions.CEZ_90_1_2022)
 
     try:
-        result = client.calculate_activity_use_allowed_wattage(
-            activity_use, energy_code
+        result = client.calculate_interior_space_allowed_wattage(
+            interior_space, energy_code
         )
     except COMCheckHTTPError as exc:
         if exc.status_code in (401, 403):
@@ -85,14 +85,14 @@ def test_calculate_activity_use_allowed_wattage(client: COMcheckClient):
     assert "spaceAllowedWattage" in result
 
 
-def test_calculate_activity_uses_allowed_wattage(client: COMcheckClient):
-    """Test calculating allowed wattage for a list of ActivityUse objects."""
-    first = get_default_interior_lighting_space_template()
+def test_calculate_interior_spaces_allowed_wattage(client: COMcheckClient):
+    """Test calculating allowed wattage for a list of InteriorSpace objects."""
+    first = get_default_interior_space_template()
     first.areaDescription = "Open Office"
     first.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE_OPEN
     first.floorArea = 2000.0
 
-    second = get_default_interior_lighting_space_template()
+    second = get_default_interior_space_template()
     second.areaDescription = "Conference Room"
     second.activityType = ActivityTypeOptions.ACTIVITY_COMMON_CONFERENCE_HALL
     second.floorArea = 500.0
@@ -100,7 +100,7 @@ def test_calculate_activity_uses_allowed_wattage(client: COMcheckClient):
     energy_code = str(EnergyCodeOptions.CEZ_90_1_2022)
 
     try:
-        result = client.calculate_activity_uses_allowed_wattage(
+        result = client.calculate_interior_spaces_allowed_wattage(
             [first, second], energy_code
         )
     except COMCheckHTTPError as exc:
