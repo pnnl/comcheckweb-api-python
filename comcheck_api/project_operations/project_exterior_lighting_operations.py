@@ -1,0 +1,266 @@
+"""Project Exterior Lighting Operations.
+
+Manages exterior lighting at the ExteriorArea granularity.  In the COMcheck
+API schema, an exterior lighting area is represented by the ``ExteriorUse``
+model.  Each ExteriorArea carries exactly one (singleton) ExteriorLightingSpace
+whose fixture[] holds the fixtures.  Fixtures can be batch added, updated,
+and/or removed via update_fixtures_in_exterior_area, matched by fixtureType
+(the schema-documented uniqueness key for fixtures within a lighting space,
+not id).  You can also edit the ExteriorArea's
+exteriorLightingSpace.fixture[] list directly and pass the whole
+ExteriorArea through update_exterior_area_in_project.
+
+Zone type
+---------
+exterior compliance requires a real zone type on lighting.exteriorLightingZoneType
+(anything other than EXT_ZONE_UNSPECIFIED).  Use
+set_exterior_lighting_zone_type_in_project to set it.  Adding an ExteriorArea
+while the zone is still EXT_ZONE_UNSPECIFIED emits a warning — it is not a
+hard error so the project can be built up incrementally.
+"""
+
+import logging
+import warnings
+from typing import Any
+
+from comcheck_api.types.common_types import ExteriorArea
+from comcheck_api.types.core_types import (
+    ComBuilding,
+    ExteriorLightingSpace,
+    ExteriorLightingZoneTypeOptions,
+    Fixture,
+)
+from comcheck_api.utilities.project_utilities import (
+    _require_exterior_use,
+    merge_fixtures,
+)
+
+logger = logging.getLogger(__name__)
+
+
+def set_exterior_lighting_zone_type_in_project(
+    project: ComBuilding,
+    zone_type: ExteriorLightingZoneTypeOptions,
+) -> ComBuilding:
+    """Set the project-level exterior lighting zone type.
+
+    Args:
+        project: The project to modify.
+        zone_type: An :class:`~comcheck_api.types.core_types.ExteriorLightingZoneTypeOptions`
+            value.  Must not be ``EXT_ZONE_UNSPECIFIED`` — exterior compliance
+            cannot be evaluated without a real zone type.
+
+    Returns:
+        Updated project with the zone type set.
+
+    Raises:
+        TypeError: If zone_type is not an ExteriorLightingZoneTypeOptions member.
+        ValueError: If zone_type is EXT_ZONE_UNSPECIFIED.
+    """
+    if not isinstance(zone_type, ExteriorLightingZoneTypeOptions):
+        raise TypeError(
+            f"zone_type must be an ExteriorLightingZoneTypeOptions member, "
+            f"got {type(zone_type).__name__!r}."
+        )
+    if zone_type == ExteriorLightingZoneTypeOptions.EXT_ZONE_UNSPECIFIED:
+        raise ValueError(
+            "EXT_ZONE_UNSPECIFIED is not a valid zone type — exterior compliance "
+            "cannot be evaluated without a real zone type. "
+            "Choose a value from ExteriorLightingZoneTypeOptions other than "
+            "EXT_ZONE_UNSPECIFIED."
+        )
+
+    updated_project = project.model_copy(deep=True)
+    updated_project.lighting.exteriorLightingZoneType = zone_type
+    return updated_project
+
+
+def add_exterior_area_to_project(
+    project: ComBuilding,
+    new_exterior_area: ExteriorArea,
+) -> ComBuilding:
+    """Add a new ExteriorArea (exterior lighting area) to the project.
+
+    Fixtures and the singleton ExteriorLightingSpace are carried inside
+    new_exterior_area — populate exteriorLightingSpace.fixture[] before
+    passing if you want fixtures on creation.
+
+    Emits a :class:`UserWarning` if the project's
+    ``lighting.exteriorLightingZoneType`` is still ``EXT_ZONE_UNSPECIFIED``,
+    because exterior compliance cannot be evaluated until a real zone type is
+    set.  Call :func:`set_exterior_lighting_zone_type_in_project` to fix it.
+
+    Args:
+        project: The project to modify.
+        new_exterior_area: The ExteriorArea to add.
+
+    Returns:
+        Updated project with the new ExteriorArea added.
+    """
+    zone = project.lighting.exteriorLightingZoneType
+    if zone == ExteriorLightingZoneTypeOptions.EXT_ZONE_UNSPECIFIED:
+        warnings.warn(
+            "The project's exterior lighting zone type is EXT_ZONE_UNSPECIFIED. "
+            "Exterior compliance cannot be evaluated until a real zone type is set. "
+            "Call set_exterior_lighting_zone_type_in_project() to fix this.",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    updated_project = project.model_copy(deep=True)
+
+    new_exterior_area = new_exterior_area.model_copy(deep=True)
+
+    # Ensure exteriorLightingSpace is initialised
+    if new_exterior_area.exteriorLightingSpace is None:
+        new_exterior_area = new_exterior_area.model_copy(
+            deep=True,
+            update={
+                "exteriorLightingSpace": ExteriorLightingSpace(
+                    description="",
+                    numFixturesAlteredOrAdded=0,
+                    postAltTotalWattage=0.0,
+                    preAltNumberFixtures=0,
+                    preAltTotalWattage=0.0,
+                    altExemptType=None,
+                    fixture=[],
+                )
+            },
+        )
+
+    updated_project.lighting.append_subcomponent(new_exterior_area)
+    return updated_project
+
+
+def update_exterior_area_in_project(
+    project: ComBuilding,
+    area_description: str,
+    updates: dict[str, Any] | ExteriorArea,
+) -> ComBuilding:
+    """Update an existing ExteriorArea.
+
+    To add, change, or remove fixtures: set the desired
+    exteriorLightingSpace.fixture[] on the updates dict (or the full
+    ExteriorArea object) before calling this function.
+
+    Args:
+        project: The project to modify.
+        area_description: The areaDescription of the ExteriorArea to update.
+        updates: Partial updates (dict) or full ExteriorArea to apply.
+
+    Returns:
+        Updated project with the ExteriorArea modified.
+    """
+    _require_exterior_use(project, area_description)
+
+    updated_project = project.model_copy(deep=True)
+    updated_project.lighting.update_subcomponent_list(
+        subcomponent_updates=updates,
+        subcomponent_id=area_description,
+        subcomponent_name="exteriorUse",
+    )
+    return updated_project
+
+
+def remove_exterior_area_from_project(
+    project: ComBuilding,
+    area_description: str,
+) -> ComBuilding:
+    """Remove an ExteriorArea (and its lighting space + fixtures) from the project.
+
+    Args:
+        project: The project to modify.
+        area_description: The areaDescription of the ExteriorArea to remove.
+
+    Returns:
+        Updated project with the ExteriorArea removed.
+    """
+    _require_exterior_use(project, area_description)
+
+    updated_project = project.model_copy(deep=True)
+    updated_project.lighting.remove_from_subcomponent_list(
+        subcomponent_id=area_description,
+        subcomponent_name="exteriorUse",
+    )
+    return updated_project
+
+
+def update_fixtures_in_exterior_area(
+    project: ComBuilding,
+    area_description: str,
+    upserts: list[Fixture | dict] = [],
+    remove_fixture_types: list[str] = [],
+) -> ComBuilding:
+    """Batch add, update, and/or remove fixtures on an ExteriorArea.
+
+    Fixtures are matched by ``fixtureType`` (the schema-documented uniqueness
+    key for fixtures within a lighting space). Removals are
+    applied first; each upsert then replaces the existing fixture with the
+    same fixtureType, or is appended as new.
+
+    Args:
+        project: The project to modify.
+        area_description: The areaDescription of the ExteriorArea to update.
+        upserts: Fixtures to add or update, matched by fixtureType.
+        remove_fixture_types: fixtureType values of fixtures to remove.
+
+    Returns:
+        Updated project with the ExteriorArea's fixture[] list modified.
+
+    Raises:
+        ValueError: If two upserts share a fixtureType, or a
+            remove_fixture_types entry does not match any current fixture.
+    """
+    _require_exterior_use(project, area_description)
+
+    updated_project = project.model_copy(deep=True)
+    exterior_area = next(
+        area
+        for area in updated_project.lighting.exteriorUse
+        if area.areaDescription == area_description
+    )
+
+    updated_fixtures = merge_fixtures(
+        current_fixtures=exterior_area.exteriorLightingSpace.fixture or [],
+        upserts=upserts,
+        remove_fixture_types=remove_fixture_types,
+    )
+
+    # exteriorLightingSpace must be dumped in full — update_subcomponent_list
+    # merges at the ExteriorArea level, so a partial {"fixture": [...]} dict
+    # would wholesale-replace exteriorLightingSpace and wipe its other fields.
+    updated_space = exterior_area.exteriorLightingSpace.model_copy(
+        deep=True, update={"fixture": updated_fixtures}
+    )
+
+    updated_project.lighting.update_subcomponent_list(
+        subcomponent_updates={
+            "exteriorLightingSpace": updated_space.model_dump(mode="python")
+        },
+        subcomponent_id=area_description,
+        subcomponent_name="exteriorUse",
+    )
+
+    return updated_project
+
+
+def get_exterior_area_keys_from_project(project: ComBuilding) -> list[dict]:
+    """Return the areaDescription and exteriorType of all ExteriorArea items.
+
+    Args:
+        project: The project to query.
+
+    Returns:
+        List of dicts with keys ``areaDescription`` and ``exteriorType``
+        for each ExteriorArea in the project.
+    """
+    exterior_areas = project.get_by_path("lighting.exteriorUse")
+    if not isinstance(exterior_areas, list):
+        return []
+    return [
+        {
+            "areaDescription": getattr(exterior_area, "areaDescription", None),
+            "exteriorType": getattr(exterior_area, "exteriorType", None),
+        }
+        for exterior_area in exterior_areas
+    ]

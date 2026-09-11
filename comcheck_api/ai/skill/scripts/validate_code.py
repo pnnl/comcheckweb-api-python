@@ -29,9 +29,11 @@ def _read_input(arg: str) -> str:
 
 
 UNSUPPORTED_PROJECT_ATTRS = {"hvac", "renewable"}
+# `wholeBldgUse` (building areas + interior lighting), `activityUse` (interior
+# lighting spaces), `exteriorUse` (exterior lighting), and
+# `exteriorLightingZoneType` all have operation modules. Only `fixtureSchedule`
+# has no operations yet.
 UNSUPPORTED_LIGHTING_ATTRS = {
-    "activityUse",
-    "exteriorUse",
     "fixtureSchedule",
 }
 
@@ -79,7 +81,7 @@ def validate(code: str) -> dict:
     2. Import check on every imported module name.
     3. Scope check that the code only uses operations actually exposed
        by the SDK and does not mutate the unsupported `hvac`,
-       `renewable`, or non-`wholeBldgUse` lighting subtrees.
+       `renewable`, or `lighting.fixtureSchedule` subtrees.
     """
     errors: list[dict] = []
 
@@ -127,6 +129,8 @@ def validate(code: str) -> dict:
                 if alias.name in {
                     "project_envelope_operations",
                     "project_building_area_operations",
+                    "project_interior_lighting_operations",
+                    "project_exterior_lighting_operations",
                 }:
                     op_module_aliases.add(alias.asname or alias.name)
         elif isinstance(node, ast.ImportFrom) and node.module == (
@@ -136,6 +140,8 @@ def validate(code: str) -> dict:
                 if alias.name in {
                     "project_envelope_operations",
                     "project_building_area_operations",
+                    "project_interior_lighting_operations",
+                    "project_exterior_lighting_operations",
                 }:
                     op_module_aliases.add(alias.asname or alias.name)
 
@@ -165,7 +171,8 @@ def validate(code: str) -> dict:
                     "line": node.lineno,
                     "message": (
                         f"`project.lighting.{node.attr}` has no operations; "
-                        "only `lighting.wholeBldgUse[]` is editable."
+                        "edit lighting via the building-area, interior-lighting, "
+                        "and exterior-lighting operation modules instead."
                     ),
                 }
             )

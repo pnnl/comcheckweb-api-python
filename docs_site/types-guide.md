@@ -129,11 +129,18 @@ roof = Roof(
 | Model | Description | Key Options |
 |---|---|---|
 | `WholeBldgUse` | Building use area | `WholeBuildingTypeOptions` |
-| `ActivityUse` | Activity area within a building use | `ActivityTypeOptions` |
-| `ExteriorUse` | Exterior lighting use | `ExteriorUseTypeOptions` |
+| `ActivityUse` | Interior lighting space within a building use, aliased as `InteriorSpace` | `ActivityTypeOptions` |
+| `ExteriorUse` | Exterior lighting area, aliased as `ExteriorArea` | `ExteriorUseTypeOptions` |
 | `Fixture` | Lighting fixture | `LightingTypeOptions` |
 | `FixtureSchedule` | Fixture schedule | - |
 | `LightingControls` | Lighting controls | `LightingControlTypeOptions` |
+
+!!! tip "InteriorSpace and ExteriorArea aliases"
+    `comcheck_api.types.common_types` defines `InteriorSpace = ActivityUse` and
+    `ExteriorArea = ExteriorUse`. The `project_interior_lighting_operations`
+    and `project_exterior_lighting_operations` modules use these aliases in
+    their function signatures to disambiguate interior lighting spaces from
+    exterior lighting areas — both are otherwise easy to confuse by name.
 
 ### Mechanical
 

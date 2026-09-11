@@ -9,7 +9,7 @@ from comcheck_api.types.core_types import WholeBuildingTypeOptions
 from comcheck_api.utilities.common import export_to_json
 
 # Initialize client
-load_dotenv()
+load_dotenv(override=True)
 client = COMcheckClient()
 api_key = os.getenv("COM_API_KEY") or "your-api-key-here"
 client.set_api_key(api_key)

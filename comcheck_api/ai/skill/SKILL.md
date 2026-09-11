@@ -30,17 +30,15 @@ Triggers:
   `envelope`, `lighting` (which contains `wholeBldgUse[]` — the
   building areas), `hvac`, `renewable`, and `control` (energy code).
   No `Project`/`Control` PascalCase aliases exist.
-  The fields `hvac`, `renewable`, and the **interior-lighting fixtures
-  inside `activityUse[]`**, plus exterior lighting (`exteriorUse[]`)
-  and the shared `fixtureSchedule[]`, exist on the model but have
-  **no operation functions** — leave them at template defaults. Only
-  `lighting.wholeBldgUse[]` (building areas, including each area's
-  own `interiorLightingSpace` singleton) is mutable, via
-  `project_building_area_operations`.
-- **Operation modules (functional)**: building areas and envelope
-  components are added/updated/removed via free functions in
-  `project_building_area_operations` and `project_envelope_operations`.
-  Each function takes a `ComBuilding` and returns a new `ComBuilding`.
+  The fields `hvac`, `renewable`, and the shared `fixtureSchedule[]`
+  exist on the model but have **no operation functions** — leave them
+  at template defaults. All other mutable areas have dedicated modules.
+- **Operation modules (functional)**: all mutations go through free
+  functions that take a `ComBuilding` and return a new `ComBuilding`:
+  - `project_building_area_operations` — `WholeBldgUse` items
+  - `project_envelope_operations` — roofs, walls, floors, windows, doors, skylights, thermal bridges
+  - `project_interior_lighting_operations` — `ActivityUse` items, aliased as `InteriorSpace` (interior lighting spaces + fixtures)
+  - `project_exterior_lighting_operations` — `ExteriorUse` items, aliased as `ExteriorArea`, + zone type
 - **Envelope items attach to a building-area key**: every
   `add_*_to_project` envelope function takes
   `(project, building_area_key, new_component)`. Look up the key
@@ -64,6 +62,14 @@ Triggers:
   is `agWall`-only). `start_run_simulation` calls this automatically,
   so you rarely call it directly — use it only when you need refreshed
   u-values on a project outside the simulation flow.
+- **Interior lighting allowed wattage is also calculated server-side**:
+  `calculate_interior_space_allowed_wattage(interior_space, energy_code)` and
+  `calculate_interior_spaces_allowed_wattage(interior_spaces, energy_code)`
+  take an `InteriorSpace` (or a list of them) plus the energy code as an
+  explicit string — `InteriorSpace` has no `control.code` of its own. Neither
+  method mutates the input or writes to `allowedWattage`; both return the
+  raw calculation payload (`{"spaceAllowedWattage": ...}` for the single
+  form, `{areaDescription: wattage, ...}` for the list form).
 
 ## Quick start
 
@@ -147,24 +153,20 @@ print(result["performanceRating"])
   bypass the validation logic in the operation modules. Always go
   through `project_envelope_operations` and
   `project_building_area_operations` instead.
-- Don't add, update, or remove interior lighting (the
-  `activityUse[]` fixtures), exterior lighting (`exteriorUse[]`,
-  `fixtureSchedule[]`), HVAC/mechanical, or renewable-energy
-  components — no operations exist for them. The whole-building
-  `interiorLightingSpace` singleton on each `WholeBldgUse` *is*
-  editable through `project_building_area_operations`; the per-
-  activity lighting nested under `activityUse[]` is not. The
-  `COMcheckClient` user methods (`list_projects`, `get_project`,
+- Don't add, update, or remove `fixtureSchedule[]`, HVAC/mechanical, or
+  renewable-energy components — no operations exist for them yet.
+  The `COMcheckClient` user methods (`list_projects`, `get_project`,
   `update_project`, `update_uvalues`, `start_run_simulation`,
   `get_simulation_status`, `get_simulation_result`, `set_api_key`)
-  are fully supported and
-  fine to use. The compliance/report client methods
-  (`check_UA_compliance`, `check_requirements`, `generate_report`) are
-  also fully supported. If asked for an unsupported mutation area,
-  tell the user it's not implemented and offer building-area /
-  envelope / simulation instead. Confirm operation scope with
-  `comcheck_api.list_operations()` (only `building_area` and
-  `envelope` groups exist).
+  are fully supported and fine to use. The compliance/report client
+  methods (`check_UA_compliance`, `check_requirements`,
+  `generate_report`) are also fully supported, as are the allowed-wattage
+  methods (`calculate_interior_space_allowed_wattage`,
+  `calculate_interior_spaces_allowed_wattage`). If asked for an
+  unsupported mutation area, tell the user it's not implemented and
+  offer building-area / envelope / lighting / simulation instead.
+  `comcheck_api.list_operations()` enumerates the `building_area`,
+  `envelope`, `interior_lighting`, and `exterior_lighting` groups.
 
 ## Common patterns
 
@@ -238,6 +240,108 @@ while time.time() < deadline:
     time.sleep(5)
 else:
     raise TimeoutError(f"Simulation {session_id} did not complete in 5 min")
+```
+
+### Adding interior lighting (InteriorSpace + fixtures)
+
+Interior lighting lives under `wholeBldgUse[i].activityUse[]`.  Use
+`project_interior_lighting_operations`.  Fixtures are batch-edited via
+`update_fixtures_in_interior_space`, matched by `fixtureType` (the
+schema-documented uniqueness key for fixtures within a lighting space, not
+`id`).
+
+```python
+from comcheck_api import project_interior_lighting_operations as il_ops
+from comcheck_api.defaults import get_default_interior_space_template, get_default_fixture_template
+from comcheck_api.types.core_types import ActivityTypeOptions
+
+# fixtureType is the required identifier (a description string); lightingType
+# is optional and marked for deprecation, so leave it unset.
+fixture = get_default_fixture_template()
+fixture.description = "Recessed LED"
+fixture.fixtureType = "Recessed LED"
+fixture.fixtureWattage = 20.0
+fixture.quantity = 10
+
+interior_space = get_default_interior_space_template()
+interior_space.areaDescription = "Open Office"
+interior_space.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE_OPEN
+interior_space.interiorLightingSpace = interior_space.interiorLightingSpace.model_copy(
+    deep=True, update={"fixture": [fixture]}
+)
+project = il_ops.add_interior_space_to_project(project, area_key, interior_space)
+
+# Update a field — fixtures are preserved unless you also pass interiorLightingSpace
+project = il_ops.update_interior_space_in_project(
+    project, area_key, "Open Office", {"floorArea": 2500.0}
+)
+
+# Batch add/update/remove fixtures in one call, matched by fixtureType
+new_fixture = get_default_fixture_template()
+new_fixture.fixtureType = "Pendant LED"
+new_fixture.fixtureWattage = 35.0
+project = il_ops.update_fixtures_in_interior_space(
+    project,
+    area_key,
+    "Open Office",
+    upserts=[new_fixture],
+    remove_fixture_types=["Recessed LED"],
+)
+
+# Remove
+project = il_ops.remove_interior_space_from_project(project, area_key, "Open Office")
+
+# Allowed wattage is calculated server-side via COMcheckClient, not il_ops.
+# energy_code is explicit — InteriorSpace has no control.code of its own.
+energy_code = str(project.control.code)
+result = client.calculate_interior_space_allowed_wattage(interior_space, energy_code)
+# {"spaceAllowedWattage": 560}
+```
+
+### Adding exterior lighting (ExteriorArea + zone type)
+
+Exterior lighting lives under `lighting.exteriorUse[]`.  Set a real zone type
+first, then add `ExteriorArea` items with fixtures inline.
+
+```python
+from comcheck_api import project_exterior_lighting_operations as el_ops
+from comcheck_api.defaults import get_default_exterior_area_template, get_default_fixture_template
+from comcheck_api.types.core_types import ExteriorLightingZoneTypeOptions, ExteriorUseTypeOptions
+
+# Must set zone type before exterior compliance can be evaluated.
+# EXT_ZONE_UNSPECIFIED raises ValueError; a raw string raises TypeError.
+project = el_ops.set_exterior_lighting_zone_type_in_project(
+    project, ExteriorLightingZoneTypeOptions.EXT_ZONE_NEIGHBORHOOD_BUS_DISTRICT
+)
+
+fixture = get_default_fixture_template()
+fixture.description = "Parking LED"
+fixture.fixtureType = "Parking LED"
+fixture.fixtureWattage = 150.0
+fixture.quantity = 8
+
+exterior_area = get_default_exterior_area_template()
+exterior_area.areaDescription = "Main Parking Area"
+exterior_area.exteriorType = ExteriorUseTypeOptions.EXTERIOR_PARKING_AREA
+exterior_area.exteriorLightingSpace = exterior_area.exteriorLightingSpace.model_copy(
+    deep=True, update={"fixture": [fixture]}
+)
+project = el_ops.add_exterior_area_to_project(project, exterior_area)
+
+# Adding while zone is EXT_ZONE_UNSPECIFIED emits UserWarning (not an error)
+project = el_ops.update_exterior_area_in_project(
+    project, "Main Parking Area", {"useQuantity": 6000.0}
+)
+
+# Batch add/update/remove fixtures in one call, matched by fixtureType
+new_fixture = get_default_fixture_template()
+new_fixture.fixtureType = "Entrance LED"
+new_fixture.fixtureWattage = 80.0
+project = el_ops.update_fixtures_in_exterior_area(
+    project, "Main Parking Area", upserts=[new_fixture]
+)
+
+project = el_ops.remove_exterior_area_from_project(project, "Main Parking Area")
 ```
 
 ### Checking compliance/requirements and generating a report

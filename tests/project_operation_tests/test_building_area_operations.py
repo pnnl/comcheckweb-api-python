@@ -1,3 +1,4 @@
+import pytest
 from copy import deepcopy
 
 from comcheck_api.client import COMcheckClient
@@ -36,6 +37,34 @@ def test_building_area_operations(
         project=project,
         config=building_area_config,
     )
+
+
+def test_add_building_area_duplicate_description_raises(project: ComBuilding):
+    existing = project.get_by_path("lighting.wholeBldgUse", [])
+    assert existing, "fixture project must have at least one building area"
+    duplicate_desc = getattr(existing[0], "areaDescription")
+
+    duplicate = get_default_building_area_template()
+    duplicate.areaDescription = duplicate_desc
+
+    with pytest.raises(ValueError, match="areaDescription"):
+        project_building_area_operations.add_building_area_to_project(
+            project, duplicate
+        )
+
+
+def test_update_building_area_duplicate_description_raises(project: ComBuilding):
+    local = project.model_copy(deep=True)
+
+    area_a = get_default_building_area_template()
+    area_b = get_default_building_area_template()
+    local = project_building_area_operations.add_building_area_to_project(local, area_a)
+    local = project_building_area_operations.add_building_area_to_project(local, area_b)
+
+    with pytest.raises(ValueError, match="areaDescription"):
+        project_building_area_operations.update_building_area_in_project(
+            local, area_b.key, {"areaDescription": area_a.areaDescription}
+        )
 
 
 def test_get_building_area_keys(project: ComBuilding):

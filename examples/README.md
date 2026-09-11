@@ -9,11 +9,15 @@ examples/
 ├── README.md                          # This file
 ├── client/                           # API client examples
 │   ├── simulation.py                 # Simulation API workflow examples
+│   ├── assemblies.py                 # Assembly u-value calculation examples
 │   ├── compliance_and_report.py      # Compliance, requirements & report examples
+│   ├── allowed_wattage.py            # Interior lighting allowed-wattage calculation examples
 │   └── user_functions.py             # User-facing function examples
 └── project_operations/               # Project operations examples
-    ├── building_area_operations.py  # Building area operations
-    └── envelope_operations.py       # Envelope operations
+    ├── building_area_operations.py       # Building area operations
+    ├── envelope_operations.py            # Envelope operations
+    ├── interior_lighting_operations.py   # Interior lighting (InteriorSpace) operations
+    └── exterior_lighting_operations.py   # Exterior lighting (ExteriorArea) operations
 ```
 
 ## Example Categories
@@ -45,6 +49,18 @@ Demonstrates compliance checks, requirements lookup, and PDF report generation.
 **Usage:**
 ```bash
 python examples/client/compliance_and_report.py
+```
+
+#### Allowed Wattage Examples (`client/allowed_wattage.py`)
+Demonstrates interior lighting allowed-wattage calculation.
+
+**What it demonstrates:**
+- `calculate_interior_space_allowed_wattage()` - Calculating allowed wattage for a single InteriorSpace
+- `calculate_interior_spaces_allowed_wattage()` - Calculating allowed wattage for a list of InteriorSpace objects
+
+**Usage:**
+```bash
+python examples/client/allowed_wattage.py
 ```
 
 #### User Function Examples (`client/user_functions.py`)
@@ -81,6 +97,36 @@ python examples/project_operations/building_area_operations.py
 - `testProjectJson/initialProject.json`
 - `testProjectJson/buildingAreaAddedProject.json`
 - `testProjectJson/buildingAreaUpdatedProject.json`
+
+#### Interior Lighting Operations (`project_operations/interior_lighting_operations.py`)
+Demonstrates adding and managing interior lighting (InteriorSpace) in a project.
+
+**What it demonstrates:**
+- `add_interior_space_to_project()` - Adding an InteriorSpace with fixtures pre-populated
+- `update_interior_space_in_project()` - Updating InteriorSpace fields
+- `update_fixtures_in_interior_space()` - Batch adding/updating/removing fixtures, matched by fixtureType
+- `remove_interior_space_from_project()` - Removing an InteriorSpace and its fixtures
+- `get_interior_space_keys_from_project()` - Listing interior spaces in a building area
+
+**Usage:**
+```bash
+python examples/project_operations/interior_lighting_operations.py
+```
+
+#### Exterior Lighting Operations (`project_operations/exterior_lighting_operations.py`)
+Demonstrates setting the exterior lighting zone type and managing ExteriorArea items with fixtures.
+
+**What it demonstrates:**
+- `set_exterior_lighting_zone_type_in_project()` - Setting the project-level zone type
+- `add_exterior_area_to_project()` - Adding an ExteriorArea with fixtures pre-populated
+- `update_exterior_area_in_project()` - Updating ExteriorArea fields
+- `update_fixtures_in_exterior_area()` - Batch adding/updating/removing fixtures, matched by fixtureType
+- `remove_exterior_area_from_project()` - Removing an ExteriorArea and its fixtures
+
+**Usage:**
+```bash
+python examples/project_operations/exterior_lighting_operations.py
+```
 
 #### Envelope Operations (`project_operations/envelope_operations.py`)
 Comprehensive examples for all envelope operations including assemblies and nested components. This script demonstrates the complete workflow of adding and updating envelope components in a COMcheck project.

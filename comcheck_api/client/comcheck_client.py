@@ -14,6 +14,7 @@ from comcheck_api.exceptions import (
     COMCheckProjectNotFoundError,
     COMCheckSimulationError,
 )
+from comcheck_api.types.common_types import InteriorSpace
 from comcheck_api.types.core_types import ComBuilding
 
 Mode = Literal["python", "json"]
@@ -167,7 +168,7 @@ class COMcheckClient:
         if not old_project:
             raise COMCheckProjectNotFoundError(project_id)
 
-        project_data_json = project_data.model_dump(mode="json", exclude_unset=True)
+        project_data_json = project_data.model_dump(mode="json")
 
         # Preserve user project reference
         user_project = old_project["userProject"]
@@ -262,7 +263,7 @@ class COMcheckClient:
             The same ``project`` instance, with u-values updated.
         """
         energy_code = str(project.control.code)
-        envelope_data = project.envelope.model_dump(mode="json", exclude_unset=True)
+        envelope_data = project.envelope.model_dump(mode="json")
         updated_assembly_uvalues = self._service.assemblies_uvalue(
             envelope_data, energy_code
         )["data"]
@@ -287,6 +288,48 @@ class COMcheckClient:
 
         return project
 
+    def calculate_interior_space_allowed_wattage(
+        self, interior_space: InteriorSpace, energy_code: str
+    ) -> Any:
+        """Calculate allowed wattage for a single interior lighting space.
+
+        Args:
+            interior_space: The interior space (``InteriorSpace``) to
+                calculate allowed wattage for.
+            energy_code: The energy code for the api end point path.
+
+        Returns:
+            A dict with the calculated wattage, e.g.
+            ``{"spaceAllowedWattage": 560}``.
+        """
+        interior_space_data = interior_space.model_dump(mode="json")
+        response = self._service.interior_space_allowed_wattage(
+            interior_space_data, energy_code
+        )
+        return response.get("data")
+
+    def calculate_interior_spaces_allowed_wattage(
+        self, interior_spaces: List[InteriorSpace], energy_code: str
+    ) -> Any:
+        """Calculate allowed wattage for a list of interior lighting spaces.
+
+        Args:
+            interior_spaces: The interior spaces (``InteriorSpace`` objects)
+                to calculate allowed wattage for.
+            energy_code: The energy code for the api end point path.
+
+        Returns:
+            A dict keyed by each interior space's ``areaDescription``, e.g.
+            ``{"Test Space": 610}``.
+        """
+        interior_spaces_data = [
+            interior_space.model_dump(mode="json") for interior_space in interior_spaces
+        ]
+        response = self._service.interior_spaces_allowed_wattage(
+            interior_spaces_data, energy_code
+        )
+        return response.get("data")
+
     def check_UA_compliance(self, project: ComBuilding) -> Any:
         """Check UA path compliance for a project.
 
@@ -296,7 +339,7 @@ class COMcheckClient:
         Returns:
             The compliance results payload returned by the API.
         """
-        project_data = project.model_dump(mode="json", exclude_unset=True)
+        project_data = project.model_dump(mode="json")
         response = self._service.check_UA_compliance(project_data)
         return response.get("data")
 
@@ -309,7 +352,7 @@ class COMcheckClient:
         Returns:
             The requirements payload returned by the API.
         """
-        project_data = project.model_dump(mode="json", exclude_unset=True)
+        project_data = project.model_dump(mode="json")
         response = self._service.check_requirements(project_data)
         return response.get("data")
 
@@ -349,7 +392,7 @@ class COMcheckClient:
             ``expires``, and ``fileName``.
         """
         report_data = {
-            "building": project.model_dump(mode="json", exclude_unset=True),
+            "building": project.model_dump(mode="json"),
             "envelope": envelope,
             "extlighting": extlighting,
             "intlighting": intlighting,
@@ -396,7 +439,7 @@ class COMcheckClient:
             logger.info("Updating project: %s", project_id)
             project = self.update_project(str(project_id), project)
 
-        project_data = project.model_dump(mode="json", exclude_unset=True)
+        project_data = project.model_dump(mode="json")
         run_result = self._service.start_run_simulation(project_data)
         if run_result.data is None:
             raise COMCheckSimulationError(
