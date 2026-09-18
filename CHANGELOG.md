@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented in this file.
 
-## [Unreleased] - targeting 2.0.0
+## [2.0.0] - 2026-09-18
 
 This release tracks a breaking update to the COMcheck Web API schema. **Projects
 created or updated with `comcheck-api` < 2.0.0 are not compatible with the current
@@ -14,20 +14,37 @@ pip install --upgrade comcheck-api
 
 ### ⚠️ Breaking Changes
 
-- **Enum types restructured.** Nearly every options enum in `comcheck_api.types.core_types`
-  (e.g. `WallTypeOptions`, `BgWallTypeOptions`, `FuelTypeOptions`,
-  `RequirementAnswerStatus`, and others) changed from `StrEnum` to plain `Enum`,
-  and some (`WallTypeOptions`, `FanEfficiencyExceptionTypeOptions`,
+- **Enum types restructured.** 26 options enums in `comcheck_api.types.core_types`
+  (e.g. `BgWallTypeOptions`, `FuelTypeOptions`, `RequirementAnswerStatus`,
+  `OrientationOptions`) changed from `StrEnum` to plain `Enum`, so they no longer
+  compare equal to their plain-string values — use `.value` or the enum member
+  instead. The remaining ~73 options enums are still `StrEnum` and are unaffected.
+  Separately, four enums (`WallTypeOptions`, `FanEfficiencyExceptionTypeOptions`,
   `FanSystemComplianceMethodOptions`, `TrackLightingWattageBasisTypeOptions`) are
-  now `RootModel` wrappers around a renamed `*Enum` class. Code comparing these
-  values against plain strings, or importing the old enum names directly, will
-  need to be updated.
-- **`model_dump()` calls in `COMcheckClient` no longer pass `exclude_unset=True`.**
-  Methods that send project data to the API (`update_project`, `update_uvalues`,
-  `check_UA_compliance`, `check_requirements`, `generate_report`,
-  `start_run_simulation`) now always serialize the full model instead of only the
-  fields explicitly set. This changes request payload shape for any code relying
-  on partial submissions.
+  now `RootModel` wrappers around a renamed `*Enum` class (e.g.
+  `WallTypeOptionsEnum`); the wrapper holds the member in `.root`, so code that
+  used these as enums directly must be updated.
+- **Serialization now uses pydantic's `MISSING` sentinel instead of
+  `exclude_unset`.** Unset fields in `core_types` models default to
+  `MISSING` and `CustomBaseModel` defines a plain `@model_serializer` that drops
+  them, so `model_dump()` on its own omits fields that were never set. Two
+  consequences:
+  - **`exclude_unset=True` is now a no-op** on any `CustomBaseModel`, because a
+    plain (`mode="plain"`) serializer bypasses pydantic's field-exclusion logic.
+    Code passing `exclude_unset`/`exclude_defaults` to `model_dump()` no longer
+    changes the output.
+  - Fields with a concrete (non-`MISSING`) default — such as
+    `Project.projectTitle`, which defaults to `"New Project"` — are now emitted
+    even when never explicitly set, whereas `exclude_unset=True` previously
+    dropped them. This changes request payload shape for code that relied on
+    partial submissions.
+- **Removed `ActivityTypeOptions.ACTIVITY_COMMON_OFFICE`** from the schema and
+  generated types. Use `ACTIVITY_COMMON_OFFICE_OPEN` or
+  `ACTIVITY_COMMON_OFFICE_ENCLOSED`. Older projects that still carry the removed
+  value are preserved verbatim rather than rejected — see `docs/schema.md`.
+- **`areaDescription` must now be unique** across `lighting.wholeBldgUse`.
+  `add_building_area_to_project()` and `update_building_area_in_project()` raise
+  `ValueError` on a duplicate description, where they previously accepted it.
 - **New required interior/exterior lighting fields and enums** were added to the
   schema (`comcheck_api/schemas/comCheck.schema.json`), backing the new
   `project_interior_lighting_operations` / `project_exterior_lighting_operations`
@@ -79,6 +96,8 @@ pip install --upgrade comcheck-api
   duplicate `fixtureType`s within a batch or an unmatched removal.
 - New energy code options (`CEZ_IECC2009`, `CEZ_IECC2012`, `CEZ_IECC2024_APPXCF`,
   `CEZ_90_1_2007`, `CEZ_90_1_2010`, `NONE`).
+- `docs/schema.md`, documenting the schema and how unknown/removed enum values
+  from older projects are handled.
 
 ### Documentation
 
@@ -92,11 +111,19 @@ pip install --upgrade comcheck-api
 
 - If you pin `comcheck-api`, bump the pin to `>=2.0.0` and re-test any code that
   imports enum types from `comcheck_api.types.core_types` or that relies on
-  partial (`exclude_unset`) payloads.
+  partial (`exclude_unset`) payloads. Note that `exclude_unset=True` is now
+  ignored — if you need to suppress a field, leave it unset so it stays `MISSING`
+  rather than assigning `None`.
+- Requires `pydantic>=2.12.5` for the `MISSING` sentinel
+  (`pydantic.experimental.missing_sentinel`). This is an experimental pydantic
+  API; if it is unavailable the serializer falls back to emitting all fields.
 - Projects saved with an older client version should be re-fetched and
   re-submitted with 2.0.0+ to pick up the new required lighting fields.
 - Update any code calling the renamed interior/exterior lighting operations,
   defaults, or allowed-wattage client/service methods listed above.
+- Replace `ACTIVITY_COMMON_OFFICE` with `ACTIVITY_COMMON_OFFICE_OPEN` or
+  `ACTIVITY_COMMON_OFFICE_ENCLOSED`, and ensure each building area has a unique
+  `areaDescription`.
 
 ## [1.0.7] and earlier
 
