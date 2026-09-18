@@ -98,6 +98,10 @@ pip install --upgrade comcheck-api
   `CEZ_90_1_2007`, `CEZ_90_1_2010`, `NONE`).
 - `docs/schema.md`, documenting the schema and how unknown/removed enum values
   from older projects are handled.
+- `x-client-version` request header, sent on every API call so the server can
+  identify the client version. Resolved from the installed package metadata, and
+  falls back to `"unknown"` when running from a source checkout with no installed
+  distribution.
 
 ### Documentation
 

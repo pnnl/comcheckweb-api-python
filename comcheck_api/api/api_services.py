@@ -6,6 +6,7 @@ and catch API schema mismatches at the boundary."""
 
 import logging
 import os
+from importlib.metadata import PackageNotFoundError, version
 from typing import Any, Dict, NoReturn, Optional
 
 import httpx
@@ -20,6 +21,12 @@ from comcheck_api.types.api_types import (
     SimulationStatusResponse,
     SimulationResultResponse,
 )
+
+try:
+    CLIENT_VERSION = version("comcheck_api")
+except PackageNotFoundError:
+    # Running from a source checkout without an installed distribution.
+    CLIENT_VERSION = "unknown"
 
 
 class COMCheckApiService:
@@ -77,6 +84,7 @@ class COMCheckApiService:
         """
         return {
             "x-api-key": self.api_key,
+            "x-client-version": CLIENT_VERSION,
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
