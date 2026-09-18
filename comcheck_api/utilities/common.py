@@ -18,7 +18,7 @@ def _json_default(obj: Any) -> Any:
     aliases, and nested models serialize the same way the API expects.
     """
     if isinstance(obj, BaseModel):
-        return obj.model_dump(mode="json", exclude_unset=True)
+        return obj.model_dump(mode="json")
     raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
 

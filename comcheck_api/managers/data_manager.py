@@ -195,7 +195,6 @@ class DataManager(Generic[T]):
             or not isinstance(current, str)
             or current
             in {getattr(existing, self._identifier, None) for existing in self._data}
-            or (not current.startswith(self._id_prefix))
         )
 
         if not needs_new_identifier:
@@ -327,7 +326,7 @@ class DataManager(Generic[T]):
         # This will raise Pydantic ValidationError if types don't align
         # Get only the model fields to avoid serializing dynamically added methods
         original_dict = original.model_dump(
-            mode="python", by_alias=False, exclude_unset=True
+            mode="python", by_alias=False
         )
         merged = {**original_dict, **updates_dict}
         try:
@@ -357,7 +356,9 @@ def get_model_info(model_class: Type[BaseModel]) -> IdInfo | None:
         or ``None`` if the class is not registered.
     """
     from comcheck_api.types.core_types import (
+        ActivityUse,
         Door,
+        ExteriorUse,
         Roof,
         Window,
         BgWall,
@@ -369,6 +370,8 @@ def get_model_info(model_class: Type[BaseModel]) -> IdInfo | None:
     )
 
     MODEL_TO_ID_INFO = {
+        ActivityUse: IdInfo(identifier="areaDescription", id_prefix="Space"),
+        ExteriorUse: IdInfo(identifier="areaDescription", id_prefix="Ext Area"),
         Door: IdInfo(identifier="assemblyType", id_prefix="Door:Door"),
         Roof: IdInfo(identifier="assemblyType", id_prefix="Roof:Roof"),
         Window: IdInfo(identifier="assemblyType", id_prefix="Window:Window"),

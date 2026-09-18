@@ -1,10 +1,16 @@
 import logging
 import re
+from copy import deepcopy
 from typing import Any, Optional, TypeVar
 
 from pydantic.main import _model_construction
-from pydantic import BaseModel
+from pydantic import BaseModel, model_serializer
 from comcheck_api.managers.data_manager import DataManager
+
+try:
+    from pydantic.experimental.missing_sentinel import MISSING as _PYDANTIC_MISSING
+except ImportError:
+    _PYDANTIC_MISSING = None
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +29,39 @@ class CustomBaseModel(BaseModel):
     """
 
     _identifier: str = "id"
+
+    @model_serializer(mode="plain")
+    def _skip_missing_fields(self):
+        if _PYDANTIC_MISSING is None:
+            return self.__dict__
+        return {k: v for k, v in self.__dict__.items() if v is not _PYDANTIC_MISSING}
+
+    def __deepcopy__(self, memo=None):
+        # MISSING (Sentinel) is not picklable, so copy field-by-field, passing it through as-is.
+        if memo is None:
+            memo = {}
+        cls = self.__class__
+        new_obj = cls.__new__(cls)
+        memo[id(self)] = new_obj
+        new_dict = {}
+        for k, v in self.__dict__.items():
+            if _PYDANTIC_MISSING is not None and v is _PYDANTIC_MISSING:
+                new_dict[k] = v
+            else:
+                new_dict[k] = deepcopy(v, memo)
+        object.__setattr__(new_obj, "__dict__", new_dict)
+        object.__setattr__(
+            new_obj,
+            "__pydantic_fields_set__",
+            deepcopy(self.__pydantic_fields_set__, memo),
+        )
+        for attr in ("__pydantic_extra__", "__pydantic_private__"):
+            try:
+                val = object.__getattribute__(self, attr)
+                object.__setattr__(new_obj, attr, deepcopy(val, memo))
+            except AttributeError:
+                pass
+        return new_obj
 
     @classmethod
     def __pydantic_init_subclass__(cls, **kwargs):

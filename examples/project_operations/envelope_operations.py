@@ -12,7 +12,7 @@ from comcheck_api.defaults import (
 from comcheck_api.types.core_types import Roof, ThermalBridgeTypeOptions
 
 # Initialize client
-load_dotenv()
+load_dotenv(override=True)
 api_key = os.getenv("COM_API_KEY")
 if not api_key:
     raise ValueError("COM_API_KEY environment variable is not set")

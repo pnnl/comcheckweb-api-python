@@ -11,7 +11,9 @@ import pytest
 from dotenv import load_dotenv
 
 from comcheck_api.client import COMcheckClient
+from comcheck_api.defaults import get_default_interior_space_template
 from comcheck_api.exceptions import COMCheckHTTPError
+from comcheck_api.types.core_types import ActivityTypeOptions, EnergyCodeOptions
 
 # Load environment variables
 load_dotenv()
@@ -59,3 +61,54 @@ def test_fetch_single_project(client: COMcheckClient):
     else:
         # If no projects exist, just pass the test
         assert True
+
+
+def test_calculate_interior_space_allowed_wattage(client: COMcheckClient):
+    """Test calculating allowed wattage for a single InteriorSpace."""
+    interior_space = get_default_interior_space_template()
+    interior_space.areaDescription = "Open Office"
+    interior_space.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE_OPEN
+    interior_space.floorArea = 2000.0
+    energy_code = str(EnergyCodeOptions.CEZ_90_1_2022)
+
+    try:
+        result = client.calculate_interior_space_allowed_wattage(
+            interior_space, energy_code
+        )
+    except COMCheckHTTPError as exc:
+        if exc.status_code in (401, 403):
+            pytest.skip(
+                f"COM_API_KEY rejected ({exc.status_code}); skipping live test."
+            )
+        raise
+    assert isinstance(result, dict)
+    assert "spaceAllowedWattage" in result
+
+
+def test_calculate_interior_spaces_allowed_wattage(client: COMcheckClient):
+    """Test calculating allowed wattage for a list of InteriorSpace objects."""
+    first = get_default_interior_space_template()
+    first.areaDescription = "Open Office"
+    first.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE_OPEN
+    first.floorArea = 2000.0
+
+    second = get_default_interior_space_template()
+    second.areaDescription = "Conference Room"
+    second.activityType = ActivityTypeOptions.ACTIVITY_COMMON_CONFERENCE_HALL
+    second.floorArea = 500.0
+
+    energy_code = str(EnergyCodeOptions.CEZ_90_1_2022)
+
+    try:
+        result = client.calculate_interior_spaces_allowed_wattage(
+            [first, second], energy_code
+        )
+    except COMCheckHTTPError as exc:
+        if exc.status_code in (401, 403):
+            pytest.skip(
+                f"COM_API_KEY rejected ({exc.status_code}); skipping live test."
+            )
+        raise
+    assert isinstance(result, dict)
+    assert "Open Office" in result
+    assert "Conference Room" in result

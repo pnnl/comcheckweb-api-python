@@ -7,7 +7,7 @@ from comcheck_api.constants.common_constants import PROJECT_TEMPLATE
 from comcheck_api.types.core_types import EnergyCodeOptions
 
 # Initialize client
-load_dotenv()
+load_dotenv(override=True)
 client = COMcheckClient()
 api_key = os.getenv("COM_API_KEY") or "your-api-key-here"
 client.set_api_key(api_key)

@@ -6,6 +6,7 @@ and catch API schema mismatches at the boundary."""
 
 import logging
 import os
+from importlib.metadata import PackageNotFoundError, version
 from typing import Any, Dict, NoReturn, Optional
 
 import httpx
@@ -20,6 +21,12 @@ from comcheck_api.types.api_types import (
     SimulationStatusResponse,
     SimulationResultResponse,
 )
+
+try:
+    CLIENT_VERSION = version("comcheck_api")
+except PackageNotFoundError:
+    # Running from a source checkout without an installed distribution.
+    CLIENT_VERSION = "unknown"
 
 
 class COMCheckApiService:
@@ -77,6 +84,7 @@ class COMCheckApiService:
         """
         return {
             "x-api-key": self.api_key,
+            "x-client-version": CLIENT_VERSION,
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
@@ -211,6 +219,59 @@ class COMCheckApiService:
             )
             response.raise_for_status()
             # may need validation here.
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
+    def interior_space_allowed_wattage(
+        self, interior_space_data: Dict[str, Any], energy_code: str
+    ) -> Dict[str, Any]:
+        """Calculate allowed wattage for a single interior lighting space.
+
+        Args:
+            interior_space_data: The interior space data to send in the request body
+            energy_code: The energy code for the api end point path
+
+        Returns:
+            API response data as dictionary
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post(
+                f"/{energy_code}/activity-use/allowed-wattage", json=interior_space_data
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
+    def interior_spaces_allowed_wattage(
+        self, interior_spaces_data: list[Dict[str, Any]], energy_code: str
+    ) -> Dict[str, Any]:
+        """Calculate allowed wattage for a list of interior lighting spaces.
+
+        Args:
+            interior_spaces_data: The list of interior space data to send in the request body
+            energy_code: The energy code for the api end point path
+
+        Returns:
+            API response data as dictionary
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post(
+                f"/{energy_code}/activity-uses/allowed-wattage",
+                json=interior_spaces_data,
+            )
+            response.raise_for_status()
             return response.json()
         except Exception as error:
             self._handle_api_error(error)
