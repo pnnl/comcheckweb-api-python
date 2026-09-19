@@ -5475,8 +5475,7 @@
                 "MASONRY_AG_WALL",
                 "OTHER_AG_WALL",
                 "OTHER_BG_WALL",
-                "OTHER_FRAME",
-                null
+                "OTHER_FRAME"
             ],
             "descriptions": [
                 "Wood-Framed, 16in. o.c.",
@@ -5489,8 +5488,7 @@
                 "Concrete Block",
                 "Other Above Grade Wall Type",
                 "Other Below Grade Wall Type",
-                "Other Framing Type",
-                "Unspecified"
+                "Other Framing Type"
             ]
         },
         "BgWallTypeOptions": {
@@ -6410,7 +6408,10 @@
             ]
         },
         "TrackLightingWattageBasisTypeOptions": {
-            "type": "string",
+            "type": [
+                "string",
+                "null"
+            ],
             "enum": [
                 "NONE",
                 "WATTAGE_BASIS_NOT_SET",
@@ -7301,13 +7302,11 @@
             "type": "string",
             "enum": [
                 "FAN_SYSTEM_MOTOR_NAMEPLATE_HP",
-                "FAN_SYSTEM_MOTOR_BRAKE_HP",
-                null
+                "FAN_SYSTEM_MOTOR_BRAKE_HP"
             ],
             "descriptions": [
                 "Motor Nameplate HP",
-                "Brake HP (BHP)",
-                "Missing"
+                "Brake HP (BHP)"
             ]
         },
         "FanEfficiencyExceptionTypeOptions": {
@@ -7328,8 +7327,7 @@
                 "FAN_EFFICIENCY_EXCEPTION_TYPE_HIGH_TEMPERATURE",
                 "FAN_EFFICIENCY_EXCEPTION_TYPE_EXPLOSIVE",
                 "FAN_EFFICIENCY_EXCEPTION_TYPE_REVERSIBLE_TUNNEL_VENT",
-                "NONE",
-                null
+                "NONE"
             ],
             "descriptions": [
                 "Unspecified",
@@ -7347,8 +7345,7 @@
                 "Moves gases > 482 F",
                 "Explosive atmosphere only",
                 "Reversible for tunnel ventilation",
-                "None",
-                "Missing"
+                "None"
             ]
         },
         "FanTypeOptions": {
