@@ -2,6 +2,23 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Added
+- Renewable energy operations module (`project_renewable_operations`) for managing on-site renewable systems and off-site procurement
+- `set_renewable_exception_in_project` — set the renewable exception on a project
+- `update_renewable_in_project` — update scalar fields on the renewable singleton
+- `add_renewable_system_to_project` / `update_renewable_system_in_project` / `remove_renewable_system_from_project` — manage on-site renewable systems
+- `get_renewable_system_keys_from_project` — list all renewable systems in a project
+- `add_offsite_renewable_procurement_to_project` / `update_offsite_renewable_procurement_in_project` / `remove_offsite_renewable_procurement_from_project` — manage offsite renewable procurement
+- `get_offsite_renewable_procurement_keys_from_project` — list all offsite renewable procurements
+- Renewable operations support for ASHRAE 90.1 2022, IECC 2024, and IECC 2024 Appendix C/F energy codes
+- `get_default_renewable_system_template` and `get_default_offsite_renewable_procurement_template` default templates
+- `COMcheckClient.update_renewable_area` and `COMCheckApiService.area_for_renewable` placeholder methods (raise `NotImplementedError` until endpoint is available)
+- `RenewableSystem` and `OffsiteRenewableProcurement` added to `MODEL_TO_ID_INFO` with auto-generated descriptions
+
+
+
 ## [2.0.1] - 2026-09-18
 
 Reverts the enum renames introduced in 2.0.0. If you updated code to use the

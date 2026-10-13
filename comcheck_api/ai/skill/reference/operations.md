@@ -1,11 +1,12 @@
 # Project Operations Reference
 
-Operation functions are free functions in four modules:
+Operation functions are free functions in five modules:
 
 - `comcheck_api.project_operations.project_building_area_operations`
 - `comcheck_api.project_operations.project_envelope_operations`
 - `comcheck_api.project_operations.project_interior_lighting_operations`
 - `comcheck_api.project_operations.project_exterior_lighting_operations`
+- `comcheck_api.project_operations.project_renewable_operations`
 
 Each function takes a `ComBuilding` and a payload, and returns a new
 `ComBuilding`. Treat them as immutable transformations.
@@ -173,6 +174,38 @@ directly and pass the whole `ExteriorArea` through
 Use `get_default_exterior_area_template()` as a starting point.
 `areaDescription` is the identifier — it is unique within `exteriorUse[]`
 and is auto-generated if missing.
+
+## Renewable energy operations
+
+```python
+from comcheck_api import project_renewable_operations as rn_ops
+```
+
+Renewable energy is managed at the project level through the
+`ComBuilding.renewable` singleton. Renewable operations require a supported
+energy code (ASHRAE 90.1 2022, IECC 2024, IECC 2024 Appendix C/F, or state
+codes based on them). All mutating operations raise `ValueError` for
+unsupported codes. Exception and on-site systems coexist — setting an
+exception does not preclude adding renewable systems. **Confirm with the user
+before adding off-site procurement** (not always present on projects).
+
+| Function | Purpose |
+|---|---|
+| `set_renewable_exception_in_project(project, renewable_exception)` | Set `renewable.renewableException`. Raises `ValueError` for `NoneType_None`, `TypeError` for non-enum values. |
+| `update_renewable_in_project(project, updates)` | Update scalar fields on the renewable singleton. Raises `ValueError` for engine-calculated, API-calculated, or list fields. |
+| `add_renewable_system_to_project(project, new_renewable_system)` | Add an on-site `RenewableSystem`. |
+| `update_renewable_system_in_project(project, renewable_system_description, updates)` | Update a `RenewableSystem` by its `description`. |
+| `remove_renewable_system_from_project(project, renewable_system_description)` | Remove a `RenewableSystem` by its `description`. |
+| `get_renewable_system_keys_from_project(project)` | List `[{description, renewableSystemType, renewableSystemCapacity, renewableSystemCapacityUnit}, …]` for the project. Works for any code. |
+| `add_offsite_renewable_procurement_to_project(project, new_procurement)` | Add an `OffsiteRenewableProcurement`. **Confirm with user first.** |
+| `update_offsite_renewable_procurement_in_project(project, procurement_description, updates)` | Update an `OffsiteRenewableProcurement` by its `description`. |
+| `remove_offsite_renewable_procurement_from_project(project, procurement_description)` | Remove an `OffsiteRenewableProcurement` by its `description`. |
+| `get_offsite_renewable_procurement_keys_from_project(project)` | List `[{description, offsiteRenewableProcurementType, offsiteRenewableEnergy}, …]` for the project. Works for any code. |
+
+Use `get_default_renewable_system_template()` and
+`get_default_offsite_renewable_procurement_template()` as starting points.
+`description` is the identifier — it is unique within each list and is
+auto-generated if missing.
 
 ## U-value calculation requires a construction type
 
