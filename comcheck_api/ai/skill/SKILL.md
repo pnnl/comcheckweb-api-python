@@ -39,7 +39,7 @@ Triggers:
   - `project_envelope_operations` — roofs, walls, floors, windows, doors, skylights, thermal bridges
   - `project_interior_lighting_operations` — `ActivityUse` items, aliased as `InteriorSpace` (interior lighting spaces + fixtures)
   - `project_exterior_lighting_operations` — `ExteriorUse` items, aliased as `ExteriorArea`, + zone type
-  - `project_renewable_operations` — renewable exception, on-site systems, off-site procurement (supported codes only)
+  - `project_renewable_operations` — renewable exception, on-site systems, off-site procurement
 - **Envelope items attach to a building-area key**: every
   `add_*_to_project` envelope function takes
   `(project, building_area_key, new_component)`. Look up the key
@@ -379,8 +379,9 @@ library, so it returns metadata and lets the caller decide
 
 ### Adding renewable energy systems
 
-Renewable operations require a supported energy code (ASHRAE 90.1 2022,
-IECC 2024, IECC 2024 Appendix C/F, or state codes based on them). Exception
+Renewable requirements only apply under some energy codes; the operations
+don't check `control.code`, so ask the user whether the project needs
+renewables rather than deciding from the code. Exception
 and on-site systems coexist — setting an exception doesn't preclude adding
 renewable systems. **Confirm with the user before adding off-site
 procurement** (not always present on projects).
@@ -392,21 +393,11 @@ from comcheck_api.defaults import (
     get_default_offsite_renewable_procurement_template,
 )
 from comcheck_api.types import (
-    EnergyCodeOptions,
     RenewableExceptionOptions,
     RenewableSystemTypeOptions,
     RenewableSystemCapacityUnitOptions,
     OffsiteRenewableProcurementType,
 )
-
-# Ensure the project uses a supported code
-if project.control.code not in {
-    EnergyCodeOptions.CEZ_90_1_2022,
-    EnergyCodeOptions.CEZ_IECC2024,
-    EnergyCodeOptions.CEZ_IECC2024_APPXCF,
-}:
-    # Unsupported — all mutating ops raise ValueError
-    print("Renewable operations are not supported for this energy code")
 
 # 1. Set a renewable exception (coexists with systems)
 project = rn_ops.set_renewable_exception_in_project(

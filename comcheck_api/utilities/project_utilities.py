@@ -240,26 +240,3 @@ def _require_offsite_renewable_procurement(
             f"OffsiteRenewableProcurement with description '{description}' "
             f"not found in renewable.offsiteRenewableProcurement."
         )
-
-
-def _require_renewable_supported_code(project: ComBuilding) -> None:
-    """Ensure the project's energy code is supported for renewable operations.
-
-    Args:
-        project: The project to check.
-
-    Raises:
-        ValueError: If the project's control.code is not in the supported set.
-    """
-    from comcheck_api.constants.renewable_constants import RENEWABLE_SUPPORTED_CODES
-
-    code = project.control.code
-    if code not in RENEWABLE_SUPPORTED_CODES:
-        supported_list = ", ".join(
-            str(c.value)
-            for c in sorted(RENEWABLE_SUPPORTED_CODES, key=lambda x: x.value)
-        )
-        raise ValueError(
-            f"Renewable operations are not supported for energy code '{code.value}'. "
-            f"Supported codes: {supported_list}"
-        )

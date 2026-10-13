@@ -11,11 +11,11 @@ The renewable data lives in ``ComBuilding.renewable`` (a required singleton
 - Off-site fields — ``requiredOffsiteRenewableEnergy``, ``proposedOffsiteRenewableEnergy``,
   and ``offsiteRenewableProcurement[]``
 
-Supported energy codes
-----------------------
-Renewable operations require one of the supported energy codes (ASHRAE 90.1 2022,
-IECC 2024, or state codes based on them). All mutating operations raise
-:exc:`ValueError` for unsupported codes.
+Energy codes
+------------
+Renewable requirements only apply under some energy codes (and state codes
+based on them). These operations don't check ``control.code`` — whether the
+project needs renewable data is up to you.
 
 Exception and systems coexistence
 ----------------------------------
@@ -43,7 +43,6 @@ from comcheck_api.types.core_types import (
 from comcheck_api.utilities.project_utilities import (
     _require_renewable_system,
     _require_offsite_renewable_procurement,
-    _require_renewable_supported_code,
 )
 
 logger = logging.getLogger(__name__)
@@ -88,8 +87,7 @@ def set_renewable_exception_in_project(
 
     Raises:
         TypeError: If renewable_exception is not a RenewableExceptionOptions member.
-        ValueError: If renewable_exception is NoneType_None, or if the project's
-            energy code is not supported for renewable operations.
+        ValueError: If renewable_exception is NoneType_None.
     """
     if not isinstance(renewable_exception, RenewableExceptionOptions):
         raise TypeError(
@@ -101,8 +99,6 @@ def set_renewable_exception_in_project(
             "NoneType_None is not a valid renewable exception. "
             "Choose a value from RenewableExceptionOptions other than NoneType_None."
         )
-
-    _require_renewable_supported_code(project)
 
     updated_project = project.model_copy(deep=True)
     updated_project.renewable.renewableException = renewable_exception
@@ -132,11 +128,8 @@ def update_renewable_in_project(
     Raises:
         ValueError: If updates contains renewableException, engine-calculated,
             API-calculated, or list fields; if a value fails validation (e.g.
-            negative numberOfFloors); or if the project's energy code is not
-            supported.
+            negative numberOfFloors).
     """
-    _require_renewable_supported_code(project)
-
     if "renewableException" in updates:
         raise ValueError(
             "Use set_renewable_exception_in_project to change renewableException."
@@ -171,12 +164,7 @@ def add_renewable_system_to_project(
 
     Returns:
         Updated project with the new RenewableSystem added.
-
-    Raises:
-        ValueError: If the project's energy code is not supported for renewable operations.
     """
-    _require_renewable_supported_code(project)
-
     updated_project = project.model_copy(deep=True)
     new_renewable_system = new_renewable_system.model_copy(deep=True)
     updated_project.renewable.append_subcomponent(new_renewable_system)
@@ -199,10 +187,8 @@ def update_renewable_system_in_project(
         Updated project with the RenewableSystem modified.
 
     Raises:
-        ValueError: If the renewable system is not found, or if the project's
-            energy code is not supported.
+        ValueError: If the renewable system is not found.
     """
-    _require_renewable_supported_code(project)
     _require_renewable_system(project, renewable_system_description)
 
     updated_project = project.model_copy(deep=True)
@@ -228,10 +214,8 @@ def remove_renewable_system_from_project(
         Updated project with the RenewableSystem removed.
 
     Raises:
-        ValueError: If the renewable system is not found, or if the project's
-            energy code is not supported.
+        ValueError: If the renewable system is not found.
     """
-    _require_renewable_supported_code(project)
     _require_renewable_system(project, renewable_system_description)
 
     updated_project = project.model_copy(deep=True)
@@ -244,8 +228,6 @@ def remove_renewable_system_from_project(
 
 def get_renewable_system_keys_from_project(project: ComBuilding) -> list[dict]:
     """Return the description, type, capacity, and unit of all renewable systems.
-
-    This is a read-only operation and works for any energy code.
 
     Args:
         project: The project to query.
@@ -288,12 +270,7 @@ def add_offsite_renewable_procurement_to_project(
 
     Returns:
         Updated project with the new OffsiteRenewableProcurement added.
-
-    Raises:
-        ValueError: If the project's energy code is not supported for renewable operations.
     """
-    _require_renewable_supported_code(project)
-
     updated_project = project.model_copy(deep=True)
     new_procurement = new_procurement.model_copy(deep=True)
 
@@ -321,10 +298,8 @@ def update_offsite_renewable_procurement_in_project(
         Updated project with the OffsiteRenewableProcurement modified.
 
     Raises:
-        ValueError: If the offsite renewable procurement is not found, or if
-            the project's energy code is not supported.
+        ValueError: If the offsite renewable procurement is not found.
     """
-    _require_renewable_supported_code(project)
     _require_offsite_renewable_procurement(project, procurement_description)
 
     updated_project = project.model_copy(deep=True)
@@ -350,10 +325,8 @@ def remove_offsite_renewable_procurement_from_project(
         Updated project with the OffsiteRenewableProcurement removed.
 
     Raises:
-        ValueError: If the offsite renewable procurement is not found, or if
-            the project's energy code is not supported.
+        ValueError: If the offsite renewable procurement is not found.
     """
-    _require_renewable_supported_code(project)
     _require_offsite_renewable_procurement(project, procurement_description)
 
     updated_project = project.model_copy(deep=True)
@@ -368,8 +341,6 @@ def get_offsite_renewable_procurement_keys_from_project(
     project: ComBuilding,
 ) -> list[dict]:
     """Return the description, type, and energy of all offsite renewable procurements.
-
-    This is a read-only operation and works for any energy code.
 
     Args:
         project: The project to query.

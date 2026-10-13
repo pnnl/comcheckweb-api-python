@@ -10,16 +10,11 @@ Renewable energy is managed at the **project level** through the
 - Off-site fields — `requiredOffsiteRenewableEnergy`, `proposedOffsiteRenewableEnergy`,
   and `offsiteRenewableProcurement[]`
 
-## Supported energy codes
+## Energy codes
 
-Renewable operations require one of the supported energy codes:
-
-- ASHRAE 90.1 2022 (`CEZ_90_1_2022`)
-- IECC 2024 (`CEZ_IECC2024`)
-- IECC 2024 Appendix C/F (`CEZ_IECC2024_APPXCF`)
-- State codes based on the above
-
-All mutating operations raise `ValueError` for unsupported codes.
+Renewable requirements only apply under some energy codes (and state codes
+based on them). These operations don't check `control.code` — whether the
+project needs renewable data is up to you.
 
 ## Key concepts
 
@@ -31,9 +26,6 @@ All mutating operations raise `ValueError` for unsupported codes.
   **not** always present. Before adding any `offsiteRenewableProcurement[]`
   entry, confirm with the user that the project actually uses off-site
   procurement.
-
-- **Read-only operations work for any code.** The `get_*_keys` functions work
-  for any energy code, not just the supported set.
 
 ## description uniqueness
 

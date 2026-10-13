@@ -28,20 +28,13 @@ def _fresh(project: ComBuilding) -> ComBuilding:
     return project.model_copy(deep=True)
 
 
-def _set_supported_code(project: ComBuilding) -> ComBuilding:
-    """Set the project to a supported energy code."""
-    proj = _fresh(project)
-    proj.control.code = EnergyCodeOptions.CEZ_90_1_2022
-    return proj
-
-
 # ---------------------------------------------------------------------------
 # set_renewable_exception_in_project
 # ---------------------------------------------------------------------------
 
 
 def test_set_renewable_exception(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     result = rn_ops.set_renewable_exception_in_project(
         proj, RenewableExceptionOptions.RENEWABLE_ONSITE_EXCEPTION_LOW_SOLAR_RAD
     )
@@ -52,7 +45,7 @@ def test_set_renewable_exception(project: ComBuilding):
 
 
 def test_set_renewable_exception_rejects_nonetype(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     with pytest.raises(ValueError, match="NoneType_None"):
         rn_ops.set_renewable_exception_in_project(
             proj, RenewableExceptionOptions.NoneType_None
@@ -60,7 +53,7 @@ def test_set_renewable_exception_rejects_nonetype(project: ComBuilding):
 
 
 def test_set_renewable_exception_rejects_non_enum(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     with pytest.raises(TypeError):
         rn_ops.set_renewable_exception_in_project(
             proj, "RENEWABLE_ONSITE_EXCEPTION_LOW_SOLAR_RAD"
@@ -68,21 +61,12 @@ def test_set_renewable_exception_rejects_non_enum(project: ComBuilding):
 
 
 def test_set_renewable_exception_does_not_mutate_original(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     original_exception = proj.renewable.renewableException
     rn_ops.set_renewable_exception_in_project(
         proj, RenewableExceptionOptions.RENEWABLE_ONSITE_EXCEPTION_LOW_SOLAR_RAD
     )
     assert proj.renewable.renewableException == original_exception
-
-
-def test_set_renewable_exception_unsupported_code(project: ComBuilding):
-    proj = _fresh(project)
-    proj.control.code = EnergyCodeOptions.CEZ_IECC2009  # Unsupported code
-    with pytest.raises(ValueError, match="not supported for energy code"):
-        rn_ops.set_renewable_exception_in_project(
-            proj, RenewableExceptionOptions.RENEWABLE_ONSITE_EXCEPTION_LOW_SOLAR_RAD
-        )
 
 
 # ---------------------------------------------------------------------------
@@ -91,13 +75,13 @@ def test_set_renewable_exception_unsupported_code(project: ComBuilding):
 
 
 def test_update_renewable_scalar_fields(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     result = rn_ops.update_renewable_in_project(proj, {"numberOfFloors": 5})
     assert result.renewable.numberOfFloors == 5
 
 
 def test_update_renewable_validates_values(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     with pytest.raises(ValueError):
         rn_ops.update_renewable_in_project(proj, {"numberOfFloors": -3})
     with pytest.raises(ValueError):
@@ -105,13 +89,13 @@ def test_update_renewable_validates_values(project: ComBuilding):
 
 
 def test_update_renewable_rejects_exception_field(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     with pytest.raises(ValueError, match="set_renewable_exception_in_project"):
         rn_ops.update_renewable_in_project(proj, {"renewableException": "junk"})
 
 
 def test_update_renewable_preserves_other_fields(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     proj = rn_ops.add_renewable_system_to_project(
         proj, get_default_renewable_system_template()
     )
@@ -125,7 +109,7 @@ def test_update_renewable_preserves_other_fields(project: ComBuilding):
 
 
 def test_update_renewable_rejects_engine_fields(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     with pytest.raises(ValueError, match="engine-calculated"):
         rn_ops.update_renewable_in_project(proj, {"requiredCapacity": 100.0})
     with pytest.raises(ValueError, match="engine-calculated"):
@@ -141,7 +125,7 @@ def test_update_renewable_rejects_engine_fields(project: ComBuilding):
 
 
 def test_update_renewable_rejects_api_fields(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     with pytest.raises(ValueError, match="API-calculated"):
         rn_ops.update_renewable_in_project(proj, {"largestThreeFloorArea": 1000.0})
     with pytest.raises(ValueError, match="API-calculated"):
@@ -149,18 +133,11 @@ def test_update_renewable_rejects_api_fields(project: ComBuilding):
 
 
 def test_update_renewable_rejects_list_fields(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     with pytest.raises(ValueError, match="list fields"):
         rn_ops.update_renewable_in_project(proj, {"renewableSystem": []})
     with pytest.raises(ValueError, match="list fields"):
         rn_ops.update_renewable_in_project(proj, {"offsiteRenewableProcurement": []})
-
-
-def test_update_renewable_unsupported_code(project: ComBuilding):
-    proj = _fresh(project)
-    proj.control.code = EnergyCodeOptions.CEZ_IECC2009  # Unsupported code
-    with pytest.raises(ValueError, match="not supported for energy code"):
-        rn_ops.update_renewable_in_project(proj, {"numberOfFloors": 5})
 
 
 # ---------------------------------------------------------------------------
@@ -169,7 +146,7 @@ def test_update_renewable_unsupported_code(project: ComBuilding):
 
 
 def test_add_renewable_system(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     rs = get_default_renewable_system_template()
     rs.description = "Solar panels"
     rs.renewableSystemCapacity = 50000.0
@@ -181,7 +158,7 @@ def test_add_renewable_system(project: ComBuilding):
 
 
 def test_add_renewable_system_does_not_mutate_original(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     original_count = len(proj.renewable.renewableSystem)
     rs = get_default_renewable_system_template()
     rs.description = "Wind turbine"
@@ -190,7 +167,7 @@ def test_add_renewable_system_does_not_mutate_original(project: ComBuilding):
 
 
 def test_add_renewable_system_auto_generates_description(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     rs1 = get_default_renewable_system_template()
     rs1.description = None  # Missing description
     result = rn_ops.add_renewable_system_to_project(proj, rs1)
@@ -200,21 +177,13 @@ def test_add_renewable_system_auto_generates_description(project: ComBuilding):
     assert any("Renewable System" in k.get("description", "") for k in keys)
 
 
-def test_add_renewable_system_unsupported_code(project: ComBuilding):
-    proj = _fresh(project)
-    proj.control.code = EnergyCodeOptions.CEZ_IECC2009
-    rs = get_default_renewable_system_template()
-    with pytest.raises(ValueError, match="not supported for energy code"):
-        rn_ops.add_renewable_system_to_project(proj, rs)
-
-
 # ---------------------------------------------------------------------------
 # update_renewable_system_in_project
 # ---------------------------------------------------------------------------
 
 
 def test_update_renewable_system(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     rs = get_default_renewable_system_template()
     rs.description = "Solar array"
     proj = rn_ops.add_renewable_system_to_project(proj, rs)
@@ -238,7 +207,7 @@ def test_update_renewable_system(project: ComBuilding):
 
 
 def test_update_renewable_system_not_found(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     with pytest.raises(ValueError, match="not found"):
         rn_ops.update_renewable_system_in_project(
             proj, "Nonexistent", {"renewableSystemCapacity": 100.0}
@@ -251,7 +220,7 @@ def test_update_renewable_system_not_found(project: ComBuilding):
 
 
 def test_remove_renewable_system(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     rs = get_default_renewable_system_template()
     rs.description = "Geothermal"
     proj = rn_ops.add_renewable_system_to_project(proj, rs)
@@ -263,7 +232,7 @@ def test_remove_renewable_system(project: ComBuilding):
 
 
 def test_remove_renewable_system_not_found(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     with pytest.raises(ValueError, match="not found"):
         rn_ops.remove_renewable_system_from_project(proj, "Nonexistent")
 
@@ -274,9 +243,27 @@ def test_remove_renewable_system_not_found(project: ComBuilding):
 
 
 def test_get_renewable_system_keys(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     keys = rn_ops.get_renewable_system_keys_from_project(proj)
     assert isinstance(keys, list)
+
+
+def test_mutating_ops_do_not_check_energy_code(project: ComBuilding):
+    # Whether a project needs renewable data is the caller's call, so ops
+    # must not reject codes (e.g. state codes) outside a fixed list.
+    proj = _fresh(project)
+    proj.control.code = EnergyCodeOptions.CEZ_IECC2009
+    proj = rn_ops.set_renewable_exception_in_project(
+        proj, RenewableExceptionOptions.RENEWABLE_ONSITE_EXCEPTION_LOW_SOLAR_RAD
+    )
+    proj = rn_ops.add_renewable_system_to_project(
+        proj, get_default_renewable_system_template()
+    )
+    proj = rn_ops.add_offsite_renewable_procurement_to_project(
+        proj, get_default_offsite_renewable_procurement_template()
+    )
+    assert len(proj.renewable.renewableSystem) == 1
+    assert len(proj.renewable.offsiteRenewableProcurement) == 1
 
 
 def test_get_renewable_system_keys_works_for_any_code(project: ComBuilding):
@@ -293,7 +280,7 @@ def test_get_renewable_system_keys_works_for_any_code(project: ComBuilding):
 
 
 def test_add_offsite_renewable_procurement(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     op = get_default_offsite_renewable_procurement_template()
     op.description = "PPA agreement"
     op.offsiteRenewableEnergy = 100000.0
@@ -307,7 +294,7 @@ def test_add_offsite_renewable_procurement(project: ComBuilding):
 def test_add_offsite_renewable_procurement_initializes_missing_list(
     project: ComBuilding,
 ):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     # Force offsiteRenewableProcurement to MISSING
     proj.renewable.offsiteRenewableProcurement = MISSING
 
@@ -324,7 +311,7 @@ def test_add_offsite_renewable_procurement_initializes_missing_list(
 def test_add_offsite_renewable_procurement_does_not_mutate_original(
     project: ComBuilding,
 ):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     # Ensure list is initialized
     if proj.renewable.offsiteRenewableProcurement is MISSING:
         proj.renewable.offsiteRenewableProcurement = []
@@ -337,21 +324,13 @@ def test_add_offsite_renewable_procurement_does_not_mutate_original(
     assert len(proj.renewable.offsiteRenewableProcurement) == original_count
 
 
-def test_add_offsite_renewable_procurement_unsupported_code(project: ComBuilding):
-    proj = _fresh(project)
-    proj.control.code = EnergyCodeOptions.CEZ_IECC2009
-    op = get_default_offsite_renewable_procurement_template()
-    with pytest.raises(ValueError, match="not supported for energy code"):
-        rn_ops.add_offsite_renewable_procurement_to_project(proj, op)
-
-
 # ---------------------------------------------------------------------------
 # update_offsite_renewable_procurement_in_project
 # ---------------------------------------------------------------------------
 
 
 def test_update_offsite_renewable_procurement(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     op = get_default_offsite_renewable_procurement_template()
     op.description = "Wind PPA"
     proj = rn_ops.add_offsite_renewable_procurement_to_project(proj, op)
@@ -375,7 +354,7 @@ def test_update_offsite_renewable_procurement(project: ComBuilding):
 
 
 def test_update_offsite_renewable_procurement_not_found(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     with pytest.raises(ValueError, match="not found"):
         rn_ops.update_offsite_renewable_procurement_in_project(
             proj, "Nonexistent", {"offsiteRenewableEnergy": 100.0}
@@ -388,7 +367,7 @@ def test_update_offsite_renewable_procurement_not_found(project: ComBuilding):
 
 
 def test_remove_offsite_renewable_procurement(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     op = get_default_offsite_renewable_procurement_template()
     op.description = "REC purchase"
     proj = rn_ops.add_offsite_renewable_procurement_to_project(proj, op)
@@ -402,7 +381,7 @@ def test_remove_offsite_renewable_procurement(project: ComBuilding):
 
 
 def test_remove_offsite_renewable_procurement_not_found(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     with pytest.raises(ValueError, match="not found"):
         rn_ops.remove_offsite_renewable_procurement_from_project(proj, "Nonexistent")
 
@@ -413,7 +392,7 @@ def test_remove_offsite_renewable_procurement_not_found(project: ComBuilding):
 
 
 def test_get_offsite_renewable_procurement_keys(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
     keys = rn_ops.get_offsite_renewable_procurement_keys_from_project(proj)
     assert isinstance(keys, list)
 
@@ -441,7 +420,7 @@ def test_get_offsite_renewable_procurement_keys_handles_missing(project: ComBuil
 
 
 def test_exception_and_systems_coexist(project: ComBuilding):
-    proj = _set_supported_code(project)
+    proj = _fresh(project)
 
     # Set an exception
     proj = rn_ops.set_renewable_exception_in_project(

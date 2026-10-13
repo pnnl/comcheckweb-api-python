@@ -5,10 +5,11 @@ ComBuilding.renewable singleton. The Renewable object carries renewable
 exceptions, sizing scalars, on-site renewable systems (renewableSystem[]),
 and off-site procurement (offsiteRenewableProcurement[]).
 
-Supported energy codes
-----------------------
-Renewable operations require one of the supported energy codes: ASHRAE 90.1
-2022, IECC 2024, IECC 2024 Appendix C/F, or state codes based on them.
+Energy codes
+------------
+Renewable requirements only apply under some energy codes (and state codes
+based on them). These operations don't check ``control.code`` — whether the
+project needs renewable data is up to you.
 
 Key concepts
 ------------
@@ -31,7 +32,6 @@ from comcheck_api.defaults import (
     get_default_offsite_renewable_procurement_template,
 )
 from comcheck_api.types.core_types import (
-    EnergyCodeOptions,
     RenewableExceptionOptions,
     RenewableSystemTypeOptions,
     RenewableSystemCapacityUnitOptions,
@@ -50,21 +50,6 @@ project = client.get_project("your-project-id")
 if not project:
     raise ValueError("Project not found")
 project_id = str(project.id)
-
-# Ensure the project uses a supported energy code
-if project.control.code not in {
-    EnergyCodeOptions.CEZ_90_1_2022,
-    EnergyCodeOptions.CEZ_IECC2024,
-    EnergyCodeOptions.CEZ_IECC2024_APPXCF,
-}:
-    print(
-        f"Warning: Renewable operations are not supported for code {project.control.code}"
-    )
-    print("Setting to CEZ_90_1_2022 for this example")
-    project.control.code = EnergyCodeOptions.CEZ_90_1_2022
-    project = client.update_project(project_id, project)
-    if not project:
-        raise ValueError("Project not found after update")
 
 
 # ── Step 1: Set the renewable exception ───────────────────────────────────────

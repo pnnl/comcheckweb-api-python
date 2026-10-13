@@ -1,21 +1,11 @@
 """Renewable energy constants for COMcheck projects."""
 
 from comcheck_api.types.core_types import (
-    EnergyCodeOptions,
     OffsiteRenewableProcurement,
     OffsiteRenewableProcurementType,
     RenewableSystem,
     RenewableSystemTypeOptions,
     RenewableSystemCapacityUnitOptions,
-)
-
-# Supported energy codes for renewable operations (ASHRAE 90.1 2022, IECC 2024, and state codes based on them)
-RENEWABLE_SUPPORTED_CODES = frozenset(
-    {
-        EnergyCodeOptions.CEZ_90_1_2022,
-        EnergyCodeOptions.CEZ_IECC2024,
-        EnergyCodeOptions.CEZ_IECC2024_APPXCF,
-    }
 )
 
 DEFAULT_RENEWABLE_SYSTEM: RenewableSystem = RenewableSystem(
