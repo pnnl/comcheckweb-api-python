@@ -394,6 +394,7 @@ class COMcheckClient:
         extlighting: bool = True,
         intlighting: bool = True,
         mechanical: bool = True,
+        use_backstop_compliance: bool = False,
         download: bool = False,
         download_dir: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
@@ -413,6 +414,8 @@ class COMcheckClient:
             extlighting: Whether to include the exterior lighting section.
             intlighting: Whether to include the interior lighting section.
             mechanical: Whether to include the mechanical section.
+            use_backstop_compliance: Whether to evaluate the report using
+                backstop compliance (sent as ``useBackstopCompliance``).
             download: When ``True``, fetch the PDF from the presigned URL and
                 save it using the server-provided ``fileName``.
             download_dir: Directory to save the PDF into when *download* is
@@ -428,6 +431,7 @@ class COMcheckClient:
             "extlighting": extlighting,
             "intlighting": intlighting,
             "mechanical": mechanical,
+            "useBackstopCompliance": use_backstop_compliance,
         }
         response = self._service.generate_report(report_data)
         if response and download:

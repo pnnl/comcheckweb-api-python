@@ -61,6 +61,7 @@ client.generate_report(
     extlighting=True,
     intlighting=True,
     mechanical=True,
+    use_backstop_compliance=False,
     download=False,
     download_dir=None,
 )
@@ -68,6 +69,8 @@ client.generate_report(
 
 - The four section flags toggle which sections appear in the report
   (all default to `True`).
+- `use_backstop_compliance=True` evaluates the report using backstop
+  compliance (sent to the API as `useBackstopCompliance`; defaults to `False`).
 - `download=True` fetches the PDF from the presigned URL and saves it
   using the server-provided `fileName`. `download_dir` defaults to the
   user's `~/Downloads` folder.

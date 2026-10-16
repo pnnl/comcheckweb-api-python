@@ -327,7 +327,8 @@ class COMCheckApiService:
         Args:
             report_data: The report request body, containing ``building`` (the
                 project data) and the ``envelope``, ``extlighting``,
-                ``intlighting``, and ``mechanical`` section flags.
+                ``intlighting``, and ``mechanical`` section flags, plus the
+                ``useBackstopCompliance`` flag.
 
         Returns:
             API response as a dictionary with ``url`` (the presigned S3 URL),

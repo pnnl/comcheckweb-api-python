@@ -18,6 +18,21 @@ All notable changes to this project are documented in this file.
 
 
 
+## [2.1.0] - 2026-10-16
+
+### Added
+
+- **`use_backstop_compliance` option for `generate_report()`.** Set
+  `use_backstop_compliance=True` to evaluate the report using envelope backstop
+  compliance; the generated PDF then includes an Envelope Backstop Compliance
+  Certificate page. Sent to the API as `useBackstopCompliance` and defaults to
+  `False`, so existing calls are unchanged.
+
+### Documentation
+
+- Documented the backstop compliance option in the Compliance & Reports page,
+  the AI skill references, and `examples/client/compliance_and_report.py`.
+
 ## [2.0.1] - 2026-09-18
 
 Reverts the enum renames introduced in 2.0.0. If you updated code to use the
