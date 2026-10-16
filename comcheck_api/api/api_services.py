@@ -417,6 +417,35 @@ class COMCheckApiService:
         except Exception as error:
             self._handle_api_error(error)
 
+    def area_for_renewable(
+        self, project_data: Dict[str, Any], energy_code: str
+    ) -> Dict[str, Any]:
+        """Calculate renewable area metrics (largestThreeFloorArea, roofAreaForRenewable).
+
+        .. warning::
+            Not yet implemented — the ``area-for-renewable`` endpoint is pending
+            in the external ``comcheck-cdk`` repository.
+
+        Args:
+            project_data: The project data (or subset) to send in the request body.
+            energy_code: The energy code for the API endpoint path.
+
+        Returns:
+            API response data as dictionary with ``largestThreeFloorArea`` and
+            ``roofAreaForRenewable`` keys.
+
+        Raises:
+            NotImplementedError: Always — the endpoint is not yet available.
+        """
+        # TODO: Implement when the area-for-renewable endpoint is available in comcheck-cdk.
+        # The results should be written to project.renewable.largestThreeFloorArea
+        # and project.renewable.roofAreaForRenewable.
+        raise NotImplementedError(
+            "The area-for-renewable endpoint is pending implementation in comcheck-cdk. "
+            "Results will be written to project.renewable.largestThreeFloorArea and "
+            "project.renewable.roofAreaForRenewable once available."
+        )
+
     def close(self) -> None:
         """Close the HTTP client connection."""
         if self._client is not None:

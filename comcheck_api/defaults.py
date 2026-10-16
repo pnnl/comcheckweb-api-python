@@ -11,6 +11,10 @@ from comcheck_api.constants.interior_lighting_constants import (
 from comcheck_api.constants.exterior_lighting_constants import (
     DEFAULT_EXTERIOR_AREA,
 )
+from comcheck_api.constants.renewable_constants import (
+    DEFAULT_RENEWABLE_SYSTEM,
+    DEFAULT_OFFSITE_RENEWABLE_PROCUREMENT,
+)
 from comcheck_api.constants.envelope_constants import (
     DEFAULT_AG_WALL,
     DEFAULT_BG_WALL,
@@ -208,3 +212,25 @@ def get_default_fixture_schedule_template():
     # TODO: Implement when DEFAULT_FIXTURE_SCHEDULE constant is available
     # return {**DEFAULT_FIXTURE_SCHEDULE, "scheduleFixtureKey": str(uuid4())}
     raise NotImplementedError("DEFAULT_FIXTURE_SCHEDULE constant not yet implemented")
+
+
+def get_default_renewable_system_template():
+    """Return a deep copy of the default renewable system template.
+
+    Defaults to a Solar PV system with 0.0 capacity in Watts.
+
+    Returns:
+        A new :class:`~comcheck_api.types.core_types.RenewableSystem` instance.
+    """
+    return copy.deepcopy(DEFAULT_RENEWABLE_SYSTEM)
+
+
+def get_default_offsite_renewable_procurement_template():
+    """Return a deep copy of the default offsite renewable procurement template.
+
+    Defaults to an unspecified procurement type with 0.0 kWh annual energy.
+
+    Returns:
+        A new :class:`~comcheck_api.types.core_types.OffsiteRenewableProcurement` instance.
+    """
+    return copy.deepcopy(DEFAULT_OFFSITE_RENEWABLE_PROCUREMENT)

@@ -5,6 +5,7 @@ from . import (
     project_envelope_operations,
     project_exterior_lighting_operations,
     project_interior_lighting_operations,
+    project_renewable_operations,
 )
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "project_envelope_operations",
     "project_exterior_lighting_operations",
     "project_interior_lighting_operations",
+    "project_renewable_operations",
 ]

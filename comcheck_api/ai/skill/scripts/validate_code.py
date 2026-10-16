@@ -28,11 +28,11 @@ def _read_input(arg: str) -> str:
     return Path(arg).read_text()
 
 
-UNSUPPORTED_PROJECT_ATTRS = {"hvac", "renewable"}
+UNSUPPORTED_PROJECT_ATTRS = {"hvac"}
 # `wholeBldgUse` (building areas + interior lighting), `activityUse` (interior
-# lighting spaces), `exteriorUse` (exterior lighting), and
-# `exteriorLightingZoneType` all have operation modules. Only `fixtureSchedule`
-# has no operations yet.
+# lighting spaces), `exteriorUse` (exterior lighting), `exteriorLightingZoneType`,
+# and `renewable` (renewable energy systems and procurement) all have operation
+# modules. Only `hvac` and `fixtureSchedule` have no operations yet.
 UNSUPPORTED_LIGHTING_ATTRS = {
     "fixtureSchedule",
 }

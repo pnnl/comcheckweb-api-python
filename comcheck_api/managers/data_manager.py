@@ -325,9 +325,7 @@ class DataManager(Generic[T]):
         # Validate partial updates by attempting to construct with merged data
         # This will raise Pydantic ValidationError if types don't align
         # Get only the model fields to avoid serializing dynamically added methods
-        original_dict = original.model_dump(
-            mode="python", by_alias=False
-        )
+        original_dict = original.model_dump(mode="python", by_alias=False)
         merged = {**original_dict, **updates_dict}
         try:
             updated_item = type(original).model_validate(merged)
@@ -367,6 +365,8 @@ def get_model_info(model_class: Type[BaseModel]) -> IdInfo | None:
         Skylight,
         ThermalBridge,
         WholeBldgUse,
+        RenewableSystem,
+        OffsiteRenewableProcurement,
     )
 
     MODEL_TO_ID_INFO = {
@@ -381,5 +381,9 @@ def get_model_info(model_class: Type[BaseModel]) -> IdInfo | None:
         Skylight: IdInfo(identifier="assemblyType", id_prefix="Skylight:Skylight"),
         ThermalBridge: IdInfo(identifier="id", id_prefix=None),
         WholeBldgUse: IdInfo(identifier="key", id_prefix=None),
+        RenewableSystem: IdInfo(identifier="description", id_prefix="Renewable System"),
+        OffsiteRenewableProcurement: IdInfo(
+            identifier="description", id_prefix="Offsite Procurement"
+        ),
     }
     return MODEL_TO_ID_INFO.get(model_class)

@@ -60,6 +60,7 @@ from .project_operations import (
     project_envelope_operations,
     project_exterior_lighting_operations,
     project_interior_lighting_operations,
+    project_renewable_operations,
 )
 
 # Introspection helpers
@@ -91,6 +92,7 @@ __all__ = [
     "project_envelope_operations",
     "project_exterior_lighting_operations",
     "project_interior_lighting_operations",
+    "project_renewable_operations",
     # Introspection
     "list_operations",
     "lookup_type",

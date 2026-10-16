@@ -288,6 +288,37 @@ class COMcheckClient:
 
         return project
 
+    def update_renewable_area(self, project: ComBuilding) -> ComBuilding:
+        """Calculate renewable area metrics and update the project in place.
+
+        .. warning::
+            Not yet implemented — the ``area-for-renewable`` endpoint is pending
+            in the external ``comcheck-cdk`` repository.
+
+        Sends the project (or the needed subset) to the area-for-renewable
+        endpoint and writes the returned ``largestThreeFloorArea`` and
+        ``roofAreaForRenewable`` values back onto ``project.renewable``.
+
+        Args:
+            project: The project whose renewable area metrics should be refreshed.
+
+        Returns:
+            The same ``project`` instance, with renewable area metrics updated.
+
+        Raises:
+            NotImplementedError: Always — the endpoint is not yet available.
+        """
+        # TODO: Implement when the area-for-renewable endpoint is available in comcheck-cdk.
+        # This should mirror the pattern of update_uvalues: POST project data to
+        # /{energy_code}/renewable/area (or similar path), extract the results, and
+        # write them back to project.renewable.largestThreeFloorArea and
+        # project.renewable.roofAreaForRenewable.
+        raise NotImplementedError(
+            "The area-for-renewable endpoint is pending implementation in comcheck-cdk. "
+            "This method will calculate largestThreeFloorArea and roofAreaForRenewable "
+            "from the project envelope/geometry once the endpoint is available."
+        )
+
     def calculate_interior_space_allowed_wattage(
         self, interior_space: InteriorSpace, energy_code: str
     ) -> Any:

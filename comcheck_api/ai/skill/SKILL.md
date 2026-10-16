@@ -30,7 +30,7 @@ Triggers:
   `envelope`, `lighting` (which contains `wholeBldgUse[]` — the
   building areas), `hvac`, `renewable`, and `control` (energy code).
   No `Project`/`Control` PascalCase aliases exist.
-  The fields `hvac`, `renewable`, and the shared `fixtureSchedule[]`
+  The fields `hvac` and the shared `fixtureSchedule[]`
   exist on the model but have **no operation functions** — leave them
   at template defaults. All other mutable areas have dedicated modules.
 - **Operation modules (functional)**: all mutations go through free
@@ -39,6 +39,7 @@ Triggers:
   - `project_envelope_operations` — roofs, walls, floors, windows, doors, skylights, thermal bridges
   - `project_interior_lighting_operations` — `ActivityUse` items, aliased as `InteriorSpace` (interior lighting spaces + fixtures)
   - `project_exterior_lighting_operations` — `ExteriorUse` items, aliased as `ExteriorArea`, + zone type
+  - `project_renewable_operations` — renewable exception, on-site systems, off-site procurement
 - **Envelope items attach to a building-area key**: every
   `add_*_to_project` envelope function takes
   `(project, building_area_key, new_component)`. Look up the key
@@ -153,8 +154,8 @@ print(result["performanceRating"])
   bypass the validation logic in the operation modules. Always go
   through `project_envelope_operations` and
   `project_building_area_operations` instead.
-- Don't add, update, or remove `fixtureSchedule[]`, HVAC/mechanical, or
-  renewable-energy components — no operations exist for them yet.
+- Don't add, update, or remove `fixtureSchedule[]` or HVAC/mechanical
+  components — no operations exist for them yet.
   The `COMcheckClient` user methods (`list_projects`, `get_project`,
   `update_project`, `update_uvalues`, `start_run_simulation`,
   `get_simulation_status`, `get_simulation_result`, `set_api_key`)
@@ -164,9 +165,9 @@ print(result["performanceRating"])
   methods (`calculate_interior_space_allowed_wattage`,
   `calculate_interior_spaces_allowed_wattage`). If asked for an
   unsupported mutation area, tell the user it's not implemented and
-  offer building-area / envelope / lighting / simulation instead.
+  offer building-area / envelope / lighting / renewable / simulation instead.
   `comcheck_api.list_operations()` enumerates the `building_area`,
-  `envelope`, `interior_lighting`, and `exterior_lighting` groups.
+  `envelope`, `interior_lighting`, `exterior_lighting`, and `renewable` groups.
 
 ## Common patterns
 
@@ -378,6 +379,51 @@ report = client.generate_report(project, use_backstop_compliance=True)
 `generate_report` deliberately does **not** open a browser — it's a
 library, so it returns metadata and lets the caller decide
 (`webbrowser.open(report["url"])`).
+
+### Adding renewable energy systems
+
+Renewable requirements only apply under some energy codes; the operations
+don't check `control.code`, so ask the user whether the project needs
+renewables rather than deciding from the code. Exception
+and on-site systems coexist — setting an exception doesn't preclude adding
+renewable systems. **Confirm with the user before adding off-site
+procurement** (not always present on projects).
+
+```python
+from comcheck_api import project_renewable_operations as rn_ops
+from comcheck_api.defaults import (
+    get_default_renewable_system_template,
+    get_default_offsite_renewable_procurement_template,
+)
+from comcheck_api.types import (
+    RenewableExceptionOptions,
+    RenewableSystemTypeOptions,
+    RenewableSystemCapacityUnitOptions,
+    OffsiteRenewableProcurementType,
+)
+
+# 1. Set a renewable exception (coexists with systems)
+project = rn_ops.set_renewable_exception_in_project(
+    project, RenewableExceptionOptions.RENEWABLE_ONSITE_EXCEPTION_NONE
+)
+
+# 2. Add an on-site renewable system
+renewable_system = get_default_renewable_system_template()
+renewable_system.description = "Rooftop Solar"
+renewable_system.renewableSystemType = RenewableSystemTypeOptions.RENEWABLE_SYSTEM_TYPE_SOLAR
+renewable_system.renewableSystemCapacity = 50000.0
+renewable_system.renewableSystemCapacityUnit = RenewableSystemCapacityUnitOptions.RENEWABLE_SYSTEM_UNIT_WATT
+project = rn_ops.add_renewable_system_to_project(project, renewable_system)
+
+# 3. Only add off-site procurement if confirmed with the user
+# offsite_procurement = get_default_offsite_renewable_procurement_template()
+# offsite_procurement.description = "Wind PPA"
+# offsite_procurement.offsiteRenewableProcurementType = (
+#     OffsiteRenewableProcurementType.OFFSITE_RENEWABLE_PROCUREMENT_PHYSICAL_AGREEMENT
+# )
+# offsite_procurement.offsiteRenewableEnergy = 100000.0  # kWh
+# project = rn_ops.add_offsite_renewable_procurement_to_project(project, offsite_procurement)
+```
 
 ## Gotchas
 
