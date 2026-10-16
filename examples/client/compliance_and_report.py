@@ -16,7 +16,7 @@ establish full envelope compliance:
 
 If your project only needs to verify the envelope trade-off path, Example 1 is
 sufficient.  If you need an ASHRAE 90.1 Compliance Check determination (e.g. to generate an
-official report), run Example 1 first; if it passes, proceed with Example 6.
+official report), run Example 1 first; if it passes, proceed with Example 7.
 """
 
 import os
@@ -67,7 +67,12 @@ report = client.generate_report(project, download=True, download_dir="./reports"
 if report:
     print(f"Saved report to ./reports/{report['fileName']}")
 
-# Example 6: ASHRAE 90.1 Compliance Check (ASHRAE 90.1-based codes)
+# Example 6: Generate a report using backstop compliance (defaults to False)
+report = client.generate_report(project, use_backstop_compliance=True)
+if report:
+    print(f"Backstop compliance report: {report['fileName']}")
+
+# Example 7: ASHRAE 90.1 Compliance Check (ASHRAE 90.1-based codes)
 # For a complete compliance determination, first verify the UA path passes,
 # then run the full simulation.
 ua_result = client.check_UA_compliance(project)

@@ -107,6 +107,17 @@ report = client.generate_report(
 )
 ```
 
+### Backstop compliance
+
+Pass `use_backstop_compliance=True` to evaluate the report using envelope
+backstop compliance. The report then includes an additional **Envelope Backstop
+Compliance Certificate** page. Defaults to `False`; the flag is sent to the API
+as `useBackstopCompliance`.
+
+```python
+report = client.generate_report(project, use_backstop_compliance=True)
+```
+
 ### Downloading the PDF
 
 Pass `download=True` to fetch the PDF from the presigned URL and save it using

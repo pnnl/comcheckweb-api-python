@@ -370,6 +370,9 @@ report = client.generate_report(project, download=True, download_dir="./out")
 report = client.generate_report(
     project, envelope=True, intlighting=True, extlighting=False, mechanical=True
 )
+
+# Use backstop compliance (defaults to False)
+report = client.generate_report(project, use_backstop_compliance=True)
 ```
 
 `generate_report` deliberately does **not** open a browser — it's a

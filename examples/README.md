@@ -45,6 +45,7 @@ Demonstrates compliance checks, requirements lookup, and PDF report generation.
 - `check_UA_compliance()` - Checking code compliance for a project
 - `check_requirements()` - Retrieving applicable requirements
 - `generate_report()` - Generating a PDF report (presigned S3 URL, optional download)
+- `generate_report(use_backstop_compliance=True)` - Generating a report using backstop compliance
 
 **Usage:**
 ```bash
