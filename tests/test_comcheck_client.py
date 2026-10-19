@@ -11,7 +11,10 @@ import pytest
 from dotenv import load_dotenv
 
 from comcheck_api.client import COMcheckClient
-from comcheck_api.defaults import get_default_interior_space_template
+from comcheck_api.defaults import (
+    get_default_interior_space_template,
+    get_default_project_template,
+)
 from comcheck_api.exceptions import COMCheckHTTPError
 from comcheck_api.types.core_types import ActivityTypeOptions, EnergyCodeOptions
 
@@ -112,3 +115,35 @@ def test_calculate_interior_spaces_allowed_wattage(client: COMcheckClient):
     assert isinstance(result, dict)
     assert "Open Office" in result
     assert "Conference Room" in result
+
+
+def test_area_for_renewable(client: COMcheckClient):
+    """Test calculating renewable areas for a default project."""
+    project = get_default_project_template()
+    project.control.code = EnergyCodeOptions.CEZ_IECC2021
+
+    try:
+        result = client.area_for_renewable(project)
+    except COMCheckHTTPError as exc:
+        if exc.status_code in (401, 403):
+            pytest.skip(
+                f"COM_API_KEY rejected ({exc.status_code}); skipping live test."
+            )
+        raise
+    assert result is project
+
+
+def test_renewable_capacity(client: COMcheckClient):
+    """Test calculating renewable capacity for a default project."""
+    project = get_default_project_template()
+    project.control.code = EnergyCodeOptions.CEZ_IECC2021
+
+    try:
+        result = client.renewable_capacity(project)
+    except COMCheckHTTPError as exc:
+        if exc.status_code in (401, 403):
+            pytest.skip(
+                f"COM_API_KEY rejected ({exc.status_code}); skipping live test."
+            )
+        raise
+    assert result is project

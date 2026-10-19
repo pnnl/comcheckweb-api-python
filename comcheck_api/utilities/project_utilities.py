@@ -184,3 +184,59 @@ def merge_fixtures(
     ]
 
     return remaining_fixtures + upserted_fixtures
+
+
+def _require_renewable_system(project: ComBuilding, description: str) -> None:
+    """Ensure project.renewable.renewableSystem contains a system with the given description.
+
+    Args:
+        project: The project to check.
+        description: The description of the renewable system to find.
+
+    Raises:
+        ValueError: If no renewable system with the given description is found.
+    """
+    renewable_systems = project.get_by_path("renewable.renewableSystem")
+    if not isinstance(renewable_systems, list):
+        raise ValueError(
+            "No renewable systems (renewable.renewableSystem) found in project."
+        )
+
+    if not any(
+        getattr(system, "description", None) == description
+        for system in renewable_systems
+    ):
+        raise ValueError(
+            f"RenewableSystem with description '{description}' "
+            f"not found in renewable.renewableSystem."
+        )
+
+
+def _require_offsite_renewable_procurement(
+    project: ComBuilding, description: str
+) -> None:
+    """Ensure project.renewable.offsiteRenewableProcurement contains a procurement with the given description.
+
+    Args:
+        project: The project to check.
+        description: The description of the offsite renewable procurement to find.
+
+    Raises:
+        ValueError: If no offsite renewable procurement with the given description is found.
+    """
+    from pydantic.experimental.missing_sentinel import MISSING
+
+    offsite_procurements = project.get_by_path("renewable.offsiteRenewableProcurement")
+    if offsite_procurements is MISSING or not isinstance(offsite_procurements, list):
+        raise ValueError(
+            "No offsite renewable procurement (renewable.offsiteRenewableProcurement) found in project."
+        )
+
+    if not any(
+        getattr(procurement, "description", None) == description
+        for procurement in offsite_procurements
+    ):
+        raise ValueError(
+            f"OffsiteRenewableProcurement with description '{description}' "
+            f"not found in renewable.offsiteRenewableProcurement."
+        )

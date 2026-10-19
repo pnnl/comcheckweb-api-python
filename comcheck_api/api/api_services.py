@@ -417,6 +417,53 @@ class COMCheckApiService:
         except Exception as error:
             self._handle_api_error(error)
 
+    def renewable_capacity(self, project_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate required and proposed renewable capacity for a project.
+
+        Args:
+            project_data: The project data to send in the request body
+
+        Returns:
+            API response data as dictionary. ``data`` holds
+            ``requiredRenewableCapacity``, ``proposedRenewableCapacity``,
+            ``requiredOffsiteRenewableProcurementEnergy``,
+            ``proposedOffsiteRenewableProcurementEnergy``, and
+            ``renewableComplianceStatus``.
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post("/renewable/renewable-capacity", json=project_data)
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
+    def area_for_renewable(self, project_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate the building areas used for renewable requirements.
+
+        Args:
+            project_data: The project data to send in the request body
+
+        Returns:
+            API response data as dictionary. ``data`` holds
+            ``largestThreeFloorArea`` and ``roofAreaForRenewable``.
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post("/renewable/area-for-renewable", json=project_data)
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
     def close(self) -> None:
         """Close the HTTP client connection."""
         if self._client is not None:

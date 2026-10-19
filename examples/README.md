@@ -12,12 +12,14 @@ examples/
 │   ├── assemblies.py                 # Assembly u-value calculation examples
 │   ├── compliance_and_report.py      # Compliance, requirements & report examples
 │   ├── allowed_wattage.py            # Interior lighting allowed-wattage calculation examples
+│   ├── renewable.py                  # Renewable area & capacity calculation examples
 │   └── user_functions.py             # User-facing function examples
 └── project_operations/               # Project operations examples
     ├── building_area_operations.py       # Building area operations
     ├── envelope_operations.py            # Envelope operations
     ├── interior_lighting_operations.py   # Interior lighting (InteriorSpace) operations
-    └── exterior_lighting_operations.py   # Exterior lighting (ExteriorArea) operations
+    ├── exterior_lighting_operations.py   # Exterior lighting (ExteriorArea) operations
+    └── renewable_operations.py           # Renewable systems & off-site procurement operations
 ```
 
 ## Example Categories
@@ -62,6 +64,18 @@ Demonstrates interior lighting allowed-wattage calculation.
 **Usage:**
 ```bash
 python examples/client/allowed_wattage.py
+```
+
+#### Renewable Examples (`client/renewable.py`)
+Demonstrates server-side renewable calculations.
+
+**What it demonstrates:**
+- `area_for_renewable()` - Calculating `largestThreeFloorArea` and `roofAreaForRenewable` and writing them onto `project.renewable`
+- `renewable_capacity()` - Calculating required vs. proposed renewable capacity and off-site energy and writing them onto `project.renewable`
+
+**Usage:**
+```bash
+python examples/client/renewable.py
 ```
 
 #### User Function Examples (`client/user_functions.py`)
