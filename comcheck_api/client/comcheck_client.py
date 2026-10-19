@@ -20,6 +20,11 @@ from comcheck_api.types.core_types import ComBuilding
 Mode = Literal["python", "json"]
 
 
+def _optional_float(value: Any) -> Optional[float]:
+    """Convert an API numeric value to ``float``, passing ``None`` through."""
+    return None if value is None else float(value)
+
+
 class COMcheckClient:
     """High-level client for the COMcheck Web API.
 
@@ -288,36 +293,70 @@ class COMcheckClient:
 
         return project
 
-    def update_renewable_area(self, project: ComBuilding) -> ComBuilding:
+    def area_for_renewable(self, project: ComBuilding) -> ComBuilding:
         """Calculate renewable area metrics and update the project in place.
 
-        .. warning::
-            Not yet implemented — the ``area-for-renewable`` endpoint is pending
-            in the external ``comcheck-cdk`` repository.
-
-        Sends the project (or the needed subset) to the area-for-renewable
-        endpoint and writes the returned ``largestThreeFloorArea`` and
-        ``roofAreaForRenewable`` values back onto ``project.renewable``.
+        Sends the project to the area-for-renewable endpoint and writes the
+        returned ``largestThreeFloorArea`` and ``roofAreaForRenewable`` values
+        back onto ``project.renewable``.
 
         Args:
             project: The project whose renewable area metrics should be refreshed.
 
         Returns:
             The same ``project`` instance, with renewable area metrics updated.
-
-        Raises:
-            NotImplementedError: Always — the endpoint is not yet available.
         """
-        # TODO: Implement when the area-for-renewable endpoint is available in comcheck-cdk.
-        # This should mirror the pattern of update_uvalues: POST project data to
-        # /{energy_code}/renewable/area (or similar path), extract the results, and
-        # write them back to project.renewable.largestThreeFloorArea and
-        # project.renewable.roofAreaForRenewable.
-        raise NotImplementedError(
-            "The area-for-renewable endpoint is pending implementation in comcheck-cdk. "
-            "This method will calculate largestThreeFloorArea and roofAreaForRenewable "
-            "from the project envelope/geometry once the endpoint is available."
+        project_data = project.model_dump(mode="json")
+        areas = self._service.area_for_renewable(project_data).get("data") or {}
+
+        renewable = project.renewable
+        renewable.largestThreeFloorArea = _optional_float(
+            areas.get("largestThreeFloorArea")
         )
+        renewable.roofAreaForRenewable = _optional_float(
+            areas.get("roofAreaForRenewable")
+        )
+        return project
+
+    def renewable_capacity(self, project: ComBuilding) -> ComBuilding:
+        """Calculate renewable capacity and update the project in place.
+
+        Sends the project to the renewable-capacity endpoint and writes the
+        returned values back onto ``project.renewable``:
+
+        - ``requiredRenewableCapacity`` → ``requiredCapacity``
+        - ``proposedRenewableCapacity`` → ``proposedCapacity``
+        - ``requiredOffsiteRenewableProcurementEnergy`` →
+          ``requiredOffsiteRenewableEnergy``
+        - ``proposedOffsiteRenewableProcurementEnergy`` →
+          ``proposedOffsiteRenewableEnergy``
+
+        The endpoint's ``renewableComplianceStatus`` has no field on the
+        project model and is not written back.
+
+        Args:
+            project: The project whose renewable capacity should be refreshed.
+
+        Returns:
+            The same ``project`` instance, with renewable capacity updated.
+        """
+        project_data = project.model_dump(mode="json")
+        capacity = self._service.renewable_capacity(project_data).get("data") or {}
+
+        renewable = project.renewable
+        renewable.requiredCapacity = _optional_float(
+            capacity.get("requiredRenewableCapacity")
+        )
+        renewable.proposedCapacity = _optional_float(
+            capacity.get("proposedRenewableCapacity")
+        )
+        renewable.requiredOffsiteRenewableEnergy = _optional_float(
+            capacity.get("requiredOffsiteRenewableProcurementEnergy")
+        )
+        renewable.proposedOffsiteRenewableEnergy = _optional_float(
+            capacity.get("proposedOffsiteRenewableProcurementEnergy")
+        )
+        return project
 
     def calculate_interior_space_allowed_wattage(
         self, interior_space: InteriorSpace, energy_code: str

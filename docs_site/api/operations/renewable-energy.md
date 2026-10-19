@@ -130,21 +130,44 @@ updated via `update_renewable_in_project`. Engine-calculated fields
 project = rn_ops.update_renewable_in_project(project, {"numberOfFloors": 5})
 ```
 
-## Renewable area calculation (placeholder)
+## Renewable calculations (API)
 
-!!! warning "Pending Implementation"
-    The `COMcheckClient.update_renewable_area` method is a placeholder. The
-    `area-for-renewable` endpoint is pending implementation in the external
-    `comcheck-cdk` repository.
+Two `COMcheckClient` methods call the COMcheck Web API to calculate renewable
+values from the full project. Neither one depends on the energy code being
+in the request path. The server reads `control.code` from the project.
 
-The `update_renewable_area` method will calculate `largestThreeFloorArea` and
-`roofAreaForRenewable` from the project envelope/geometry once the endpoint is
-available. It follows the same pattern as `update_uvalues`:
+### Renewable areas
+
+`area_for_renewable` calculates `largestThreeFloorArea` and
+`roofAreaForRenewable` from the project's envelope and geometry, writes them
+onto `project.renewable`, and returns the same project. It follows the same
+pattern as `update_uvalues`:
 
 ```python
-# This will raise NotImplementedError until the endpoint is available
-# project = client.update_renewable_area(project)
+project = client.area_for_renewable(project)
+print(project.renewable.largestThreeFloorArea, project.renewable.roofAreaForRenewable)
 ```
+
+### Renewable capacity
+
+`renewable_capacity` calculates the required vs. proposed renewable capacity
+and off-site renewable energy, writes them onto `project.renewable`, and
+returns the same project:
+
+```python
+project = client.renewable_capacity(project)
+```
+
+| API value | Written to `project.renewable` |
+| --- | --- |
+| `requiredRenewableCapacity` | `requiredCapacity` |
+| `proposedRenewableCapacity` | `proposedCapacity` |
+| `requiredOffsiteRenewableProcurementEnergy` | `requiredOffsiteRenewableEnergy` |
+| `proposedOffsiteRenewableProcurementEnergy` | `proposedOffsiteRenewableEnergy` |
+
+Any value the engine does not produce is set to `None`. The endpoint also
+returns a `renewableComplianceStatus`, but the project model has no field for
+it, so it is not written back.
 
 ## Removing renewable systems
 

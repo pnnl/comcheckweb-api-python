@@ -417,34 +417,52 @@ class COMCheckApiService:
         except Exception as error:
             self._handle_api_error(error)
 
-    def area_for_renewable(
-        self, project_data: Dict[str, Any], energy_code: str
-    ) -> Dict[str, Any]:
-        """Calculate renewable area metrics (largestThreeFloorArea, roofAreaForRenewable).
-
-        .. warning::
-            Not yet implemented — the ``area-for-renewable`` endpoint is pending
-            in the external ``comcheck-cdk`` repository.
+    def renewable_capacity(self, project_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate required and proposed renewable capacity for a project.
 
         Args:
-            project_data: The project data (or subset) to send in the request body.
-            energy_code: The energy code for the API endpoint path.
+            project_data: The project data to send in the request body
 
         Returns:
-            API response data as dictionary with ``largestThreeFloorArea`` and
-            ``roofAreaForRenewable`` keys.
+            API response data as dictionary. ``data`` holds
+            ``requiredRenewableCapacity``, ``proposedRenewableCapacity``,
+            ``requiredOffsiteRenewableProcurementEnergy``,
+            ``proposedOffsiteRenewableProcurementEnergy``, and
+            ``renewableComplianceStatus``.
 
         Raises:
-            NotImplementedError: Always — the endpoint is not yet available.
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
         """
-        # TODO: Implement when the area-for-renewable endpoint is available in comcheck-cdk.
-        # The results should be written to project.renewable.largestThreeFloorArea
-        # and project.renewable.roofAreaForRenewable.
-        raise NotImplementedError(
-            "The area-for-renewable endpoint is pending implementation in comcheck-cdk. "
-            "Results will be written to project.renewable.largestThreeFloorArea and "
-            "project.renewable.roofAreaForRenewable once available."
-        )
+        try:
+            client = self._get_client()
+            response = client.post("/renewable/renewable-capacity", json=project_data)
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
+    def area_for_renewable(self, project_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate the building areas used for renewable requirements.
+
+        Args:
+            project_data: The project data to send in the request body
+
+        Returns:
+            API response data as dictionary. ``data`` holds
+            ``largestThreeFloorArea`` and ``roofAreaForRenewable``.
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post("/renewable/area-for-renewable", json=project_data)
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
 
     def close(self) -> None:
         """Close the HTTP client connection."""

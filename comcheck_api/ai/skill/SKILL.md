@@ -71,6 +71,14 @@ Triggers:
   method mutates the input or writes to `allowedWattage`; both return the
   raw calculation payload (`{"spaceAllowedWattage": ...}` for the single
   form, `{areaDescription: wattage, ...}` for the list form).
+- **Renewable areas and capacity are calculated server-side**:
+  `area_for_renewable(project)` writes `largestThreeFloorArea` and
+  `roofAreaForRenewable` onto `project.renewable`;
+  `renewable_capacity(project)` writes `requiredCapacity`,
+  `proposedCapacity`, `requiredOffsiteRenewableEnergy`, and
+  `proposedOffsiteRenewableEnergy`. Both mutate and return the same
+  project, like `update_uvalues`. Both send the full project; the energy
+  code comes from `project.control.code`.
 
 ## Quick start
 
@@ -163,7 +171,8 @@ print(result["performanceRating"])
   methods (`check_UA_compliance`, `check_requirements`,
   `generate_report`) are also fully supported, as are the allowed-wattage
   methods (`calculate_interior_space_allowed_wattage`,
-  `calculate_interior_spaces_allowed_wattage`). If asked for an
+  `calculate_interior_spaces_allowed_wattage`) and the renewable methods
+  (`area_for_renewable`, `renewable_capacity`). If asked for an
   unsupported mutation area, tell the user it's not implemented and
   offer building-area / envelope / lighting / renewable / simulation instead.
   `comcheck_api.list_operations()` enumerates the `building_area`,
@@ -423,6 +432,10 @@ project = rn_ops.add_renewable_system_to_project(project, renewable_system)
 # )
 # offsite_procurement.offsiteRenewableEnergy = 100000.0  # kWh
 # project = rn_ops.add_offsite_renewable_procurement_to_project(project, offsite_procurement)
+
+# 4. Calculate renewable areas and capacity (written onto project.renewable)
+project = client.area_for_renewable(project)
+project = client.renewable_capacity(project)
 ```
 
 ## Gotchas
