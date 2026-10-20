@@ -13,6 +13,7 @@ examples/
 │   ├── compliance_and_report.py      # Compliance, requirements & report examples
 │   ├── allowed_wattage.py            # Interior lighting allowed-wattage calculation examples
 │   ├── renewable.py                  # Renewable area & capacity calculation examples
+│   ├── credits.py                    # Energy credit operations & calculation examples
 │   └── user_functions.py             # User-facing function examples
 └── project_operations/               # Project operations examples
     ├── building_area_operations.py       # Building area operations
@@ -76,6 +77,18 @@ Demonstrates server-side renewable calculations.
 **Usage:**
 ```bash
 python examples/client/renewable.py
+```
+
+#### Credits Examples (`client/credits.py`)
+Demonstrates energy credit operations and the server-side credit calculation.
+
+**What it demonstrates:**
+- `add_energy_credit_to_project()` / `update_energy_credit_in_project()` - Adding energy credits to a building area and updating their inputs
+- `calculate_energy_credits()` - Calculating proposed vs. required credits per building area (the project is not modified)
+
+**Usage:**
+```bash
+python examples/client/credits.py
 ```
 
 #### User Function Examples (`client/user_functions.py`)

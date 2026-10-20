@@ -28,7 +28,8 @@ Triggers:
 - **Project shape**: a project is a `ComBuilding` Pydantic model with
   lowercase top-level fields: `project` (metadata), `location`,
   `envelope`, `lighting` (which contains `wholeBldgUse[]` — the
-  building areas), `hvac`, `renewable`, and `control` (energy code).
+  building areas), `hvac`, `renewable`, `efficiencyPackages` (energy
+  credits), and `control` (energy code).
   No `Project`/`Control` PascalCase aliases exist.
   The fields `hvac` and the shared `fixtureSchedule[]`
   exist on the model but have **no operation functions** — leave them
@@ -40,6 +41,7 @@ Triggers:
   - `project_interior_lighting_operations` — `ActivityUse` items, aliased as `InteriorSpace` (interior lighting spaces + fixtures)
   - `project_exterior_lighting_operations` — `ExteriorUse` items, aliased as `ExteriorArea`, + zone type
   - `project_renewable_operations` — renewable exception, on-site systems, off-site procurement
+  - `project_credit_operations` — energy credits (`EfficiencyPackage` items) per building area, multiplier exception, core and shell credit
 - **Envelope items attach to a building-area key**: every
   `add_*_to_project` envelope function takes
   `(project, building_area_key, new_component)`. Look up the key
@@ -79,6 +81,12 @@ Triggers:
   `proposedOffsiteRenewableEnergy`. Both mutate and return the same
   project, like `update_uvalues`. Both send the full project; the energy
   code comes from `project.control.code`.
+- **Energy credits are calculated server-side**:
+  `calculate_energy_credits(project)` returns an `EnergyCreditResult`
+  (`energyCredits[]` per building area and credit type, `proposed`,
+  `required`, renewable and load management totals, `warnings`,
+  `userAlerts`, and a derived `passes`). Unlike the renewable methods it
+  does **not** modify the project.
 
 ## Quick start
 
@@ -171,12 +179,14 @@ print(result["performanceRating"])
   methods (`check_UA_compliance`, `check_requirements`,
   `generate_report`) are also fully supported, as are the allowed-wattage
   methods (`calculate_interior_space_allowed_wattage`,
-  `calculate_interior_spaces_allowed_wattage`) and the renewable methods
-  (`area_for_renewable`, `renewable_capacity`). If asked for an
+  `calculate_interior_spaces_allowed_wattage`), the renewable methods
+  (`area_for_renewable`, `renewable_capacity`), and
+  `calculate_energy_credits`. If asked for an
   unsupported mutation area, tell the user it's not implemented and
-  offer building-area / envelope / lighting / renewable / simulation instead.
+  offer building-area / envelope / lighting / renewable / credits / simulation instead.
   `comcheck_api.list_operations()` enumerates the `building_area`,
-  `envelope`, `interior_lighting`, `exterior_lighting`, and `renewable` groups.
+  `envelope`, `interior_lighting`, `exterior_lighting`, `renewable`, and
+  `credits` groups.
 
 ## Common patterns
 
@@ -436,6 +446,36 @@ project = rn_ops.add_renewable_system_to_project(project, renewable_system)
 # 4. Calculate renewable areas and capacity (written onto project.renewable)
 project = client.area_for_renewable(project)
 project = client.renewable_capacity(project)
+```
+
+### Adding energy credits
+
+Energy credits apply to IECC 2021+, ASHRAE 90.1-2022, and state codes
+based on them; each code family has its own credit type enum
+(`EfficiencyPackageTypeOptions`, `IECC2024EnergyCreditTypeOptions`,
+`VT2024EnergyCreditTypeOptions`, ...). Pick credit types matching
+`project.control.code`. A building area holds at most one credit per type.
+
+```python
+from comcheck_api import project_credit_operations as cr_ops
+from comcheck_api.types.core_types import (
+    EfficiencyPackage,
+    IECC2024EnergyCreditTypeOptions as Credit,
+)
+
+area_key = ba_ops.get_building_area_keys_from_project(project)[0]["key"]
+project = cr_ops.add_energy_credit_to_project(
+    project,
+    area_key,
+    EfficiencyPackage(
+        type=Credit.EFF_PACKAGE_ENERGY_CREDIT_IECC2024_REDUCE_AIR_INFILTRATION,
+        airInfiltration=0.25,
+        airInfiltrationMeasurementType="AIR_INFILTRATION_MEASUREMENT_75PA",
+    ),
+)
+
+result = client.calculate_energy_credits(project)  # project is not modified
+print(result.required, result.proposed, result.passes)
 ```
 
 ## Gotchas

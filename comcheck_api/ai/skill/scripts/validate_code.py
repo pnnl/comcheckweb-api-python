@@ -31,8 +31,9 @@ def _read_input(arg: str) -> str:
 UNSUPPORTED_PROJECT_ATTRS = {"hvac"}
 # `wholeBldgUse` (building areas + interior lighting), `activityUse` (interior
 # lighting spaces), `exteriorUse` (exterior lighting), `exteriorLightingZoneType`,
-# and `renewable` (renewable energy systems and procurement) all have operation
-# modules. Only `hvac` and `fixtureSchedule` have no operations yet.
+# `renewable` (renewable energy systems and procurement), and `efficiencyPackages`
+# (energy credits) all have operation modules. Only `hvac` and `fixtureSchedule`
+# have no operations yet.
 UNSUPPORTED_LIGHTING_ATTRS = {
     "fixtureSchedule",
 }
@@ -80,8 +81,8 @@ def validate(code: str) -> dict:
     1. Syntax check via :func:`compile`.
     2. Import check on every imported module name.
     3. Scope check that the code only uses operations actually exposed
-       by the SDK and does not mutate the unsupported `hvac`,
-       `renewable`, or `lighting.fixtureSchedule` subtrees.
+       by the SDK and does not mutate the unsupported `hvac` or
+       `lighting.fixtureSchedule` subtrees.
     """
     errors: list[dict] = []
 

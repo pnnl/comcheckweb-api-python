@@ -14,6 +14,7 @@ from comcheck_api.exceptions import (
     COMCheckProjectNotFoundError,
     COMCheckSimulationError,
 )
+from comcheck_api.types.api_types import EnergyCreditResult
 from comcheck_api.types.common_types import InteriorSpace
 from comcheck_api.types.core_types import ComBuilding
 
@@ -357,6 +358,24 @@ class COMcheckClient:
             capacity.get("proposedOffsiteRenewableProcurementEnergy")
         )
         return project
+
+    def calculate_energy_credits(self, project: ComBuilding) -> EnergyCreditResult:
+        """Calculate the proposed and required energy credits of a project.
+
+        Sends the project to the update-energy-credits endpoint. Nothing is
+        written back to the project — the project model has no fields for
+        calculated credits.
+
+        Args:
+            project: The project whose energy credits should be calculated.
+
+        Returns:
+            The credits achieved per building area and credit type, the proposed
+            and required totals, and any warnings and user alerts.
+        """
+        project_data = project.model_dump(mode="json")
+        credits = self._service.update_energy_credits(project_data).get("data") or {}
+        return EnergyCreditResult.model_validate(credits)
 
     def calculate_interior_space_allowed_wattage(
         self, interior_space: InteriorSpace, energy_code: str

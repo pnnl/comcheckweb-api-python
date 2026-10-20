@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 import json
 import os
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 import uuid
 
 import pytest
