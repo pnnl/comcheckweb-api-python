@@ -1,7 +1,7 @@
 # Getting Started
 
 !!! note "Supported Sections"
-    Currently, **Building Area**, **Envelope**, **Interior Lighting**, **Exterior Lighting**, and **Compliance Simulation** operations are fully supported. Mechanical, credits, and renewable energy sections are planned but not yet implemented. See the [home page](index.md#current-status) for the full status table.
+    Currently, **Building Area**, **Envelope**, **Interior Lighting**, **Exterior Lighting**, **Renewable Energy**, **Credits**, and **Compliance Simulation** operations are fully supported. The mechanical section is planned but not yet implemented. See the [home page](index.md#current-status) for the full status table.
 
 ## Setup
 

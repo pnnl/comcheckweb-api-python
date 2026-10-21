@@ -464,6 +464,29 @@ class COMCheckApiService:
         except Exception as error:
             self._handle_api_error(error)
 
+    def update_energy_credits(self, project_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate the proposed and required energy credits for a project.
+
+        Args:
+            project_data: The project data to send in the request body
+
+        Returns:
+            API response data as dictionary. ``data`` holds ``energyCredits``,
+            ``proposed``, ``required``, ``proposedRenewableAndLoadMgmt``,
+            ``requiredRenewableAndLoadMgmt``, ``warnings``, and ``userAlerts``.
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post("/update-energy-credits", json=project_data)
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
     def close(self) -> None:
         """Close the HTTP client connection."""
         if self._client is not None:

@@ -125,3 +125,83 @@ class SimulationResultResponse(ApiResponse):
     """
 
     data: SimulationResultInfo | None = None
+
+
+class EnergyCreditMessage(BaseModel):
+    """A warning or user alert from the energy credit calculation.
+
+    Attributes:
+        level: ``info``, ``warning``, or ``error``.
+        category: Message category, e.g. ``energy_credit`` or ``renewable``.
+        message: Human-readable message.
+        metadata: Extra details, if any.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    level: str | None = None
+    category: str | None = None
+    message: str | None = None
+    metadata: dict[str, Any] | None = None
+
+
+class BuildingAreaCredit(BaseModel):
+    """Credits achieved by one energy credit in one building area.
+
+    Attributes:
+        creditType: The energy credit type (``EfficiencyPackage.type``).
+        bldgUseKey: The building area key (``WholeBldgUse.key``).
+        category: ``regular``, or ``renewable_load`` for renewable and load
+            management credits. May be ``None`` from older backends.
+        value: Credits achieved, weighted by the building area's share of the
+            gross floor area.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    creditType: str | None = None
+    bldgUseKey: str | None = None
+    category: str | None = None
+    value: float | None = None
+
+
+class EnergyCreditResult(BaseModel):
+    """Result of the ``update-energy-credits`` endpoint.
+
+    Attributes:
+        energyCredits: Credits achieved per building area and credit type.
+        proposed: Total proposed credits.
+        required: Total required credits.
+        proposedRenewableAndLoadMgmt: Proposed renewable and load management
+            credits. ``0`` for codes without the renewable trade-off.
+        requiredRenewableAndLoadMgmt: Required renewable and load management
+            credits. ``0`` for codes without the renewable trade-off.
+        warnings: Calculation warnings, e.g. a credit missing an input.
+        userAlerts: Alerts for the user, e.g. insufficient credits.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    energyCredits: list[BuildingAreaCredit] = []
+    proposed: float | None = None
+    required: float | None = None
+    proposedRenewableAndLoadMgmt: float | None = None
+    requiredRenewableAndLoadMgmt: float | None = None
+    warnings: list[EnergyCreditMessage] = []
+    userAlerts: list[EnergyCreditMessage] = []
+
+    @property
+    def passes(self) -> bool | None:
+        """Whether proposed credits meet the required credits.
+
+        Checks the renewable and load management credits too. ``None`` when
+        the totals are missing. This is derived from the totals; the
+        compliance check reports the official energy credit status.
+        """
+        if self.proposed is None or self.required is None:
+            return None
+        if self.proposed < self.required:
+            return False
+        return (self.proposedRenewableAndLoadMgmt or 0) >= (
+            self.requiredRenewableAndLoadMgmt or 0
+        )

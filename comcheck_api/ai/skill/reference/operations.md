@@ -1,12 +1,13 @@
 # Project Operations Reference
 
-Operation functions are free functions in five modules:
+Operation functions are free functions in six modules:
 
 - `comcheck_api.project_operations.project_building_area_operations`
 - `comcheck_api.project_operations.project_envelope_operations`
 - `comcheck_api.project_operations.project_interior_lighting_operations`
 - `comcheck_api.project_operations.project_exterior_lighting_operations`
 - `comcheck_api.project_operations.project_renewable_operations`
+- `comcheck_api.project_operations.project_credit_operations`
 
 Each function takes a `ComBuilding` and a payload, and returns a new
 `ComBuilding`. Treat them as immutable transformations.
@@ -205,6 +206,31 @@ Use `get_default_renewable_system_template()` and
 `get_default_offsite_renewable_procurement_template()` as starting points.
 `description` is the identifier — it is unique within each list and is
 auto-generated if missing.
+
+## Energy credit operations
+
+```python
+from comcheck_api import project_credit_operations as cr_ops
+```
+
+Energy credits live in the flat `project.efficiencyPackages` list. Each
+`EfficiencyPackage` belongs to a building area (`bldgUseKey` =
+`WholeBldgUse.key`) and is identified by its `type`; a building area holds
+at most one credit per type. The operations don't check `control.code` —
+pick credit types from the enum for the project's code family.
+
+| Function | Notes |
+|---|---|
+| `add_energy_credit_to_project(project, building_area_key, new_energy_credit)` | Sets `bldgUseKey`. Raises `ValueError` if the building area is missing or already has that credit type. |
+| `update_energy_credit_in_project(project, building_area_key, credit_type, updates)` | Revalidates the merged entry. Raises `ValueError` for `type` / `bldgUseKey` updates (remove + add instead). |
+| `remove_energy_credit_from_project(project, building_area_key, credit_type)` | Remove one credit. |
+| `get_energy_credit_keys_from_project(project, building_area_key=None)` | List `[{bldgUseKey, type}, …]`, optionally for one building area. |
+| `set_energy_credit_multiplier_exception_in_project(project, multiplier_exception)` | Set `energyCreditMultiplierException` (IECC 2024 Appendix C/F). Raises `TypeError` for non-enum values. |
+| `set_core_and_shell_credit_in_project(project, core_and_shell_credit)` | Set `projectCoreAndShellCredit`; `None` clears it. Raises `ValueError` for negative values. |
+
+`remove_building_area_from_project` also removes the building area's
+energy credits. Use `client.calculate_energy_credits(project)` for the
+proposed and required credits.
 
 ## U-value calculation requires a construction type
 

@@ -14,8 +14,8 @@ This package is under active development. Here is the current support status for
 | Exterior Lighting | Supported |
 | Compliance Simulation | Supported |
 | Mechanical | TBD |
-| Credits | TBD |
-| Renewable Energy | TBD |
+| Credits | Supported |
+| Renewable Energy | Supported |
 
 Operations and data managers for the TBD sections are not yet implemented. The underlying types and models for these sections are available (see [Types Guide](types-guide.md)), but there are no high-level convenience functions for them yet.
 

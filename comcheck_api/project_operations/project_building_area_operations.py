@@ -1,6 +1,7 @@
 """Project Building Area Operations."""
 
 from typing import Any
+from pydantic.experimental.missing_sentinel import MISSING
 
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
 from comcheck_api.types.core_types import ComBuilding, WholeBldgUse
@@ -91,6 +92,8 @@ def remove_building_area_from_project(
 ) -> ComBuilding:
     """Remove an existing building area in the project.
 
+    Energy credits (``efficiencyPackages``) of the building area are removed too.
+
     Args:
         project: The project object to modify
         building_area_key: The key of the building area to update
@@ -106,6 +109,12 @@ def remove_building_area_from_project(
     updated_project.lighting.remove_from_subcomponent_list(
         subcomponent_id=building_area_key, subcomponent_name="wholeBldgUse"
     )
+    if updated_project.efficiencyPackages is not MISSING:
+        updated_project.efficiencyPackages = [
+            efficiency_package
+            for efficiency_package in updated_project.efficiencyPackages
+            if efficiency_package.bldgUseKey != building_area_key
+        ]
 
     return updated_project
 

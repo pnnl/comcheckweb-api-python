@@ -57,6 +57,7 @@ from . import defaults
 # Project Operations
 from .project_operations import (
     project_building_area_operations,
+    project_credit_operations,
     project_envelope_operations,
     project_exterior_lighting_operations,
     project_interior_lighting_operations,
@@ -89,6 +90,7 @@ __all__ = [
     "defaults",
     # Project Operations
     "project_building_area_operations",
+    "project_credit_operations",
     "project_envelope_operations",
     "project_exterior_lighting_operations",
     "project_interior_lighting_operations",

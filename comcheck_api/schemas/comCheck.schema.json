@@ -127,7 +127,7 @@
                 "efficiencyPackages": {
                     "description": "Efficiency Package or Energy Credits",
                     "type": "array",
-                    "item": {
+                    "items": {
                         "$ref": "comCheck.schema.json#/definitions/EfficiencyPackage"
                     },
                     "minItems": 0
@@ -267,8 +267,13 @@
                     "description": "Energy Credit Multiplier Exception",
                     "enum": [
                         "NO_ENERGY_CREDIT_MULTIPLIER_EXCEPTION",
-                        "ENERGY_CREDIT_MULTIPLIER_EXCEPTION_LOW_ENERGY_BUILDINGS",
+                        "ENERGY_CREDIT_MULTIPLIER_EXCEPTION_PEAK_HEATING_LOAD",
                         "ENERGY_CREDIT_MULTIPLIER_EXCEPTION_PRIMARY_HEAT_PUMP",
+                        "ENERGY_CREDIT_MULTIPLIER_EXCEPTION_MEETING_LOAD",
+                        "ENERGY_CREDIT_MULTIPLIER_EXCEPTION_ELECTRIC_RESISTANCE_HEAT",
+                        "ENERGY_CREDIT_MULTIPLIER_EXCEPTION_LOW_ENERGY_BUILDINGS",
+                        "ENERGY_CREDIT_MULTIPLIER_EXCEPTION_UTILITY_MISC_GROUP",
+                        "ENERGY_CREDIT_MULTIPLIER_EXCEPTION_INDUSTRIAL_USE",
                         null
                     ]
                 }
@@ -4760,7 +4765,7 @@
                         "null"
                     ],
                     "minimum": 0.0,
-                    "$comment": "Used when $.type is in [EFF_PACKAGE_ENERGY_CREDIT_ONSITE_RENEWABLES, EFF_PACKAGE_ENERGY_CREDIT_DENVER_ONSITE_RENEWABLES, EFF_PACKAGE_ENERGY_CREDIT_DENVER_ENHANCED_RENEWABLES, EFF_PACKAGE_ENERGY_CREDIT_MAS_ONSITE_RENEWABLES]"
+                    "$comment": "Deprecated, use onSiteRenewableCapacity. Still accepted and copied to onSiteRenewableCapacity by the API when that is not set."
                 },
                 "renewableType": {
                     "description": "Renewable system type",
@@ -4932,6 +4937,107 @@
                     "minimum": 0,
                     "$comment": "Used when $.type is in [EFF_PACKAGE_ENERGY_CREDIT_EFFICIENT_ELEVATOR, EFF_PACKAGE_ENERGY_CREDIT_IECC2024_EFFICIENT_ELEVATOR]"
                 },
+                "onSiteRenewableCapacity": {
+                    "description": "On-site renewable capacity, unit is Btu for thermal system and watts for electric system.",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "minimum": 0.0,
+                    "$comment": "Read by the compliance engine for IECC 2021, IECC 2024 and VT 2024 on-site renewable energy credits. Supersedes renewableCapacity."
+                },
+                "airInfiltrationMeasurementType": {
+                    "description": "Pressure at which air infiltration was measured",
+                    "anyOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "$ref": "comCheck.schema.json#/definitions/AirInfiltrationMeasurementTypeOptions"
+                        }
+                    ],
+                    "$comment": "Used when $.type is in [EFF_PACKAGE_ENERGY_CREDIT_IECC2024_REDUCE_AIR_INFILTRATION, ENERGY_CREDIT_VT_2024_REDUCE_AIR_INFILTRATION]"
+                },
+                "demandResponseSignal": {
+                    "description": "Flag indicates the load management system responds to a demand response signal",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ],
+                    "$comment": "Used for IECC 2024 and VT 2024 load management energy credits"
+                },
+                "demandResponseRequired": {
+                    "description": "Flag indicates demand response is required",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ],
+                    "$comment": "Used for IECC 2024 and VT 2024 load management energy credits"
+                },
+                "ventilationShiftIncluded": {
+                    "description": "Flag indicates ventilation load shifting is included",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ],
+                    "$comment": "Used for IECC 2024 and VT 2024 HVAC and lighting load management energy credits"
+                },
+                "sumOfGuestRoomFloorAreaWithKitchens": {
+                    "description": "Sum of guest room floor area with kitchens",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "minimum": 0.0,
+                    "unit": "sqft",
+                    "$comment": "Used when $.type is in [EFF_PACKAGE_ENERGY_CREDIT_IECC2024_EFFICIENT_RES_KITCHEN_EQUIPMENT] and the VT 2024 equivalent"
+                },
+                "sumOfTotalGuestRoomFloorArea": {
+                    "description": "Sum of total guest room floor area",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "minimum": 0.0,
+                    "unit": "sqft",
+                    "$comment": "Used when $.type is in [EFF_PACKAGE_ENERGY_CREDIT_IECC2024_EFFICIENT_RES_KITCHEN_EQUIPMENT] and the VT 2024 equivalent"
+                },
+                "tsprProposed": {
+                    "description": "Proposed total system performance ratio (TSPR)",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "minimum": 0.0,
+                    "$comment": "Used when $.type is in [EFF_PACKAGE_ENERGY_CREDIT_IECC2024_HVAC_TSPR] and the VT 2024 equivalent"
+                },
+                "tsprTarget": {
+                    "description": "Target total system performance ratio (TSPR)",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "minimum": 0.0,
+                    "$comment": "Used when $.type is in [EFF_PACKAGE_ENERGY_CREDIT_IECC2024_HVAC_TSPR] and the VT 2024 equivalent"
+                },
+                "tsprReference": {
+                    "description": "Reference total system performance ratio (TSPR)",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "minimum": 0.0,
+                    "$comment": "Used when $.type is in [EFF_PACKAGE_ENERGY_CREDIT_IECC2024_HVAC_TSPR] and the VT 2024 equivalent"
+                },
+                "tsprMpf": {
+                    "description": "TSPR mechanical performance factor (MPF)",
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "minimum": 0.0,
+                    "$comment": "Used when $.type is in [EFF_PACKAGE_ENERGY_CREDIT_IECC2024_HVAC_TSPR] and the VT 2024 equivalent"
+                },
                 "type": {
                     "description": "Efficiency Package or Energy Credit Type",
                     "anyOf": [
@@ -4946,6 +5052,9 @@
                         },
                         {
                             "$ref": "comCheck.schema.json#/definitions/IECC2024EnergyCreditTypeOptions"
+                        },
+                        {
+                            "$ref": "comCheck.schema.json#/definitions/VT2024EnergyCreditTypeOptions"
                         }
                     ]
                 }
@@ -7602,6 +7711,61 @@
                 "C406.3.6 G05 Cooling energy storage",
                 "C406.3.6 G06 Service hot water energy storage",
                 "C406.3.7 G07 Building thermal mass"
+            ]
+        },
+        "VT2024EnergyCreditTypeOptions": {
+            "type": "string",
+            "enum": [
+                "ENERGY_CREDIT_VT_2024_ENVELOPE_PERFORMANCE",
+                "ENERGY_CREDIT_VT_2024_UA_REDUCTION",
+                "ENERGY_CREDIT_VT_2024_ENVELOPE_LEAK_REDUCTION",
+                "ENERGY_CREDIT_VT_2024_ADD_ROOF_INSULATION_R10",
+                "ENERGY_CREDIT_VT_2024_ADD_ROOF_INSULATION_R5",
+                "ENERGY_CREDIT_VT_2024_ADD_WALL_INSULATION_R5",
+                "ENERGY_CREDIT_VT_2024_ADD_WALL_INSULATION_R2_5",
+                "ENERGY_CREDIT_VT_2024_IMPROVE_FENESTRATION",
+                "ENERGY_CREDIT_VT_2024_HVAC_PERFORMANCE",
+                "ENERGY_CREDIT_VT_2024_HEATING_EFFICIENCY",
+                "ENERGY_CREDIT_VT_2024_COOLING_EFFICIENCY",
+                "ENERGY_CREDIT_VT_2024_RES_HVAC_CTRL",
+                "ENERGY_CREDIT_VT_2024_ENERGY_RECOVERY",
+                "ENERGY_CREDIT_VT_2024_SHW_PREHEAT_RECOVERY",
+                "ENERGY_CREDIT_VT_2024_HP_WATER_HEATER",
+                "ENERGY_CREDIT_VT_2024_SHW_PIPE_INSULATION",
+                "ENERGY_CREDIT_VT_2024_POINT_USE_WATER_HEATER",
+                "ENERGY_CREDIT_VT_2024_THERM_BALANCE_VALVES",
+                "ENERGY_CREDIT_VT_2024_SHW_HEAT_TRACE",
+                "ENERGY_CREDIT_VT_2024_SHW_SUBMETERS",
+                "ENERGY_CREDIT_VT_2024_SHW_DIST_SIZING",
+                "ENERGY_CREDIT_VT_2024_SHOWER_HEAT_RECOVERY",
+                "ENERGY_CREDIT_VT_2024_ENERGY_MONITOR",
+                "ENERGY_CREDIT_VT_2024_ENHANCED_LGT_CTRL",
+                "ENERGY_CREDIT_VT_2024_INCREASE_OCCP_SENSORS",
+                "ENERGY_CREDIT_VT_2024_INCREASE_DAYLIT_AREA",
+                "ENERGY_CREDIT_VT_2024_RES_LGT_CTRL",
+                "ENERGY_CREDIT_VT_2024_REDUCED_LGT_POWER",
+                "ENERGY_CREDIT_VT_2024_EFF_ELEVATOR",
+                "ENERGY_CREDIT_VT_2024_COM_KITCHEN_EQUIP",
+                "ENERGY_CREDIT_VT_2024_RES_KITCHEN_EQUIP",
+                "ENERGY_CREDIT_VT_2024_FAULT_DETECTION",
+                "ENERGY_CREDIT_VT_2024_RENEWABLE_ENERGY",
+                "ENERGY_CREDIT_VT_2024_LGT_LOAD_MGMT",
+                "ENERGY_CREDIT_VT_2024_HVAC_LOAD_MGMT",
+                "ENERGY_CREDIT_VT_2024_AUTO_SHAD",
+                "ENERGY_CREDIT_VT_2024_ELEC_ENERGY_STORAGE",
+                "ENERGY_CREDIT_VT_2024_COOL_ENERGY_STORAGE",
+                "ENERGY_CREDIT_VT_2024_SHW_ENERGY_STORAGE",
+                "ENERGY_CREDIT_VT_2024_BLDG_THERM_MASS",
+                "ENERGY_CREDIT_VT_2024_INSUL_EMBODIED_CARB",
+                "ENERGY_CREDIT_VT_2024_ADD_ELEC_INFRAS"
+            ]
+        },
+        "AirInfiltrationMeasurementTypeOptions": {
+            "type": "string",
+            "enum": [
+                "AIR_INFILTRATION_MEASUREMENT_UNKNOWN",
+                "AIR_INFILTRATION_MEASUREMENT_75PA",
+                "AIR_INFILTRATION_MEASUREMENT_50PA"
             ]
         },
         "Denver2022EnergyCreditTypeOptions": {

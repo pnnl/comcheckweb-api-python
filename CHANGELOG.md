@@ -18,6 +18,22 @@ All notable changes to this project are documented in this file.
 - `COMCheckApiService.area_for_renewable` and `COMCheckApiService.renewable_capacity` service methods
 - `examples/client/renewable.py` example
 - `RenewableSystem` and `OffsiteRenewableProcurement` added to `MODEL_TO_ID_INFO` with auto-generated descriptions
+- Energy credit operations module (`project_credit_operations`) for managing energy credits (`efficiencyPackages`) per building area
+- `add_energy_credit_to_project` / `update_energy_credit_in_project` / `remove_energy_credit_from_project` — manage a building area's energy credits
+- `get_energy_credit_keys_from_project` — list the energy credits in a project
+- `set_energy_credit_multiplier_exception_in_project` and `set_core_and_shell_credit_in_project` — set the project-level credit fields
+- `COMcheckClient.calculate_energy_credits` — calculate proposed and required energy credits via `POST /update-energy-credits`, returning an `EnergyCreditResult`
+- `COMCheckApiService.update_energy_credits` service method
+- `EnergyCreditResult`, `BuildingAreaCredit`, and `EnergyCreditMessage` response models
+- `examples/client/credits.py` example
+- Schema: Vermont 2024 credit types (`VT2024EnergyCreditTypeOptions`), all eight `EnergyCreditMultiplierException` values, and the `EfficiencyPackage` inputs read by the IECC 2024 / Vermont 2024 credits (`onSiteRenewableCapacity`, `airInfiltrationMeasurementType`, `demandResponseSignal`, `demandResponseRequired`, `ventilationShiftIncluded`, `sumOfGuestRoomFloorAreaWithKitchens`, `sumOfTotalGuestRoomFloorArea`, `tsprProposed`, `tsprTarget`, `tsprReference`, `tsprMpf`)
+
+### Changed
+- `ComBuilding.efficiencyPackages` is now typed `list[EfficiencyPackage]` (was `list[Any]`); the schema used `item` instead of `items`, so entries were never validated
+- `remove_building_area_from_project` also removes the building area's energy credits
+
+### Deprecated
+- `EfficiencyPackage.renewableCapacity` — use `onSiteRenewableCapacity`. The API still accepts it and copies it to `onSiteRenewableCapacity`.
 
 
 
