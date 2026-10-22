@@ -14,6 +14,7 @@ examples/
 │   ├── allowed_wattage.py            # Interior lighting allowed-wattage calculation examples
 │   ├── renewable.py                  # Renewable area & capacity calculation examples
 │   ├── credits.py                    # Energy credit operations & calculation examples
+│   ├── mechanical.py                 # Mechanical efficiency & compliance calculation examples
 │   └── user_functions.py             # User-facing function examples
 └── project_operations/               # Project operations examples
     ├── building_area_operations.py       # Building area operations
@@ -89,6 +90,25 @@ Demonstrates energy credit operations and the server-side credit calculation.
 **Usage:**
 ```bash
 python examples/client/credits.py
+```
+
+#### Mechanical Examples (`client/mechanical.py`)
+Demonstrates mechanical system efficiency and compliance calculations.
+
+**What it demonstrates:**
+- `calculate_water_heater_efficiency()` - Calculating efficiency requirements for water heater systems
+- `calculate_hvac_system_efficiency()` - Calculating efficiency requirements for HVAC systems
+- `validate_hvac_system_economizer()` - Validating economizer requirements for an HVAC system
+- `calculate_plant_efficiency()` - Calculating efficiency requirements for HVAC plants
+- `calculate_fan_pressure_drop_credit()` - Calculating pressure drop credit for a fan system
+- `check_fan_system_compliance()` - Checking fan system compliance
+- `calculate_fan_maximum_allowable_hp()` - Calculating maximum allowable horsepower for a fan
+- `update_fan_system_compliance()` - Updating fan system compliance fields in a project
+- `update_fan_pressure_drop_credits()` - Updating pressure drop credit values in a project
+
+**Usage:**
+```bash
+python examples/client/mechanical.py
 ```
 
 #### User Function Examples (`client/user_functions.py`)

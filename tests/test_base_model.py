@@ -93,3 +93,54 @@ def test_missing_subcomponent_list_raises():
                 subcomponent_id="Child:Child 1",
                 subcomponent_name="SampleChildModel",
             )
+
+
+def test_get_normalized_subcomponent_info_from_annotation():
+    """Test that _get_normalized_subcomponent_info extracts type from list annotation."""
+    from comcheck_api.types.core_types import HVAC, HVACSystem, ServiceWaterHeatingSystem
+    from comcheck_api.defaults import get_default_project_template
+
+    project = get_default_project_template()
+
+    # Initialize hvac so we can test on it
+    hvac = HVAC(hvacSystem=[], hvacPlant=[], fanSystem=[])
+
+    # Test hvacSystem -> HVACSystem (list[HVACSystem] annotation)
+    cls, name = hvac._get_normalized_subcomponent_info(None, "hvacSystem")
+    assert cls == HVACSystem
+    assert name == "hvacSystem"
+
+    # Test swhSystem -> ServiceWaterHeatingSystem (list[ServiceWaterHeatingSystem] | MISSING annotation)
+    cls, name = project._get_normalized_subcomponent_info(None, "swhSystem")
+    assert cls == ServiceWaterHeatingSystem
+    assert name == "swhSystem"
+
+
+def test_get_normalized_subcomponent_info_from_annotation_hvac():
+    """Test annotation extraction for hvac subcomponents."""
+    from comcheck_api.types.core_types import HVAC, HVACSystem, FanSystem, HVACPlant
+
+    # Initialize hvac
+    hvac = HVAC(hvacSystem=[], hvacPlant=[], fanSystem=[])
+
+    # Test fanSystem -> FanSystem (list[FanSystem] | None annotation)
+    cls, name = hvac._get_normalized_subcomponent_info(None, "fanSystem")
+    assert cls == FanSystem
+    assert name == "fanSystem"
+
+    # Test hvacPlant -> HVACPlant
+    cls, name = hvac._get_normalized_subcomponent_info(None, "hvacPlant")
+    assert cls == HVACPlant
+    assert name == "hvacPlant"
+
+
+def test_get_subcomponent_list_normalizes_none():
+    """Test that _get_subcomponent_list normalizes None to []."""
+    from comcheck_api.types.core_types import HVAC
+
+    hvac = HVAC(hvacSystem=[], hvacPlant=[], fanSystem=None)
+
+    # Should normalize None to []
+    fan_list = hvac._get_subcomponent_list("fanSystem")
+    assert fan_list == []
+    assert isinstance(fan_list, list)

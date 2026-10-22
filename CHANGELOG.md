@@ -18,6 +18,24 @@ All notable changes to this project are documented in this file.
 - `COMCheckApiService.area_for_renewable` and `COMCheckApiService.renewable_capacity` service methods
 - `examples/client/renewable.py` example
 - `RenewableSystem` and `OffsiteRenewableProcurement` added to `MODEL_TO_ID_INFO` with auto-generated descriptions
+- Mechanical operations module (`project_mechanical_operations`) for managing HVAC systems, fan systems, HVAC plants, and water heaters
+- `add_hvac_system_to_project` / `update_hvac_system_in_project` / `remove_hvac_system_from_project` — manage HVAC systems
+- `assign_fan_system_to_hvac_system` — assign a fan system to an HVAC system by description (copies the UUID into `fanSystemKey`)
+- `get_hvac_system_keys_from_project` — list all HVAC systems with their fan system links
+- `add_fan_system_to_project` / `update_fan_system_in_project` / `remove_fan_system_from_project` — manage fan systems
+- `get_fan_system_keys_from_project` — list all fan systems
+- `add_fan_to_fan_system` / `update_fan_in_fan_system` / `remove_fan_from_fan_system` — manage fans within fan systems
+- `add_hvac_plant_to_project` / `update_hvac_plant_in_project` / `remove_hvac_plant_from_project` — manage HVAC plants
+- `get_hvac_plant_keys_from_project` — list all HVAC plants
+- `add_water_heater_to_project` / `update_water_heater_in_project` / `remove_water_heater_from_project` — manage water heaters
+- `get_water_heater_keys_from_project` — list all water heaters
+- Automatic `fanSystemKey` UUID generation and validation for fan systems
+- `HVACSystemListManager`, `FanSystemListManager`, `HVACPlantListManager`, `WaterHeaterListManager` in `comcheck_api.managers.components.mechanical`
+- `HVACSystem`, `FanSystem`, `Fan`, `HVACPlant`, `ServiceWaterHeatingSystem` added to `MODEL_TO_ID_INFO` with auto-generated descriptions ("HVAC System", "Fan System", "Fan", "Plant", "Water Heater")
+- Mechanical API calls on `COMcheckClient` (`POST /{energyCode}/mechanical/...`): `calculate_water_heater_efficiency`, `calculate_hvac_system_efficiency`, `validate_hvac_system_economizer`, `calculate_plant_efficiency`, `calculate_fan_pressure_drop_credit`, `check_fan_system_compliance`, `calculate_fan_maximum_allowable_hp`
+- `COMcheckClient.update_fan_system_compliance` and `COMcheckClient.update_fan_pressure_drop_credits` — calculate fan system compliance / pressure drop credits and write them onto the project's fan system
+- Matching `COMCheckApiService` service methods, and `WaterHeaterEfficiency`, `HVACSystemEfficiency`, `EconomizerValidation`, `PlantEfficiency`, `FanSystemComplianceResult` result types
+- `examples/client/mechanical.py` example
 - Energy credit operations module (`project_credit_operations`) for managing energy credits (`efficiencyPackages`) per building area
 - `add_energy_credit_to_project` / `update_energy_credit_in_project` / `remove_energy_credit_from_project` — manage a building area's energy credits
 - `get_energy_credit_keys_from_project` — list the energy credits in a project
@@ -31,6 +49,9 @@ All notable changes to this project are documented in this file.
 ### Changed
 - `ComBuilding.efficiencyPackages` is now typed `list[EfficiencyPackage]` (was `list[Any]`); the schema used `item` instead of `items`, so entries were never validated
 - `remove_building_area_from_project` also removes the building area's energy credits
+- `CustomBaseModel._get_normalized_subcomponent_info` now extracts element type from list annotations when `subcomponent_name` is given, fixing type lookup for `hvacSystem`, `fanSystem`, `hvacPlant`, and `swhSystem`
+- `CustomBaseModel._get_subcomponent_list` now normalizes `None` to `[]` for optional list fields (e.g., `hvac.fanSystem`)
+- Skill validation no longer blocks `hvac` or `swhSystem` — mechanical operations are now fully supported
 
 ### Deprecated
 - `EfficiencyPackage.renewableCapacity` — use `onSiteRenewableCapacity`. The API still accepts it and copies it to `onSiteRenewableCapacity`.

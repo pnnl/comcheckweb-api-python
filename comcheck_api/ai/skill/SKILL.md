@@ -28,18 +28,19 @@ Triggers:
 - **Project shape**: a project is a `ComBuilding` Pydantic model with
   lowercase top-level fields: `project` (metadata), `location`,
   `envelope`, `lighting` (which contains `wholeBldgUse[]` — the
-  building areas), `hvac`, `renewable`, `efficiencyPackages` (energy
-  credits), and `control` (energy code).
-  No `Project`/`Control` PascalCase aliases exist.
-  The fields `hvac` and the shared `fixtureSchedule[]`
-  exist on the model but have **no operation functions** — leave them
-  at template defaults. All other mutable areas have dedicated modules.
+  building areas), `hvac`, `swhSystem` (water heaters),
+  `renewable`, `efficiencyPackages` (energy credits), and `control`
+  (energy code). No `Project`/`Control` PascalCase aliases exist.
+  The shared `fixtureSchedule[]` exists on the model but has **no
+  operation functions** — leave it at template defaults. All other
+  mutable areas have dedicated modules.
 - **Operation modules (functional)**: all mutations go through free
   functions that take a `ComBuilding` and return a new `ComBuilding`:
   - `project_building_area_operations` — `WholeBldgUse` items
   - `project_envelope_operations` — roofs, walls, floors, windows, doors, skylights, thermal bridges
   - `project_interior_lighting_operations` — `ActivityUse` items, aliased as `InteriorSpace` (interior lighting spaces + fixtures)
   - `project_exterior_lighting_operations` — `ExteriorUse` items, aliased as `ExteriorArea`, + zone type
+  - `project_mechanical_operations` — HVAC systems, fan systems (with fans), plants, water heaters
   - `project_renewable_operations` — renewable exception, on-site systems, off-site procurement
   - `project_credit_operations` — energy credits (`EfficiencyPackage` items) per building area, multiplier exception, core and shell credit
 - **Envelope items attach to a building-area key**: every
@@ -170,10 +171,9 @@ print(result["performanceRating"])
   bypass the validation logic in the operation modules. Always go
   through `project_envelope_operations` and
   `project_building_area_operations` instead.
-- Don't add, update, or remove `fixtureSchedule[]` or HVAC/mechanical
-  components — no operations exist for them yet.
-  The `COMcheckClient` user methods (`list_projects`, `get_project`,
-  `update_project`, `update_uvalues`, `start_run_simulation`,
+- Don't add, update, or remove `fixtureSchedule[]` — no operations
+  exist for it yet. The `COMcheckClient` user methods (`list_projects`,
+  `get_project`, `update_project`, `update_uvalues`, `start_run_simulation`,
   `get_simulation_status`, `get_simulation_result`, `set_api_key`)
   are fully supported and fine to use. The compliance/report client
   methods (`check_UA_compliance`, `check_requirements`,
@@ -183,10 +183,10 @@ print(result["performanceRating"])
   (`area_for_renewable`, `renewable_capacity`), and
   `calculate_energy_credits`. If asked for an
   unsupported mutation area, tell the user it's not implemented and
-  offer building-area / envelope / lighting / renewable / credits / simulation instead.
+  offer building-area / envelope / lighting / mechanical / renewable / credits / simulation instead.
   `comcheck_api.list_operations()` enumerates the `building_area`,
-  `envelope`, `interior_lighting`, `exterior_lighting`, `renewable`, and
-  `credits` groups.
+  `envelope`, `interior_lighting`, `exterior_lighting`, `mechanical`,
+  `renewable`, and `credits` groups.
 
 ## Common patterns
 
@@ -447,6 +447,55 @@ project = rn_ops.add_renewable_system_to_project(project, renewable_system)
 project = client.area_for_renewable(project)
 project = client.renewable_capacity(project)
 ```
+
+### Adding mechanical systems
+
+Mechanical operations cover HVAC systems, fan systems, HVAC plants, and service
+water heating. The `hvac` singleton can be `MISSING` and is created automatically
+on add. Fan systems link to HVAC systems via a UUID (`fanSystemKey`) that is
+set by the library — use `assign_fan_system_to_hvac_system` to create the link
+by description.
+
+```python
+from comcheck_api import project_mechanical_operations as mech_ops
+from comcheck_api.types.core_types import (
+    Fan,
+    FanSystem,
+    HVACPlant,
+    HVACSystem,
+    ServiceWaterHeatingSystem,
+)
+
+# 1. Add an HVAC system
+hvac_system = HVACSystem(description="Rooftop Unit 1", quantity=2)
+project = mech_ops.add_hvac_system_to_project(project, hvac_system)
+
+# 2. Add a fan system
+fan_system = FanSystem(description="Supply Fan 1")
+project = mech_ops.add_fan_system_to_project(project, fan_system)
+
+# 3. Add a fan to the fan system
+fan = Fan(description="Fan 1")
+project = mech_ops.add_fan_to_fan_system(project, "Supply Fan 1", fan)
+
+# 4. Assign the fan system to the HVAC system (by description, not UUID)
+project = mech_ops.assign_fan_system_to_hvac_system(
+    project, "Rooftop Unit 1", "Supply Fan 1"
+)
+
+# 5. Add a plant
+plant = HVACPlant(description="Chiller 1")
+project = mech_ops.add_hvac_plant_to_project(project, plant)
+
+# 6. Add a water heater (swhSystem is top-level, not under hvac)
+water_heater = ServiceWaterHeatingSystem(description="Water Heater 1")
+project = mech_ops.add_water_heater_to_project(project, water_heater)
+```
+
+**Fan system keys**: the library sets a new UUID on `fanSystemKey` when you add
+a fan system if it's empty or already used. You cannot update `fanSystemKey`
+directly — use `assign_fan_system_to_hvac_system` or `remove_fan_system_from_project`
+(which clears `fanSystemKey` on referencing HVAC systems).
 
 ### Adding energy credits
 

@@ -28,12 +28,13 @@ def _read_input(arg: str) -> str:
     return Path(arg).read_text()
 
 
-UNSUPPORTED_PROJECT_ATTRS = {"hvac"}
+UNSUPPORTED_PROJECT_ATTRS: set[str] = set()
 # `wholeBldgUse` (building areas + interior lighting), `activityUse` (interior
 # lighting spaces), `exteriorUse` (exterior lighting), `exteriorLightingZoneType`,
-# `renewable` (renewable energy systems and procurement), and `efficiencyPackages`
-# (energy credits) all have operation modules. Only `hvac` and `fixtureSchedule`
-# have no operations yet.
+# `renewable` (renewable energy systems and procurement), `efficiencyPackages`
+# (energy credits), `hvac` (HVAC systems, fan systems, plants), and `swhSystem`
+# (water heaters) all have operation modules. Only `fixtureSchedule`
+# has no operations yet.
 UNSUPPORTED_LIGHTING_ATTRS = {
     "fixtureSchedule",
 }
@@ -132,6 +133,9 @@ def validate(code: str) -> dict:
                     "project_building_area_operations",
                     "project_interior_lighting_operations",
                     "project_exterior_lighting_operations",
+                    "project_mechanical_operations",
+                    "project_renewable_operations",
+                    "project_credit_operations",
                 }:
                     op_module_aliases.add(alias.asname or alias.name)
         elif isinstance(node, ast.ImportFrom) and node.module == (
@@ -143,12 +147,15 @@ def validate(code: str) -> dict:
                     "project_building_area_operations",
                     "project_interior_lighting_operations",
                     "project_exterior_lighting_operations",
+                    "project_mechanical_operations",
+                    "project_renewable_operations",
+                    "project_credit_operations",
                 }:
                     op_module_aliases.add(alias.asname or alias.name)
 
     for node in ast.walk(tree):
-        # Forbid `project.hvac` / `project.renewable` access in any context.
-        if isinstance(node, ast.Attribute) and any(
+        # Check for unsupported project attrs (currently none — hvac and swhSystem now have operations)
+        if UNSUPPORTED_PROJECT_ATTRS and isinstance(node, ast.Attribute) and any(
             _is_attr_chain(node, "project", attr) for attr in UNSUPPORTED_PROJECT_ATTRS
         ):
             errors.append(

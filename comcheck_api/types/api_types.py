@@ -205,3 +205,107 @@ class EnergyCreditResult(BaseModel):
         return (self.proposedRenewableAndLoadMgmt or 0) >= (
             self.requiredRenewableAndLoadMgmt or 0
         )
+
+
+class WaterHeaterEfficiency(BaseModel):
+    """Efficiency requirements for a water heater.
+
+    Attributes:
+        minEfficiency: Minimum required efficiency.
+        maxEfficiency: Maximum required efficiency.
+        efficiencyUnits: Units for the efficiency values.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    minEfficiency: float | None = None
+    maxEfficiency: float | None = None
+    efficiencyUnits: str | None = None
+
+
+class HVACSystemEfficiency(BaseModel):
+    """Efficiency requirements for an HVAC system.
+
+    Attributes:
+        minCoolingEfficiency: Minimum cooling efficiency required.
+        maxCoolingEfficiency: Maximum cooling efficiency required.
+        minHeatingEfficiency: Minimum heating efficiency required.
+        maxHeatingEfficiency: Maximum heating efficiency required.
+        minPartLoadEfficiency: Minimum part-load efficiency.
+        partLoadEfficiency: Part-load efficiency value.
+        coolingEfficiencyUnits: Units for cooling efficiency.
+        heatingEfficiencyUnits: Units for heating efficiency.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    minCoolingEfficiency: float | None = None
+    maxCoolingEfficiency: float | None = None
+    minHeatingEfficiency: float | None = None
+    maxHeatingEfficiency: float | None = None
+    minPartLoadEfficiency: float | None = None
+    partLoadEfficiency: str | float | None = None
+    coolingEfficiencyUnits: str | None = None
+    heatingEfficiencyUnits: str | None = None
+
+
+class EconomizerValidation(BaseModel):
+    """Economizer validation results for an HVAC system.
+
+    Attributes:
+        coolingCapLimitNoEconomizer: Cooling capacity limit without economizer.
+        coolCapNoReqLimit: Cooling capacity without requirement limit.
+        coolCapNoEconomizer: Cooling capacity without economizer.
+        complies: Whether the system complies with economizer requirements.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    coolingCapLimitNoEconomizer: str | float | None = None
+    coolCapNoReqLimit: str | float | None = None
+    coolCapNoEconomizer: str | float | None = None
+    complies: bool | None = None
+
+
+class PlantEfficiency(BaseModel):
+    """Efficiency requirements for an HVAC plant.
+
+    Attributes:
+        plantMinHeatingEfficiency: Minimum plant heating efficiency.
+        plantRequiredCoolingEfficiency: Required plant cooling efficiency.
+        minPartLoadEfficiency: Minimum part-load efficiency.
+        coolingEfficiencyUnits: Units for cooling efficiency.
+        heatingEfficiencyUnits: Units for heating efficiency.
+        partLoadEfficiencyUnits: Units for part-load efficiency.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    plantMinHeatingEfficiency: float | None = None
+    plantRequiredCoolingEfficiency: float | None = None
+    minPartLoadEfficiency: float | None = None
+    coolingEfficiencyUnits: str | None = None
+    heatingEfficiencyUnits: str | None = None
+    partLoadEfficiencyUnits: str | None = None
+
+
+class FanSystemComplianceResult(BaseModel):
+    """Fan system compliance check results.
+
+    Attributes:
+        hasPressureDropCredits: Whether the system has pressure drop credits.
+        complyMethod: Compliance method used.
+        complies: Whether the system complies.
+        complianceMessage: Compliance status message.
+        proposed: Proposed fan system value.
+        maxAllowed: Maximum allowed value.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    hasPressureDropCredits: bool | None = None
+    complyMethod: str | None = None
+    complies: bool | None = None
+    complianceMessage: str | None = None
+    proposed: float | None = None
+    maxAllowed: float | None = None

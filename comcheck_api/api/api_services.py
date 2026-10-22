@@ -487,6 +487,213 @@ class COMCheckApiService:
         except Exception as error:
             self._handle_api_error(error)
 
+    def water_heater_efficiency(
+        self, swh_data: Dict[str, Any], energy_code: str, water_heater_name: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Calculate efficiency for water heater systems.
+
+        Args:
+            swh_data: ServiceWaterHeatingSystem data or list of systems
+            energy_code: The energy code for the endpoint path
+            water_heater_name: Optional name to match a system description
+
+        Returns:
+            API response data as dictionary. ``data`` is a dict keyed by
+            system description, with ``minEfficiency``, ``maxEfficiency``,
+            and ``efficiencyUnits``.
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            params = {"waterHeaterName": water_heater_name} if water_heater_name else None
+            response = client.post(
+                f"/{energy_code}/mechanical/water-heaters/efficiency",
+                json=swh_data,
+                params=params,
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
+    def hvac_system_efficiency(
+        self, hvac_data: Dict[str, Any], energy_code: str, hvac_name: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Calculate efficiency for HVAC systems.
+
+        Args:
+            hvac_data: HVACSystem data or list of systems
+            energy_code: The energy code for the endpoint path
+            hvac_name: Optional name to match a system description
+
+        Returns:
+            API response data as dictionary. ``data`` is a dict keyed by
+            system description, with efficiency fields.
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            params = {"hvacName": hvac_name} if hvac_name else None
+            response = client.post(
+                f"/{energy_code}/mechanical/hvac-systems/efficiency",
+                json=hvac_data,
+                params=params,
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
+    def hvac_system_economizers_validation(
+        self, hvac_data: Dict[str, Any], energy_code: str
+    ) -> Dict[str, Any]:
+        """Validate economizer requirements for an HVAC system.
+
+        Args:
+            hvac_data: Single HVACSystem data
+            energy_code: The energy code for the endpoint path
+
+        Returns:
+            API response data as dictionary. ``data`` is a dict keyed by
+            system description, with economizer validation fields.
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post(
+                f"/{energy_code}/mechanical/hvac-systems/economizers-validation",
+                json=hvac_data,
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
+    def plant_efficiency(
+        self, plant_data: Dict[str, Any], energy_code: str, plant_name: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Calculate efficiency for HVAC plants.
+
+        Args:
+            plant_data: HVACPlant data or list of plants
+            energy_code: The energy code for the endpoint path
+            plant_name: Optional name to match a plant description
+
+        Returns:
+            API response data as dictionary. ``data`` is a dict keyed by
+            plant description, with efficiency fields.
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            params = {"plantName": plant_name} if plant_name else None
+            response = client.post(
+                f"/{energy_code}/mechanical/plants/efficiency",
+                json=plant_data,
+                params=params,
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
+    def fan_pressure_drop_credit(
+        self, credit_data: Dict[str, Any], energy_code: str, fan_pressure_credit_type: str
+    ) -> Dict[str, Any]:
+        """Calculate pressure drop credit for a fan system.
+
+        Args:
+            credit_data: FanSystemPressureDropCredits data without type field
+            energy_code: The energy code for the endpoint path
+            fan_pressure_credit_type: The credit type (required query param)
+
+        Returns:
+            API response data as dictionary. ``data`` holds
+            ``pressureDropCredit``.
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post(
+                f"/{energy_code}/mechanical/fan-systems/fan-pressure-credit",
+                json=credit_data,
+                params={"fanPressureCreditType": fan_pressure_credit_type},
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
+    def fan_system_compliance(
+        self, fan_system_data: Dict[str, Any], energy_code: str
+    ) -> Dict[str, Any]:
+        """Check compliance for a fan system.
+
+        Args:
+            fan_system_data: Single FanSystem data
+            energy_code: The energy code for the endpoint path
+
+        Returns:
+            API response data as dictionary. ``data`` holds compliance fields.
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post(
+                f"/{energy_code}/mechanical/fan-systems/compliance",
+                json=fan_system_data,
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
+    def fan_maximum_allowable_hp(
+        self, fan_data: Dict[str, Any], energy_code: str
+    ) -> Dict[str, Any]:
+        """Calculate maximum allowable horsepower for a fan.
+
+        Args:
+            fan_data: Fan data
+            energy_code: The energy code for the endpoint path
+
+        Returns:
+            API response data as dictionary. ``data`` holds
+            ``maxNameplateHp``.
+
+        Raises:
+            COMCheckHTTPError: If the API returns an error status
+            COMCheckConnectionError: If the request fails
+        """
+        try:
+            client = self._get_client()
+            response = client.post(
+                f"/{energy_code}/mechanical/fan-systems/maximum-allowable-hp",
+                json=fan_data,
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            self._handle_api_error(error)
+
     def close(self) -> None:
         """Close the HTTP client connection."""
         if self._client is not None:
