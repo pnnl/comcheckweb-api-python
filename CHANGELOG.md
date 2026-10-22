@@ -25,6 +25,7 @@ All notable changes to this project are documented in this file.
 - `add_fan_system_to_project` / `update_fan_system_in_project` / `remove_fan_system_from_project` — manage fan systems
 - `get_fan_system_keys_from_project` — list all fan systems
 - `add_fan_to_fan_system` / `update_fan_in_fan_system` / `remove_fan_from_fan_system` — manage fans within fan systems
+- `add_pressure_drop_credit_to_fan_system` / `update_pressure_drop_credit_in_fan_system` / `remove_pressure_drop_credit_from_fan_system` — manage a fan system's pressure drop credits by `type`
 - `add_hvac_plant_to_project` / `update_hvac_plant_in_project` / `remove_hvac_plant_from_project` — manage HVAC plants
 - `get_hvac_plant_keys_from_project` — list all HVAC plants
 - `add_water_heater_to_project` / `update_water_heater_in_project` / `remove_water_heater_from_project` — manage water heaters

@@ -28,6 +28,7 @@ apply to the project is up to you.
 """
 
 import logging
+import warnings
 from typing import Any
 from uuid import uuid4
 from pydantic import BaseModel
@@ -39,6 +40,9 @@ from comcheck_api.types.core_types import (
     HVACSystem,
     FanSystem,
     Fan,
+    FanSystemComplianceMethodOptions,
+    FanSystemPressureDropCredits,
+    PressureDropTypeOptions,
     HVACPlant,
     ServiceWaterHeatingSystem,
 )
@@ -534,6 +538,164 @@ def remove_fan_from_fan_system(
             )
             break
 
+    return updated_project
+
+
+def add_pressure_drop_credit_to_fan_system(
+    project: ComBuilding,
+    fan_system_description: str,
+    new_credit: FanSystemPressureDropCredits,
+) -> ComBuilding:
+    """Add a pressure drop credit to a fan system.
+
+    Credits are identified by ``type``, which is unique within a fan system.
+    ``pressureDropCredit`` is calculated by the engine — use
+    :meth:`~comcheck_api.client.COMcheckClient.update_fan_pressure_drop_credits`
+    to fill it in.
+
+    Emits a :class:`UserWarning` if the fan system's ``complyMethod`` is not
+    ``FAN_SYSTEM_MOTOR_BRAKE_HP``; the UI only offers pressure drop credits for
+    the brake horsepower method.
+
+    Args:
+        project: The project to modify.
+        fan_system_description: The description of the fan system.
+        new_credit: The FanSystemPressureDropCredits to add.
+
+    Returns:
+        Updated project with the credit added.
+
+    Raises:
+        ValueError: If the fan system is not found, the credit type is
+            ``PRESSURE_DROP_CREDIT_TYPE_UNSPECIFIED``, or the fan system already
+            has a credit of that type.
+    """
+    _require_fan_system(project, fan_system_description)
+
+    if new_credit.type == PressureDropTypeOptions.PRESSURE_DROP_CREDIT_TYPE_UNSPECIFIED:
+        raise ValueError(
+            "PRESSURE_DROP_CREDIT_TYPE_UNSPECIFIED is not a valid credit type. "
+            "Choose a value from PressureDropTypeOptions."
+        )
+
+    updated_project = project.model_copy(deep=True)
+    fan_system = _find_by_description(updated_project.hvac.fanSystem, fan_system_description)
+    credits = fan_system.pressureDropCredits
+    if credits is MISSING or credits is None:
+        credits = []
+
+    if any(credit.type == new_credit.type for credit in credits):
+        raise ValueError(
+            f"Fan system '{fan_system_description}' already has a "
+            f"{new_credit.type} pressure drop credit."
+        )
+
+    if fan_system.complyMethod != FanSystemComplianceMethodOptions.FAN_SYSTEM_MOTOR_BRAKE_HP:
+        warnings.warn(
+            f"Fan system '{fan_system_description}' does not use the "
+            "FAN_SYSTEM_MOTOR_BRAKE_HP compliance method, so pressure drop "
+            "credits don't apply to it.",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    fan_system.pressureDropCredits = [*credits, new_credit.model_copy(deep=True)]
+    return updated_project
+
+
+def update_pressure_drop_credit_in_fan_system(
+    project: ComBuilding,
+    fan_system_description: str,
+    credit_type: PressureDropTypeOptions,
+    updates: dict[str, Any] | FanSystemPressureDropCredits,
+) -> ComBuilding:
+    """Update the inputs of a pressure drop credit in a fan system.
+
+    ``type`` can't be changed (remove the credit and add a new one), and the
+    engine-calculated ``pressureDropCredit`` can't be set. Changing an input
+    clears ``pressureDropCredit`` so a stale value isn't kept; recalculate it
+    with :meth:`~comcheck_api.client.COMcheckClient.update_fan_pressure_drop_credits`.
+
+    Args:
+        project: The project to modify.
+        fan_system_description: The description of the fan system.
+        credit_type: The ``type`` of the credit to update.
+        updates: Partial updates (dict) or full FanSystemPressureDropCredits to apply.
+
+    Returns:
+        Updated project with the credit modified.
+
+    Raises:
+        ValueError: If the fan system or credit is not found, updates change
+            ``type`` or ``pressureDropCredit``, or a value fails validation.
+    """
+    _require_fan_system(project, fan_system_description)
+
+    updated_project = project.model_copy(deep=True)
+    fan_system = _find_by_description(updated_project.hvac.fanSystem, fan_system_description)
+    credits = fan_system.pressureDropCredits
+    if credits is MISSING or credits is None:
+        credits = []
+    index = next(
+        (i for i, credit in enumerate(credits) if credit.type == credit_type), None
+    )
+    if index is None:
+        raise ValueError(
+            f"Pressure drop credit '{credit_type}' not found in fan system "
+            f"'{fan_system_description}'."
+        )
+
+    current = credits[index]
+    updates = _updates_to_dict(updates)
+    _reject_changed_fields(
+        current,
+        updates,
+        frozenset({"type", "pressureDropCredit"}),
+        "update_pressure_drop_credit_in_fan_system",
+        hint="Remove the credit and add a new one to change its type.",
+    )
+
+    merged = {**current.model_dump(mode="python"), **updates}
+    if merged != current.model_dump(mode="python"):
+        merged.pop("pressureDropCredit", None)
+    credits[index] = FanSystemPressureDropCredits.model_validate(merged)
+    fan_system.pressureDropCredits = credits
+    return updated_project
+
+
+def remove_pressure_drop_credit_from_fan_system(
+    project: ComBuilding,
+    fan_system_description: str,
+    credit_type: PressureDropTypeOptions,
+) -> ComBuilding:
+    """Remove a pressure drop credit from a fan system.
+
+    Args:
+        project: The project to modify.
+        fan_system_description: The description of the fan system.
+        credit_type: The ``type`` of the credit to remove.
+
+    Returns:
+        Updated project with the credit removed.
+
+    Raises:
+        ValueError: If the fan system or credit is not found.
+    """
+    _require_fan_system(project, fan_system_description)
+
+    updated_project = project.model_copy(deep=True)
+    fan_system = _find_by_description(updated_project.hvac.fanSystem, fan_system_description)
+    credits = fan_system.pressureDropCredits
+    if credits is MISSING or credits is None:
+        credits = []
+    remaining = [credit for credit in credits if credit.type != credit_type]
+    if len(remaining) == len(credits):
+        raise ValueError(
+            f"Pressure drop credit '{credit_type}' not found in fan system "
+            f"'{fan_system_description}'."
+        )
+
+    fan_system.pressureDropCredits = remaining
     return updated_project
 
 

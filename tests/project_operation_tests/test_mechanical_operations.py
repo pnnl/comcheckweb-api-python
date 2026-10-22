@@ -11,7 +11,10 @@ from comcheck_api.types.core_types import (
     ComBuilding,
     HVACSystem,
     FanSystem,
+    FanSystemComplianceMethodOptions,
+    FanSystemPressureDropCredits,
     Fan,
+    PressureDropTypeOptions,
     HVACPlant,
     ServiceWaterHeatingSystem,
 )
@@ -647,3 +650,124 @@ def test_mechanical_round_trip(project: ComBuilding):
     assert original_fan_key is not None
     assert reloaded_fan_key == original_fan_key
     assert reloaded_hvac_key == original_fan_key
+
+
+# ---------------------------------------------------------------------------
+# Pressure Drop Credit Tests
+# ---------------------------------------------------------------------------
+
+MERV_9 = PressureDropTypeOptions.PARTICULATE_FILTRATION_CREDIT_MERV_9_THRU_12
+SOUND = PressureDropTypeOptions.SOUND_ATTENUATION_SECTION
+
+
+def _with_brake_hp_fan_system(project: ComBuilding) -> ComBuilding:
+    return mech_ops.add_fan_system_to_project(
+        _fresh(project),
+        FanSystem(
+            description="Supply Fans",
+            complyMethod=FanSystemComplianceMethodOptions.FAN_SYSTEM_MOTOR_BRAKE_HP,
+        ),
+    )
+
+
+def test_add_pressure_drop_credit(project: ComBuilding):
+    proj = _with_brake_hp_fan_system(project)
+
+    result = mech_ops.add_pressure_drop_credit_to_fan_system(
+        proj, "Supply Fans", FanSystemPressureDropCredits(type=MERV_9, cfm=1000)
+    )
+
+    credits = result.hvac.fanSystem[0].pressureDropCredits
+    assert [credit.type for credit in credits] == [MERV_9]
+    assert proj.hvac.fanSystem[0].pressureDropCredits is MISSING
+
+
+def test_add_pressure_drop_credit_rejects_duplicate_type(project: ComBuilding):
+    proj = _with_brake_hp_fan_system(project)
+    proj = mech_ops.add_pressure_drop_credit_to_fan_system(
+        proj, "Supply Fans", FanSystemPressureDropCredits(type=MERV_9)
+    )
+
+    with pytest.raises(ValueError, match="already has"):
+        mech_ops.add_pressure_drop_credit_to_fan_system(
+            proj, "Supply Fans", FanSystemPressureDropCredits(type=MERV_9)
+        )
+
+
+def test_add_pressure_drop_credit_rejects_unspecified_type(project: ComBuilding):
+    proj = _with_brake_hp_fan_system(project)
+
+    with pytest.raises(ValueError, match="not a valid credit type"):
+        mech_ops.add_pressure_drop_credit_to_fan_system(
+            proj,
+            "Supply Fans",
+            FanSystemPressureDropCredits(
+                type=PressureDropTypeOptions.PRESSURE_DROP_CREDIT_TYPE_UNSPECIFIED
+            ),
+        )
+
+
+def test_add_pressure_drop_credit_warns_without_brake_hp(project: ComBuilding):
+    proj = mech_ops.add_fan_system_to_project(
+        _fresh(project), FanSystem(description="Supply Fans")
+    )
+
+    with pytest.warns(UserWarning, match="FAN_SYSTEM_MOTOR_BRAKE_HP"):
+        mech_ops.add_pressure_drop_credit_to_fan_system(
+            proj, "Supply Fans", FanSystemPressureDropCredits(type=MERV_9)
+        )
+
+
+def test_update_pressure_drop_credit_clears_calculated_value(project: ComBuilding):
+    proj = _with_brake_hp_fan_system(project)
+    proj = mech_ops.add_pressure_drop_credit_to_fan_system(
+        proj,
+        "Supply Fans",
+        FanSystemPressureDropCredits(type=MERV_9, cfm=1000, pressureDropCredit=0.5),
+    )
+
+    result = mech_ops.update_pressure_drop_credit_in_fan_system(
+        proj, "Supply Fans", MERV_9, {"cfm": 2000}
+    )
+
+    credit = result.hvac.fanSystem[0].pressureDropCredits[0]
+    assert credit.cfm == 2000
+    assert credit.pressureDropCredit is MISSING
+
+
+def test_update_pressure_drop_credit_rejects_type_and_calculated_value(
+    project: ComBuilding,
+):
+    proj = _with_brake_hp_fan_system(project)
+    proj = mech_ops.add_pressure_drop_credit_to_fan_system(
+        proj, "Supply Fans", FanSystemPressureDropCredits(type=MERV_9)
+    )
+
+    with pytest.raises(ValueError, match="type"):
+        mech_ops.update_pressure_drop_credit_in_fan_system(
+            proj, "Supply Fans", MERV_9, {"type": SOUND}
+        )
+    with pytest.raises(ValueError, match="pressureDropCredit"):
+        mech_ops.update_pressure_drop_credit_in_fan_system(
+            proj, "Supply Fans", MERV_9, {"pressureDropCredit": 1.0}
+        )
+
+
+def test_remove_pressure_drop_credit(project: ComBuilding):
+    proj = _with_brake_hp_fan_system(project)
+    proj = mech_ops.add_pressure_drop_credit_to_fan_system(
+        proj, "Supply Fans", FanSystemPressureDropCredits(type=MERV_9)
+    )
+    proj = mech_ops.add_pressure_drop_credit_to_fan_system(
+        proj, "Supply Fans", FanSystemPressureDropCredits(type=SOUND)
+    )
+
+    result = mech_ops.remove_pressure_drop_credit_from_fan_system(
+        proj, "Supply Fans", MERV_9
+    )
+
+    assert [c.type for c in result.hvac.fanSystem[0].pressureDropCredits] == [SOUND]
+    with pytest.raises(ValueError, match="not found"):
+        mech_ops.remove_pressure_drop_credit_from_fan_system(
+            result, "Supply Fans", MERV_9
+        )

@@ -220,6 +220,39 @@ project = mech_ops.remove_fan_from_fan_system(
 
 Remove a fan from a fan system.
 
+## Pressure Drop Credits
+
+Pressure drop credits are nested within fan systems (`FanSystem.pressureDropCredits[]`)
+and identified by their `type` (a `PressureDropTypeOptions` value), which is
+unique within a fan system. They apply to fan systems that use the
+`FAN_SYSTEM_MOTOR_BRAKE_HP` compliance method; adding one to another fan system
+emits a `UserWarning`.
+
+`pressureDropCredit` is calculated by the engine. Updating a credit's inputs
+clears it; recalculate with `COMcheckClient.update_fan_pressure_drop_credits`
+(see [API calls](#api-calls)).
+
+```python
+from comcheck_api.types.core_types import (
+    FanSystemPressureDropCredits,
+    PressureDropTypeOptions,
+)
+
+MERV_9 = PressureDropTypeOptions.PARTICULATE_FILTRATION_CREDIT_MERV_9_THRU_12
+
+project = mech_ops.add_pressure_drop_credit_to_fan_system(
+    project, "Supply Fan 1", FanSystemPressureDropCredits(type=MERV_9, cfm=1000)
+)
+project = mech_ops.update_pressure_drop_credit_in_fan_system(
+    project, "Supply Fan 1", MERV_9, {"cfm": 1200}
+)
+project = mech_ops.remove_pressure_drop_credit_from_fan_system(
+    project, "Supply Fan 1", MERV_9
+)
+```
+
+`type` can't be updated — remove the credit and add a new one.
+
 ## HVAC Plants
 
 HVAC plants are identified by their `description`.

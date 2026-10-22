@@ -204,6 +204,9 @@ on add. `swhSystem[]` is a top-level list (not under `hvac`).
 | `add_fan_to_fan_system(project, fan_system_description, new_fan)` | Add a `Fan` to a fan system. |
 | `update_fan_in_fan_system(project, fan_system_description, fan_description, updates)` | Update a `Fan` by its `description`. |
 | `remove_fan_from_fan_system(project, fan_system_description, fan_description)` | Remove a `Fan` by its `description`. |
+| `add_pressure_drop_credit_to_fan_system(project, fan_system_description, new_credit)` | Add a `FanSystemPressureDropCredits`. `type` is unique per fan system; `PRESSURE_DROP_CREDIT_TYPE_UNSPECIFIED` raises `ValueError`. Warns unless the fan system's `complyMethod` is `FAN_SYSTEM_MOTOR_BRAKE_HP`. |
+| `update_pressure_drop_credit_in_fan_system(project, fan_system_description, credit_type, updates)` | Update a credit's inputs by its `type`. Raises `ValueError` for `type` or `pressureDropCredit` changes; changing an input clears `pressureDropCredit` (recalculate with `client.update_fan_pressure_drop_credits`). |
+| `remove_pressure_drop_credit_from_fan_system(project, fan_system_description, credit_type)` | Remove a credit by its `type`. |
 | **HVAC plants** (`hvac.hvacPlant[]`) | |
 | `add_hvac_plant_to_project(project, new_hvac_plant)` | Add an `HVACPlant`. |
 | `update_hvac_plant_in_project(project, hvac_plant_description, updates)` | Update an `HVACPlant` by its `description`. Raises `ValueError` for engine-calculated fields (`requirementAnswer`). |
