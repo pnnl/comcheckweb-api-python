@@ -253,19 +253,19 @@ def get_hvac_system_keys_from_project(project: ComBuilding) -> list[dict]:
     fan_systems = getattr(project.hvac, "fanSystem", None) or []
     if isinstance(fan_systems, list):
         for fan_system in fan_systems:
-            key = getattr(fan_system, "fanSystemKey", None)
-            desc = getattr(fan_system, "description", None)
+            key = _field_value(fan_system, "fanSystemKey")
+            desc = _field_value(fan_system, "description")
             if key:
                 fan_system_map[key] = desc
 
     result = []
     for system in hvac_systems:
-        fan_system_key = getattr(system, "fanSystemKey", None)
+        fan_system_key = _field_value(system, "fanSystemKey")
         result.append(
             {
-                "description": getattr(system, "description", None),
-                "systemType": getattr(system, "systemType", None),
-                "quantity": getattr(system, "quantity", None),
+                "description": _field_value(system, "description"),
+                "systemType": _field_value(system, "systemType"),
+                "quantity": _field_value(system, "quantity"),
                 "fanSystemKey": fan_system_key,
                 "fanSystemDescription": fan_system_map.get(fan_system_key) if fan_system_key else None,
             }
@@ -424,9 +424,9 @@ def get_fan_system_keys_from_project(project: ComBuilding) -> list[dict]:
 
     return [
         {
-            "description": getattr(system, "description", None),
-            "fanSystemKey": getattr(system, "fanSystemKey", None),
-            "complyMethod": getattr(system, "complyMethod", None),
+            "description": _field_value(system, "description"),
+            "fanSystemKey": _field_value(system, "fanSystemKey"),
+            "complyMethod": _field_value(system, "complyMethod"),
         }
         for system in fan_systems
     ]
@@ -813,10 +813,10 @@ def get_hvac_plant_keys_from_project(project: ComBuilding) -> list[dict]:
 
     return [
         {
-            "description": getattr(plant, "description", None),
-            "plantType": getattr(plant, "plantType", None),
-            "systemType": getattr(plant, "systemType", None),
-            "quantity": getattr(plant, "quantity", None),
+            "description": _field_value(plant, "description"),
+            "plantType": _field_value(plant, "plantType"),
+            "systemType": _field_value(plant, "systemType"),
+            "quantity": _field_value(plant, "quantity"),
         }
         for plant in hvac_plants
     ]
@@ -934,16 +934,22 @@ def get_water_heater_keys_from_project(project: ComBuilding) -> list[dict]:
 
     return [
         {
-            "description": getattr(system, "description", None),
-            "swhSystemType": getattr(system, "swhSystemType", None),
-            "fuelType": getattr(system, "fuelType", None),
-            "quantity": getattr(system, "quantity", None),
+            "description": _field_value(system, "description"),
+            "swhSystemType": _field_value(system, "swhSystemType"),
+            "fuelType": _field_value(system, "fuelType"),
+            "quantity": _field_value(system, "quantity"),
         }
         for system in water_heaters
     ]
 
 
 # *********** Helper Functions ***********
+
+
+def _field_value(item, field: str) -> Any:
+    """Return item.field, with an unset (MISSING) field as None."""
+    value = getattr(item, field, None)
+    return None if value is MISSING else value
 
 
 def _find_by_description(items, description: str):

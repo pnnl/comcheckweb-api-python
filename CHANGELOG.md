@@ -36,7 +36,7 @@ All notable changes to this project are documented in this file.
 - Mechanical API calls on `COMcheckClient` (`POST /{energyCode}/mechanical/...`): `calculate_water_heater_efficiency`, `calculate_hvac_system_efficiency`, `validate_hvac_system_economizer`, `calculate_plant_efficiency`, `calculate_fan_pressure_drop_credit`, `check_fan_system_compliance`, `calculate_fan_maximum_allowable_hp`
 - `COMcheckClient.update_fan_system_compliance` and `COMcheckClient.update_fan_pressure_drop_credits` — calculate fan system compliance / pressure drop credits and write them onto the project's fan system
 - Matching `COMCheckApiService` service methods, and `WaterHeaterEfficiency`, `HVACSystemEfficiency`, `EconomizerValidation`, `PlantEfficiency`, `FanSystemComplianceResult` result types
-- `examples/client/mechanical.py` example
+- `examples/client/mechanical.py` and `examples/project_operations/mechanical_operations.py` examples
 - Energy credit operations module (`project_credit_operations`) for managing energy credits (`efficiencyPackages`) per building area
 - `add_energy_credit_to_project` / `update_energy_credit_in_project` / `remove_energy_credit_from_project` — manage a building area's energy credits
 - `get_energy_credit_keys_from_project` — list the energy credits in a project

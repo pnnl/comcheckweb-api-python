@@ -771,3 +771,15 @@ def test_remove_pressure_drop_credit(project: ComBuilding):
         mech_ops.remove_pressure_drop_credit_from_fan_system(
             result, "Supply Fans", MERV_9
         )
+
+
+def test_keys_report_unset_fields_as_none(project: ComBuilding):
+    proj = mech_ops.add_hvac_plant_to_project(
+        _fresh(project), HVACPlant(description="Boiler Plant")
+    )
+
+    keys = mech_ops.get_hvac_plant_keys_from_project(proj)
+
+    assert keys == [
+        {"description": "Boiler Plant", "plantType": None, "systemType": None, "quantity": None}
+    ]

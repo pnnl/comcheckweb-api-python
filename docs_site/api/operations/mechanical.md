@@ -18,6 +18,8 @@ Mechanical data lives in two places on `ComBuilding`:
 
 All four lists are identified by `description`, which is auto-generated if missing (e.g., "HVAC System 1", "Fan System 1", "Plant 1", "Water Heater 1"). The `hvac` singleton is created automatically when you add the first HVAC, fan, or plant component.
 
+See `examples/project_operations/mechanical_operations.py` for a full walkthrough.
+
 ## HVAC Systems
 
 HVAC systems are identified by their `description`.

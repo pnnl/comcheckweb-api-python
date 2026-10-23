@@ -21,7 +21,8 @@ examples/
     ├── envelope_operations.py            # Envelope operations
     ├── interior_lighting_operations.py   # Interior lighting (InteriorSpace) operations
     ├── exterior_lighting_operations.py   # Exterior lighting (ExteriorArea) operations
-    └── renewable_operations.py           # Renewable systems & off-site procurement operations
+    ├── renewable_operations.py           # Renewable systems & off-site procurement operations
+    └── mechanical_operations.py          # HVAC, fan systems, plants & water heater operations
 ```
 
 ## Example Categories
@@ -174,6 +175,21 @@ Demonstrates setting the exterior lighting zone type and managing ExteriorArea i
 **Usage:**
 ```bash
 python examples/project_operations/exterior_lighting_operations.py
+```
+
+#### Mechanical Operations (`project_operations/mechanical_operations.py`)
+Demonstrates managing HVAC systems, fan systems (with fans and pressure drop credits), plants, and water heaters, all identified by `description`.
+
+**What it demonstrates:**
+- `add_hvac_system_to_project()` / `add_fan_system_to_project()` / `add_hvac_plant_to_project()` / `add_water_heater_to_project()` - Adding mechanical items
+- `add_fan_to_fan_system()` / `add_pressure_drop_credit_to_fan_system()` - Adding fans and pressure drop credits to a fan system
+- `assign_fan_system_to_hvac_system()` - Linking a fan system to an HVAC system by description
+- `client.update_fan_pressure_drop_credits()` / `client.update_fan_system_compliance()` - Filling in engine-calculated fan system values
+- `update_*` / `remove_*` and `get_*_keys_from_project()` - Updating, renaming, removing, and listing items
+
+**Usage:**
+```bash
+python examples/project_operations/mechanical_operations.py
 ```
 
 #### Envelope Operations (`project_operations/envelope_operations.py`)
