@@ -47,9 +47,11 @@ Add a new HVAC system. Creates the `hvac` singleton if it's `MISSING`.
 **Example:**
 
 ```python
-from comcheck_api.types.core_types import HVACSystem
+from comcheck_api.defaults import get_default_hvac_system_template
 
-hvac_system = HVACSystem(description="Rooftop Unit 1", quantity=2)
+hvac_system = get_default_hvac_system_template()
+hvac_system.description = "Rooftop Unit 1"
+hvac_system.quantity = 2
 project = mech_ops.add_hvac_system_to_project(project, hvac_system)
 ```
 
@@ -132,9 +134,10 @@ Add a new fan system. The library sets a new UUID on `fanSystemKey` if it's empt
 **Example:**
 
 ```python
-from comcheck_api.types.core_types import FanSystem
+from comcheck_api.defaults import get_default_fan_system_template
 
-fan_system = FanSystem(description="Supply Fan 1")
+fan_system = get_default_fan_system_template()
+fan_system.description = "Supply Fan 1"
 project = mech_ops.add_fan_system_to_project(project, fan_system)
 ```
 
@@ -191,9 +194,10 @@ Add a new fan to a fan system.
 **Example:**
 
 ```python
-from comcheck_api.types.core_types import Fan
+from comcheck_api.defaults import get_default_fan_template
 
-fan = Fan(description="Fan 1")
+fan = get_default_fan_template()
+fan.description = "Fan 1"
 project = mech_ops.add_fan_to_fan_system(project, "Supply Fan 1", fan)
 ```
 
@@ -273,9 +277,10 @@ Add a new HVAC plant. Creates the `hvac` singleton if it's `MISSING`.
 **Example:**
 
 ```python
-from comcheck_api.types.core_types import HVACPlant
+from comcheck_api.defaults import get_default_hvac_plant_template
 
-plant = HVACPlant(description="Chiller 1")
+plant = get_default_hvac_plant_template()
+plant.description = "Chiller 1"
 project = mech_ops.add_hvac_plant_to_project(project, plant)
 ```
 
@@ -327,9 +332,10 @@ Add a new water heater. Initializes `swhSystem` to `[]` if it's `MISSING`.
 **Example:**
 
 ```python
-from comcheck_api.types.core_types import ServiceWaterHeatingSystem
+from comcheck_api.defaults import get_default_water_heater_template
 
-water_heater = ServiceWaterHeatingSystem(description="Water Heater 1")
+water_heater = get_default_water_heater_template()
+water_heater.description = "Water Heater 1"
 project = mech_ops.add_water_heater_to_project(project, water_heater)
 ```
 

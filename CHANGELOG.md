@@ -33,6 +33,7 @@ All notable changes to this project are documented in this file.
 - Automatic `fanSystemKey` UUID generation and validation for fan systems
 - `HVACSystemListManager`, `FanSystemListManager`, `HVACPlantListManager`, `WaterHeaterListManager` in `comcheck_api.managers.components.mechanical`
 - `HVACSystem`, `FanSystem`, `Fan`, `HVACPlant`, `ServiceWaterHeatingSystem` added to `MODEL_TO_ID_INFO` with auto-generated descriptions ("HVAC System", "Fan System", "Fan", "Plant", "Water Heater")
+- `get_default_hvac_system_template`, `get_default_fan_system_template`, `get_default_fan_template`, `get_default_hvac_plant_template`, and `get_default_water_heater_template` default templates for mechanical systems
 - Mechanical API calls on `COMcheckClient` (`POST /{energyCode}/mechanical/...`): `calculate_water_heater_efficiency`, `calculate_hvac_system_efficiency`, `validate_hvac_system_economizer`, `calculate_plant_efficiency`, `calculate_fan_pressure_drop_credit`, `check_fan_system_compliance`, `calculate_fan_maximum_allowable_hp`
 - `COMcheckClient.update_fan_system_compliance` and `COMcheckClient.update_fan_pressure_drop_credits` — calculate fan system compliance / pressure drop credits and write them onto the project's fan system
 - Matching `COMCheckApiService` service methods, and `WaterHeaterEfficiency`, `HVACSystemEfficiency`, `EconomizerValidation`, `PlantEfficiency`, `FanSystemComplianceResult` result types

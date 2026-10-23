@@ -218,10 +218,12 @@ on add. `swhSystem[]` is a top-level list (not under `hvac`).
 | `remove_water_heater_from_project(project, water_heater_description)` | Remove a `ServiceWaterHeatingSystem` by its `description`. |
 | `get_water_heater_keys_from_project(project)` | List `[{description, swhSystemType, fuelType, quantity}, …]` for the project. |
 
-Construct `HVACSystem`, `FanSystem`, `Fan`, `HVACPlant`, and
-`ServiceWaterHeatingSystem` directly from `comcheck_api.types.core_types`
-(all fields are optional). `description` is the
-identifier — it is unique within each list and is auto-generated if missing.
+Use `get_default_hvac_system_template()`, `get_default_fan_system_template()`,
+`get_default_fan_template()`, `get_default_hvac_plant_template()`, and
+`get_default_water_heater_template()` from `comcheck_api.defaults` as starting
+points (or construct models directly from `comcheck_api.types.core_types`, where
+all fields are optional). `description` is the identifier — it is unique within
+each list and is auto-generated if missing.
 
 **Fan system keys**: the library sets a new UUID on `fanSystemKey` when you add
 a fan system if it's empty or already used. You cannot update `fanSystemKey`

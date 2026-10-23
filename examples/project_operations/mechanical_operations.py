@@ -29,16 +29,18 @@ from comcheck_api import (
     COMcheckClient,
     project_mechanical_operations as mech_ops,
 )
+from comcheck_api.defaults import (
+    get_default_hvac_system_template,
+    get_default_fan_system_template,
+    get_default_fan_template,
+    get_default_hvac_plant_template,
+    get_default_water_heater_template,
+)
 from comcheck_api.types.core_types import (
-    Fan,
-    FanSystem,
     FanSystemComplianceMethodOptions,
     FanSystemPressureDropCredits,
-    HVACPlant,
-    HVACSystem,
     PlantTypeOptions,
     PressureDropTypeOptions,
-    ServiceWaterHeatingSystem,
     SWHFuelTypeOptions,
     SWHSystemTypeOptions,
 )
@@ -58,23 +60,23 @@ project_id = str(project.id)
 
 
 # ── Step 1: Add an HVAC system ────────────────────────────────────────────────
-project = mech_ops.add_hvac_system_to_project(
-    project, HVACSystem(description="Rooftop Unit 1", systemType="HVAC", quantity=2)
-)
+hvac_system = get_default_hvac_system_template()
+hvac_system.description = "Rooftop Unit 1"
+hvac_system.quantity = 2
+project = mech_ops.add_hvac_system_to_project(project, hvac_system)
 print(f"HVAC systems: {mech_ops.get_hvac_system_keys_from_project(project)}")
 
 # ── Step 2: Add a fan system with a fan ───────────────────────────────────────
 # fanSystemKey is left empty; the library sets a UUID.
-project = mech_ops.add_fan_system_to_project(
-    project,
-    FanSystem(
-        description="Supply Fans",
-        complyMethod=FanSystemComplianceMethodOptions.FAN_SYSTEM_MOTOR_BRAKE_HP,
-    ),
-)
-project = mech_ops.add_fan_to_fan_system(
-    project, "Supply Fans", Fan(description="Supply Fan 1", maxNameplateHp=10.0)
-)
+fan_system = get_default_fan_system_template()
+fan_system.description = "Supply Fans"
+fan_system.complyMethod = FanSystemComplianceMethodOptions.FAN_SYSTEM_MOTOR_BRAKE_HP
+project = mech_ops.add_fan_system_to_project(project, fan_system)
+
+fan = get_default_fan_template()
+fan.description = "Supply Fan 1"
+fan.nameplateHp = 10.0
+project = mech_ops.add_fan_to_fan_system(project, "Supply Fans", fan)
 
 # ── Step 3: Add a pressure drop credit to the fan system ──────────────────────
 # Credits are identified by type, which is unique within a fan system. They
@@ -92,20 +94,18 @@ print(f"HVAC systems: {mech_ops.get_hvac_system_keys_from_project(project)}")
 print(f"Fan systems: {mech_ops.get_fan_system_keys_from_project(project)}")
 
 # ── Step 5: Add a plant and a water heater ────────────────────────────────────
-project = mech_ops.add_hvac_plant_to_project(
-    project,
-    HVACPlant(description="Boiler Plant", plantType=PlantTypeOptions.HEATING_PLANT),
-)
-project = mech_ops.add_water_heater_to_project(
-    project,
-    ServiceWaterHeatingSystem(
-        description="Water Heater 1",
-        systemType="Water Heater",
-        swhSystemType=SWHSystemTypeOptions.STORAGE_WATER_HEATER,
-        fuelType=SWHFuelTypeOptions.GAS,
-        quantity=1,
-    ),
-)
+plant = get_default_hvac_plant_template()
+plant.description = "Boiler Plant"
+plant.plantType = PlantTypeOptions.HEATING_PLANT
+project = mech_ops.add_hvac_plant_to_project(project, plant)
+
+water_heater = get_default_water_heater_template()
+water_heater.description = "Water Heater 1"
+water_heater.swhSystemType = SWHSystemTypeOptions.STORAGE_WATER_HEATER
+water_heater.fuelType = SWHFuelTypeOptions.GAS
+water_heater.quantity = 1
+project = mech_ops.add_water_heater_to_project(project, water_heater)
+
 print(f"Plants: {mech_ops.get_hvac_plant_keys_from_project(project)}")
 print(f"Water heaters: {mech_ops.get_water_heater_keys_from_project(project)}")
 
@@ -128,7 +128,7 @@ project = mech_ops.update_hvac_system_in_project(
     project, "Rooftop Unit 1", {"quantity": 3}
 )
 project = mech_ops.update_fan_in_fan_system(
-    project, "Supply Fans", "Supply Fan 1", {"maxNameplateHp": 7.5}
+    project, "Supply Fans", "Supply Fan 1", {"nameplateHp": 7.5}
 )
 # Changing a credit input clears its pressureDropCredit; recalculate it.
 project = mech_ops.update_pressure_drop_credit_in_fan_system(

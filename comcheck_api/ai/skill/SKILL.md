@@ -458,24 +458,28 @@ by description.
 
 ```python
 from comcheck_api import project_mechanical_operations as mech_ops
-from comcheck_api.types.core_types import (
-    Fan,
-    FanSystem,
-    HVACPlant,
-    HVACSystem,
-    ServiceWaterHeatingSystem,
+from comcheck_api.defaults import (
+    get_default_hvac_system_template,
+    get_default_fan_system_template,
+    get_default_fan_template,
+    get_default_hvac_plant_template,
+    get_default_water_heater_template,
 )
 
 # 1. Add an HVAC system
-hvac_system = HVACSystem(description="Rooftop Unit 1", quantity=2)
+hvac_system = get_default_hvac_system_template()
+hvac_system.description = "Rooftop Unit 1"
+hvac_system.quantity = 2
 project = mech_ops.add_hvac_system_to_project(project, hvac_system)
 
 # 2. Add a fan system
-fan_system = FanSystem(description="Supply Fan 1")
+fan_system = get_default_fan_system_template()
+fan_system.description = "Supply Fan 1"
 project = mech_ops.add_fan_system_to_project(project, fan_system)
 
 # 3. Add a fan to the fan system
-fan = Fan(description="Fan 1")
+fan = get_default_fan_template()
+fan.description = "Fan 1"
 project = mech_ops.add_fan_to_fan_system(project, "Supply Fan 1", fan)
 
 # 4. Assign the fan system to the HVAC system (by description, not UUID)
@@ -484,11 +488,13 @@ project = mech_ops.assign_fan_system_to_hvac_system(
 )
 
 # 5. Add a plant
-plant = HVACPlant(description="Chiller 1")
+plant = get_default_hvac_plant_template()
+plant.description = "Chiller 1"
 project = mech_ops.add_hvac_plant_to_project(project, plant)
 
 # 6. Add a water heater (swhSystem is top-level, not under hvac)
-water_heater = ServiceWaterHeatingSystem(description="Water Heater 1")
+water_heater = get_default_water_heater_template()
+water_heater.description = "Water Heater 1"
 project = mech_ops.add_water_heater_to_project(project, water_heater)
 ```
 
