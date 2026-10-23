@@ -61,6 +61,7 @@ from .project_operations import (
     project_envelope_operations,
     project_exterior_lighting_operations,
     project_interior_lighting_operations,
+    project_mechanical_operations,
     project_renewable_operations,
 )
 
@@ -94,6 +95,7 @@ __all__ = [
     "project_envelope_operations",
     "project_exterior_lighting_operations",
     "project_interior_lighting_operations",
+    "project_mechanical_operations",
     "project_renewable_operations",
     # Introspection
     "list_operations",

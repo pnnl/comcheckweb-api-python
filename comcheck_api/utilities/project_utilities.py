@@ -240,3 +240,136 @@ def _require_offsite_renewable_procurement(
             f"OffsiteRenewableProcurement with description '{description}' "
             f"not found in renewable.offsiteRenewableProcurement."
         )
+
+
+def _ensure_hvac(project: ComBuilding):
+    """Create the hvac singleton if it is MISSING, and normalize fanSystem=None to [].
+
+    Args:
+        project: The project to check.
+
+    Returns:
+        The HVAC object (created if needed).
+    """
+    from pydantic.experimental.missing_sentinel import MISSING
+    from comcheck_api.types.core_types import HVAC
+
+    if project.hvac is MISSING:
+        project.hvac = HVAC(hvacSystem=[], hvacPlant=[], fanSystem=[])
+
+    # Normalize fanSystem=None to []
+    if project.hvac.fanSystem is None:
+        project.hvac.fanSystem = []
+
+    return project.hvac
+
+
+def _require_hvac_system(project: ComBuilding, description: str) -> None:
+    """Ensure project.hvac.hvacSystem contains a system with the given description.
+
+    Args:
+        project: The project to check.
+        description: The description of the HVAC system to find.
+
+    Raises:
+        ValueError: If no HVAC system with the given description is found.
+    """
+    from pydantic.experimental.missing_sentinel import MISSING
+
+    if project.hvac is MISSING:
+        raise ValueError("No HVAC data (hvac) found in project.")
+
+    hvac_systems = getattr(project.hvac, "hvacSystem", None)
+    if not isinstance(hvac_systems, list):
+        raise ValueError("No HVAC systems (hvac.hvacSystem) found in project.")
+
+    if not any(
+        getattr(system, "description", None) == description for system in hvac_systems
+    ):
+        raise ValueError(
+            f"HVACSystem with description '{description}' not found in hvac.hvacSystem."
+        )
+
+
+def _require_fan_system(project: ComBuilding, description: str) -> None:
+    """Ensure project.hvac.fanSystem contains a system with the given description.
+
+    Args:
+        project: The project to check.
+        description: The description of the fan system to find.
+
+    Raises:
+        ValueError: If no fan system with the given description is found.
+    """
+    from pydantic.experimental.missing_sentinel import MISSING
+
+    if project.hvac is MISSING:
+        raise ValueError("No HVAC data (hvac) found in project.")
+
+    fan_systems = getattr(project.hvac, "fanSystem", None)
+    # fanSystem can be None, normalize to empty list for checking
+    if fan_systems is None:
+        fan_systems = []
+    if not isinstance(fan_systems, list):
+        raise ValueError("No fan systems (hvac.fanSystem) found in project.")
+
+    if not any(
+        getattr(system, "description", None) == description for system in fan_systems
+    ):
+        raise ValueError(
+            f"FanSystem with description '{description}' not found in hvac.fanSystem."
+        )
+
+
+def _require_hvac_plant(project: ComBuilding, description: str) -> None:
+    """Ensure project.hvac.hvacPlant contains a plant with the given description.
+
+    Args:
+        project: The project to check.
+        description: The description of the HVAC plant to find.
+
+    Raises:
+        ValueError: If no HVAC plant with the given description is found.
+    """
+    from pydantic.experimental.missing_sentinel import MISSING
+
+    if project.hvac is MISSING:
+        raise ValueError("No HVAC data (hvac) found in project.")
+
+    hvac_plants = getattr(project.hvac, "hvacPlant", None)
+    if not isinstance(hvac_plants, list):
+        raise ValueError("No HVAC plants (hvac.hvacPlant) found in project.")
+
+    if not any(
+        getattr(plant, "description", None) == description for plant in hvac_plants
+    ):
+        raise ValueError(
+            f"HVACPlant with description '{description}' not found in hvac.hvacPlant."
+        )
+
+
+def _require_water_heater(project: ComBuilding, description: str) -> None:
+    """Ensure project.swhSystem contains a system with the given description.
+
+    Args:
+        project: The project to check.
+        description: The description of the water heater to find.
+
+    Raises:
+        ValueError: If no water heater with the given description is found.
+    """
+    from pydantic.experimental.missing_sentinel import MISSING
+
+    water_heaters = project.swhSystem
+    if water_heaters is MISSING or not isinstance(water_heaters, list):
+        raise ValueError(
+            "No water heaters (swhSystem) found in project."
+        )
+
+    if not any(
+        getattr(system, "description", None) == description for system in water_heaters
+    ):
+        raise ValueError(
+            f"ServiceWaterHeatingSystem with description '{description}' "
+            f"not found in swhSystem."
+        )

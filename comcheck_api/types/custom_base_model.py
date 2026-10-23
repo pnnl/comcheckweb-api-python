@@ -219,9 +219,10 @@ class CustomBaseModel(BaseModel):
     ):
         """Resolve the concrete type and attribute name for a subcomponent.
 
-        When *subcomponent_name* is provided the type is looked up from
-        ``core_types`` by capitalising the name.  Otherwise the type and
-        name are derived from the *subcomponent* instance itself.
+        When *subcomponent_name* is provided the type is first looked up from
+        the field's annotation (unwrapping ``list[X]``, ``list[X] | None``, etc.),
+        falling back to capitalising the name and looking it up in ``core_types``.
+        Otherwise the type and name are derived from the *subcomponent* instance itself.
 
         Args:
             subcomponent: A model instance or dict representing the subcomponent.
@@ -238,11 +239,38 @@ class CustomBaseModel(BaseModel):
         """
         if subcomponent_name:
             from comcheck_api.types import core_types
+            import types
+            import typing
 
-            class_name = subcomponent_name[0].upper() + subcomponent_name[1:]
-            cls = getattr(core_types, class_name, None)
+            # Try to extract the type from the field annotation
+            cls = None
+            if subcomponent_name in self.__class__.model_fields:
+                field_info = self.__class__.model_fields[subcomponent_name]
+                annotation = field_info.annotation
+
+                # Unwrap list[X] | None | MISSING etc.
+                origin = typing.get_origin(annotation)
+                if origin is typing.Union or origin is types.UnionType:
+                    # For Union types, find the list type
+                    args = typing.get_args(annotation)
+                    for arg in args:
+                        if typing.get_origin(arg) is list:
+                            annotation = arg
+                            origin = list
+                            break
+
+                if origin is list:
+                    # Extract the element type from list[X]
+                    args = typing.get_args(annotation)
+                    if args:
+                        cls = args[0]
+
+            # Fall back to capitalising the name
             if cls is None:
-                raise ValueError(f"Unknown subcomponent type for name '{class_name}'")
+                class_name = subcomponent_name[0].upper() + subcomponent_name[1:]
+                cls = getattr(core_types, class_name, None)
+                if cls is None:
+                    raise ValueError(f"Unknown subcomponent type for name '{class_name}'")
 
             return cls, subcomponent_name
         else:
@@ -266,11 +294,11 @@ class CustomBaseModel(BaseModel):
             subcomponent_name: Name of the list-valued field on this model.
 
         Returns:
-            The current list value for the given attribute.
+            The current list value for the given attribute. ``None`` and ``MISSING`` are normalized to ``[]``.
 
         Raises:
             AttributeError: If the field does not exist on this model.
-            TypeError: If the field value is not a list.
+            TypeError: If the field value is not a list, None, or MISSING.
         """
         if subcomponent_name not in self.__class__.model_fields:
             raise AttributeError(
@@ -279,10 +307,16 @@ class CustomBaseModel(BaseModel):
 
         current_subcomponents = getattr(self, subcomponent_name, [])
 
+        # Normalize None and MISSING to []
+        if current_subcomponents is None:
+            return []
+        if _PYDANTIC_MISSING is not None and current_subcomponents is _PYDANTIC_MISSING:
+            return []
+
         if not isinstance(current_subcomponents, list):
             raise TypeError(
                 f"{self.__class__.__name__}.{subcomponent_name} "
-                f"must be a list, got {type(current_subcomponents).__name__}"
+                f"must be a list, None, or MISSING, got {type(current_subcomponents).__name__}"
             )
 
         return current_subcomponents
