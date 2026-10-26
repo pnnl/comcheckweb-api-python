@@ -58,7 +58,7 @@ for any of these models. Leave `project.hvac` at its template default.
 | `HVACSystem` | One HVAC system definition. |
 | `HVACPlant` | Central plant equipment. |
 | `Fan` / `FanSystem` | Fan and fan-system models. |
-| `ServiceWaterHeatingSystem` (SWH) | Service water heating. |
+| `ServiceWaterHeatingSystem` (SWH) | Water heater (stored in `swhSystem[]`). |
 
 ## Enums (StrEnum)
 

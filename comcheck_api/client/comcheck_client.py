@@ -11,12 +11,28 @@ import httpx
 
 from comcheck_api.api import COMCheckApiService
 from comcheck_api.exceptions import (
+    COMCheckAPIError,
     COMCheckProjectNotFoundError,
     COMCheckSimulationError,
 )
-from comcheck_api.types.api_types import EnergyCreditResult
+from comcheck_api.types.api_types import (
+    EnergyCreditResult,
+    WaterHeaterEfficiency,
+    HVACSystemEfficiency,
+    EconomizerValidation,
+    PlantEfficiency,
+    FanSystemComplianceResult,
+)
 from comcheck_api.types.common_types import InteriorSpace
-from comcheck_api.types.core_types import ComBuilding
+from comcheck_api.types.core_types import (
+    ComBuilding,
+    ServiceWaterHeatingSystem,
+    HVACSystem,
+    HVACPlant,
+    FanSystem,
+    FanSystemPressureDropCredits,
+    Fan,
+)
 
 Mode = Literal["python", "json"]
 
@@ -582,6 +598,338 @@ class COMcheckClient:
                 f"Failed to get simulation result for session {session_id}"
             )
         return result_response.data.model_dump(mode="python")
+
+    def calculate_water_heater_efficiency(
+        self,
+        water_heaters: Union[ServiceWaterHeatingSystem, List[ServiceWaterHeatingSystem]],
+        energy_code: str,
+        water_heater_name: Optional[str] = None,
+    ) -> Dict[str, WaterHeaterEfficiency]:
+        """Calculate efficiency requirements for water heater systems.
+
+        Args:
+            water_heaters: A single ``ServiceWaterHeatingSystem`` or a list of them.
+            energy_code: The energy code to use.
+            water_heater_name: Optional name to match a system description.
+
+        Returns:
+            A dict keyed by system description, with efficiency requirements.
+
+        Raises:
+            ValueError: If a list contains duplicate descriptions.
+        """
+        systems = [water_heaters] if not isinstance(water_heaters, list) else water_heaters
+        if len(systems) > 1:
+            descriptions = [s.description for s in systems]
+            if len(descriptions) != len(set(descriptions)):
+                raise ValueError("All water heater descriptions must be unique")
+
+        if water_heater_name:
+            descriptions = [s.description for s in systems]
+            if water_heater_name not in descriptions:
+                raise ValueError(
+                    f"water_heater_name '{water_heater_name}' does not match any system description"
+                )
+
+        swh_data = (
+            [s.model_dump(mode="json") for s in systems]
+            if len(systems) > 1
+            else systems[0].model_dump(mode="json")
+        )
+        result = self._service.water_heater_efficiency(swh_data, energy_code, water_heater_name)
+        data = result.get("data") or {}
+        return {
+            desc: WaterHeaterEfficiency.model_validate(eff)
+            for desc, eff in data.items()
+        }
+
+    def calculate_hvac_system_efficiency(
+        self,
+        hvac_systems: Union[HVACSystem, List[HVACSystem]],
+        energy_code: str,
+        hvac_name: Optional[str] = None,
+    ) -> Dict[str, HVACSystemEfficiency]:
+        """Calculate efficiency requirements for HVAC systems.
+
+        Args:
+            hvac_systems: A single ``HVACSystem`` or a list of them.
+            energy_code: The energy code to use.
+            hvac_name: Optional name to match a system description.
+
+        Returns:
+            A dict keyed by system description, with efficiency requirements.
+
+        Raises:
+            ValueError: If a list contains duplicate descriptions.
+        """
+        systems = [hvac_systems] if not isinstance(hvac_systems, list) else hvac_systems
+        if len(systems) > 1:
+            descriptions = [s.description for s in systems]
+            if len(descriptions) != len(set(descriptions)):
+                raise ValueError("All HVAC system descriptions must be unique")
+
+        if hvac_name:
+            descriptions = [s.description for s in systems]
+            if hvac_name not in descriptions:
+                raise ValueError(
+                    f"hvac_name '{hvac_name}' does not match any system description"
+                )
+
+        hvac_data = (
+            [s.model_dump(mode="json") for s in systems]
+            if len(systems) > 1
+            else systems[0].model_dump(mode="json")
+        )
+        result = self._service.hvac_system_efficiency(hvac_data, energy_code, hvac_name)
+        data = result.get("data") or {}
+        return {
+            desc: HVACSystemEfficiency.model_validate(eff)
+            for desc, eff in data.items()
+        }
+
+    def validate_hvac_system_economizer(
+        self, hvac_system: HVACSystem, energy_code: str
+    ) -> EconomizerValidation:
+        """Validate economizer requirements for an HVAC system.
+
+        Args:
+            hvac_system: The HVAC system to validate.
+            energy_code: The energy code to use.
+
+        Returns:
+            Economizer validation results.
+
+        Raises:
+            ValueError: If the HVAC system description is empty.
+        """
+        if not hvac_system.description or not hvac_system.description.strip():
+            raise ValueError("HVAC system description cannot be empty")
+
+        hvac_data = hvac_system.model_dump(mode="json")
+        result = self._service.hvac_system_economizers_validation(hvac_data, energy_code)
+        data = result.get("data") or {}
+        # The endpoint returns data keyed by description
+        for validation_data in data.values():
+            return EconomizerValidation.model_validate(validation_data)
+        return EconomizerValidation()
+
+    def calculate_plant_efficiency(
+        self,
+        plants: Union[HVACPlant, List[HVACPlant]],
+        energy_code: str,
+        plant_name: Optional[str] = None,
+    ) -> Dict[str, PlantEfficiency]:
+        """Calculate efficiency requirements for HVAC plants.
+
+        Args:
+            plants: A single ``HVACPlant`` or a list of them.
+            energy_code: The energy code to use.
+            plant_name: Optional name to match a plant description.
+
+        Returns:
+            A dict keyed by plant description, with efficiency requirements.
+
+        Raises:
+            ValueError: If a list contains duplicate descriptions.
+        """
+        plant_list = [plants] if not isinstance(plants, list) else plants
+        if len(plant_list) > 1:
+            descriptions = [p.description for p in plant_list]
+            if len(descriptions) != len(set(descriptions)):
+                raise ValueError("All plant descriptions must be unique")
+
+        if plant_name:
+            descriptions = [p.description for p in plant_list]
+            if plant_name not in descriptions:
+                raise ValueError(
+                    f"plant_name '{plant_name}' does not match any plant description"
+                )
+
+        plant_data = (
+            [p.model_dump(mode="json") for p in plant_list]
+            if len(plant_list) > 1
+            else plant_list[0].model_dump(mode="json")
+        )
+        result = self._service.plant_efficiency(plant_data, energy_code, plant_name)
+        data = result.get("data") or {}
+        return {
+            desc: PlantEfficiency.model_validate(eff)
+            for desc, eff in data.items()
+        }
+
+    def calculate_fan_pressure_drop_credit(
+        self, credit: FanSystemPressureDropCredits, energy_code: str
+    ) -> float:
+        """Calculate pressure drop credit for a fan system.
+
+        Args:
+            credit: The pressure drop credit to calculate. The ``type`` field
+                must be set and cannot be ``PRESSURE_DROP_CREDIT_TYPE_UNSPECIFIED``.
+            energy_code: The energy code to use.
+
+        Returns:
+            The calculated pressure drop credit value.
+
+        Raises:
+            ValueError: If the credit type is unset or unspecified.
+            COMCheckAPIError: If the response has no ``pressureDropCredit``.
+        """
+        if not credit.type or credit.type == "PRESSURE_DROP_CREDIT_TYPE_UNSPECIFIED":
+            raise ValueError(
+                "Credit type must be set and cannot be PRESSURE_DROP_CREDIT_TYPE_UNSPECIFIED"
+            )
+
+        # Dump the credit without the type field
+        credit_dict = credit.model_dump(mode="json")
+        credit_type = credit_dict.pop("type", None)
+
+        result = self._service.fan_pressure_drop_credit(credit_dict, energy_code, credit_type)
+        data = result.get("data") or {}
+        if data.get("pressureDropCredit") is None:
+            raise COMCheckAPIError("No pressureDropCredit returned from the API")
+        return float(data["pressureDropCredit"])
+
+    def check_fan_system_compliance(
+        self, fan_system: FanSystem, energy_code: str
+    ) -> FanSystemComplianceResult:
+        """Check compliance for a fan system.
+
+        Args:
+            fan_system: The fan system to check.
+            energy_code: The energy code to use.
+
+        Returns:
+            Fan system compliance results.
+        """
+        fan_system_data = fan_system.model_dump(mode="json")
+        result = self._service.fan_system_compliance(fan_system_data, energy_code)
+        data = result.get("data") or {}
+        return FanSystemComplianceResult.model_validate(data)
+
+    def calculate_fan_maximum_allowable_hp(
+        self, fan: Fan, energy_code: str
+    ) -> float:
+        """Calculate maximum allowable horsepower for a fan.
+
+        Args:
+            fan: The fan to calculate for.
+            energy_code: The energy code to use.
+
+        Returns:
+            The maximum nameplate horsepower.
+
+        Raises:
+            COMCheckAPIError: If the response has no ``maxNameplateHp``.
+        """
+        fan_data = fan.model_dump(mode="json")
+        result = self._service.fan_maximum_allowable_hp(fan_data, energy_code)
+        data = result.get("data") or {}
+        if data.get("maxNameplateHp") is None:
+            raise COMCheckAPIError("No maxNameplateHp returned from the API")
+        return float(data["maxNameplateHp"])
+
+    def update_fan_system_compliance(
+        self, project: ComBuilding, fan_system_description: str
+    ) -> ComBuilding:
+        """Calculate fan system compliance and update the project in place.
+
+        Sends the fan system to the compliance endpoint and writes the returned
+        values back onto the matching fan system in ``project.hvac.fanSystem``
+        (matched by ``description``).
+
+        Args:
+            project: The project whose fan system should be updated.
+            fan_system_description: The description of the fan system to update.
+
+        Returns:
+            The same ``project`` instance, with compliance fields updated.
+
+        Raises:
+            ValueError: If hvac is missing or the fan system is not found.
+        """
+        from comcheck_api.types.core_types import MISSING
+
+        if project.hvac is MISSING or not project.hvac:
+            raise ValueError("Project has no hvac data")
+
+        fan_system = None
+        for fs in project.hvac.fanSystem or []:
+            if fs.description == fan_system_description:
+                fan_system = fs
+                break
+
+        if fan_system is None:
+            raise ValueError(
+                f"Fan system '{fan_system_description}' not found in project"
+            )
+
+        energy_code = str(project.control.code)
+        compliance = self.check_fan_system_compliance(fan_system, energy_code)
+
+        results = {
+            field: getattr(compliance, field)
+            for field in (
+                "complies",
+                "complianceMessage",
+                "complyMethod",
+                "hasPressureDropCredits",
+            )
+            if getattr(compliance, field) is not None
+        }
+        # Revalidate the merged fan system — plain setattr skips Pydantic
+        # validation, so e.g. a boolean hasPressureDropCredits would not be
+        # converted to the HasPressureDropCredits enum.
+        updated_fan_system = FanSystem.model_validate(
+            {**fan_system.model_dump(mode="python"), **results}
+        )
+        fan_systems = project.hvac.fanSystem
+        fan_systems[fan_systems.index(fan_system)] = updated_fan_system
+
+        return project
+
+    def update_fan_pressure_drop_credits(
+        self, project: ComBuilding, fan_system_description: str
+    ) -> ComBuilding:
+        """Calculate pressure drop credits and update the project in place.
+
+        For each credit in the fan system's ``pressureDropCredits`` list,
+        calculates the credit value and writes it back to
+        ``pressureDropCredit`` on that credit.
+
+        Args:
+            project: The project whose fan system should be updated.
+            fan_system_description: The description of the fan system to update.
+
+        Returns:
+            The same ``project`` instance, with pressure drop credit values updated.
+
+        Raises:
+            ValueError: If hvac is missing or the fan system is not found.
+        """
+        from comcheck_api.types.core_types import MISSING
+
+        if project.hvac is MISSING or not project.hvac:
+            raise ValueError("Project has no hvac data")
+
+        fan_system = None
+        for fs in project.hvac.fanSystem or []:
+            if fs.description == fan_system_description:
+                fan_system = fs
+                break
+
+        if fan_system is None:
+            raise ValueError(
+                f"Fan system '{fan_system_description}' not found in project"
+            )
+
+        energy_code = str(project.control.code)
+
+        for credit in fan_system.pressureDropCredits or []:
+            if credit.type and credit.type != "PRESSURE_DROP_CREDIT_TYPE_UNSPECIFIED":
+                credit_value = self.calculate_fan_pressure_drop_credit(credit, energy_code)
+                credit.pressureDropCredit = credit_value
+
+        return project
 
     def close(self) -> None:
         """Close the API service connection."""

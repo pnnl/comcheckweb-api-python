@@ -14,13 +14,15 @@ examples/
 │   ├── allowed_wattage.py            # Interior lighting allowed-wattage calculation examples
 │   ├── renewable.py                  # Renewable area & capacity calculation examples
 │   ├── credits.py                    # Energy credit operations & calculation examples
+│   ├── mechanical.py                 # Mechanical efficiency & compliance calculation examples
 │   └── user_functions.py             # User-facing function examples
 └── project_operations/               # Project operations examples
     ├── building_area_operations.py       # Building area operations
     ├── envelope_operations.py            # Envelope operations
     ├── interior_lighting_operations.py   # Interior lighting (InteriorSpace) operations
     ├── exterior_lighting_operations.py   # Exterior lighting (ExteriorArea) operations
-    └── renewable_operations.py           # Renewable systems & off-site procurement operations
+    ├── renewable_operations.py           # Renewable systems & off-site procurement operations
+    └── mechanical_operations.py          # HVAC, fan systems, plants & water heater operations
 ```
 
 ## Example Categories
@@ -91,6 +93,25 @@ Demonstrates energy credit operations and the server-side credit calculation.
 python examples/client/credits.py
 ```
 
+#### Mechanical Examples (`client/mechanical.py`)
+Demonstrates mechanical system efficiency and compliance calculations.
+
+**What it demonstrates:**
+- `calculate_water_heater_efficiency()` - Calculating efficiency requirements for water heater systems
+- `calculate_hvac_system_efficiency()` - Calculating efficiency requirements for HVAC systems
+- `validate_hvac_system_economizer()` - Validating economizer requirements for an HVAC system
+- `calculate_plant_efficiency()` - Calculating efficiency requirements for HVAC plants
+- `calculate_fan_pressure_drop_credit()` - Calculating pressure drop credit for a fan system
+- `check_fan_system_compliance()` - Checking fan system compliance
+- `calculate_fan_maximum_allowable_hp()` - Calculating maximum allowable horsepower for a fan
+- `update_fan_system_compliance()` - Updating fan system compliance fields in a project
+- `update_fan_pressure_drop_credits()` - Updating pressure drop credit values in a project
+
+**Usage:**
+```bash
+python examples/client/mechanical.py
+```
+
 #### User Function Examples (`client/user_functions.py`)
 Demonstrates user-facing API client functions.
 
@@ -154,6 +175,21 @@ Demonstrates setting the exterior lighting zone type and managing ExteriorArea i
 **Usage:**
 ```bash
 python examples/project_operations/exterior_lighting_operations.py
+```
+
+#### Mechanical Operations (`project_operations/mechanical_operations.py`)
+Demonstrates managing HVAC systems, fan systems (with fans and pressure drop credits), plants, and water heaters, all identified by `description`.
+
+**What it demonstrates:**
+- `add_hvac_system_to_project()` / `add_fan_system_to_project()` / `add_hvac_plant_to_project()` / `add_water_heater_to_project()` - Adding mechanical items
+- `add_fan_to_fan_system()` / `add_pressure_drop_credit_to_fan_system()` - Adding fans and pressure drop credits to a fan system
+- `assign_fan_system_to_hvac_system()` - Linking a fan system to an HVAC system by description
+- `client.update_fan_pressure_drop_credits()` / `client.update_fan_system_compliance()` - Filling in engine-calculated fan system values
+- `update_*` / `remove_*` and `get_*_keys_from_project()` - Updating, renaming, removing, and listing items
+
+**Usage:**
+```bash
+python examples/project_operations/mechanical_operations.py
 ```
 
 #### Envelope Operations (`project_operations/envelope_operations.py`)

@@ -1,11 +1,12 @@
 # Project Operations Reference
 
-Operation functions are free functions in six modules:
+Operation functions are free functions in seven modules:
 
 - `comcheck_api.project_operations.project_building_area_operations`
 - `comcheck_api.project_operations.project_envelope_operations`
 - `comcheck_api.project_operations.project_interior_lighting_operations`
 - `comcheck_api.project_operations.project_exterior_lighting_operations`
+- `comcheck_api.project_operations.project_mechanical_operations`
 - `comcheck_api.project_operations.project_renewable_operations`
 - `comcheck_api.project_operations.project_credit_operations`
 
@@ -175,6 +176,60 @@ directly and pass the whole `ExteriorArea` through
 Use `get_default_exterior_area_template()` as a starting point.
 `areaDescription` is the identifier — it is unique within `exteriorUse[]`
 and is auto-generated if missing.
+
+## Mechanical operations
+
+```python
+from comcheck_api import project_mechanical_operations as mech_ops
+```
+
+Mechanical operations manage HVAC systems, fan systems, HVAC plants, and service
+water heating. The `hvac` singleton can be `MISSING` and is created automatically
+on add. `swhSystem[]` is a top-level list (not under `hvac`).
+
+| Function | Purpose |
+|---|---|
+| **HVAC systems** (`hvac.hvacSystem[]`) | |
+| `add_hvac_system_to_project(project, new_hvac_system)` | Add an `HVACSystem`. Raises `ValueError` if `fanSystemKey` references a non-existent fan system. |
+| `update_hvac_system_in_project(project, hvac_system_description, updates)` | Update an `HVACSystem` by its `description`. Raises `ValueError` for engine-calculated fields (`requirementAnswer`) or invalid `fanSystemKey`. |
+| `remove_hvac_system_from_project(project, hvac_system_description)` | Remove an `HVACSystem` by its `description`. |
+| `assign_fan_system_to_hvac_system(project, hvac_system_description, fan_system_description)` | Assign a fan system to an HVAC system by copying its UUID into `fanSystemKey`. Pass `fan_system_description=None` to unassign. |
+| `get_hvac_system_keys_from_project(project)` | List `[{description, systemType, quantity, fanSystemKey, fanSystemDescription}, …]` for the project. |
+| **Fan systems** (`hvac.fanSystem[]`) | |
+| `add_fan_system_to_project(project, new_fan_system)` | Add a `FanSystem`. The library sets a new UUID on `fanSystemKey` if it's empty or already used. |
+| `update_fan_system_in_project(project, fan_system_description, updates)` | Update a `FanSystem` by its `description`. Raises `ValueError` for engine-calculated fields (`complies`, `complianceMessage`, `requirementAnswer`) or `fanSystemKey` changes. |
+| `remove_fan_system_from_project(project, fan_system_description)` | Remove a `FanSystem` by its `description`. Also clears `fanSystemKey` on HVAC systems that reference it. |
+| `get_fan_system_keys_from_project(project)` | List `[{description, fanSystemKey, complyMethod}, …]` for the project. |
+| **Fans** (nested in `FanSystem.fan[]`) | |
+| `add_fan_to_fan_system(project, fan_system_description, new_fan)` | Add a `Fan` to a fan system. |
+| `update_fan_in_fan_system(project, fan_system_description, fan_description, updates)` | Update a `Fan` by its `description`. |
+| `remove_fan_from_fan_system(project, fan_system_description, fan_description)` | Remove a `Fan` by its `description`. |
+| `add_pressure_drop_credit_to_fan_system(project, fan_system_description, new_credit)` | Add a `FanSystemPressureDropCredits`. `type` is unique per fan system; `PRESSURE_DROP_CREDIT_TYPE_UNSPECIFIED` raises `ValueError`. Warns unless the fan system's `complyMethod` is `FAN_SYSTEM_MOTOR_BRAKE_HP`. |
+| `update_pressure_drop_credit_in_fan_system(project, fan_system_description, credit_type, updates)` | Update a credit's inputs by its `type`. Raises `ValueError` for `type` or `pressureDropCredit` changes; changing an input clears `pressureDropCredit` (recalculate with `client.update_fan_pressure_drop_credits`). |
+| `remove_pressure_drop_credit_from_fan_system(project, fan_system_description, credit_type)` | Remove a credit by its `type`. |
+| **HVAC plants** (`hvac.hvacPlant[]`) | |
+| `add_hvac_plant_to_project(project, new_hvac_plant)` | Add an `HVACPlant`. |
+| `update_hvac_plant_in_project(project, hvac_plant_description, updates)` | Update an `HVACPlant` by its `description`. Raises `ValueError` for engine-calculated fields (`requirementAnswer`). |
+| `remove_hvac_plant_from_project(project, hvac_plant_description)` | Remove an `HVACPlant` by its `description`. |
+| `get_hvac_plant_keys_from_project(project)` | List `[{description, plantType, systemType, quantity}, …]` for the project. |
+| **Water heaters** (`swhSystem[]`, top-level) | |
+| `add_water_heater_to_project(project, new_water_heater)` | Add a `ServiceWaterHeatingSystem`. |
+| `update_water_heater_in_project(project, water_heater_description, updates)` | Update a `ServiceWaterHeatingSystem` by its `description`. Raises `ValueError` for engine-calculated fields (`requirementAnswer`). |
+| `remove_water_heater_from_project(project, water_heater_description)` | Remove a `ServiceWaterHeatingSystem` by its `description`. |
+| `get_water_heater_keys_from_project(project)` | List `[{description, swhSystemType, fuelType, quantity}, …]` for the project. |
+
+Use `get_default_hvac_system_template()`, `get_default_fan_system_template()`,
+`get_default_fan_template()`, `get_default_hvac_plant_template()`, and
+`get_default_water_heater_template()` from `comcheck_api.defaults` as starting
+points (or construct models directly from `comcheck_api.types.core_types`, where
+all fields are optional). `description` is the identifier — it is unique within
+each list and is auto-generated if missing.
+
+**Fan system keys**: the library sets a new UUID on `fanSystemKey` when you add
+a fan system if it's empty or already used. You cannot update `fanSystemKey`
+directly — use `assign_fan_system_to_hvac_system` or `remove_fan_system_from_project`
+(which clears `fanSystemKey` on referencing HVAC systems). Callers use descriptions
+and never handle the UUID directly.
 
 ## Renewable energy operations
 

@@ -26,6 +26,7 @@ from comcheck_api import (
     project_envelope_operations,
     project_exterior_lighting_operations,
     project_interior_lighting_operations,
+    project_mechanical_operations,
     project_renewable_operations,
 )
 
@@ -34,6 +35,7 @@ _OP_MODULES = {
     "envelope": project_envelope_operations,
     "interior_lighting": project_interior_lighting_operations,
     "exterior_lighting": project_exterior_lighting_operations,
+    "mechanical": project_mechanical_operations,
     "renewable": project_renewable_operations,
     "credits": project_credit_operations,
 }

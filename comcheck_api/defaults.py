@@ -15,6 +15,13 @@ from comcheck_api.constants.renewable_constants import (
     DEFAULT_RENEWABLE_SYSTEM,
     DEFAULT_OFFSITE_RENEWABLE_PROCUREMENT,
 )
+from comcheck_api.constants.mechanical_constants import (
+    DEFAULT_HVAC_SYSTEM,
+    DEFAULT_FAN_SYSTEM,
+    DEFAULT_FAN,
+    DEFAULT_HVAC_PLANT,
+    DEFAULT_WATER_HEATER,
+)
 from comcheck_api.constants.envelope_constants import (
     DEFAULT_AG_WALL,
     DEFAULT_BG_WALL,
@@ -234,3 +241,62 @@ def get_default_offsite_renewable_procurement_template():
         A new :class:`~comcheck_api.types.core_types.OffsiteRenewableProcurement` instance.
     """
     return copy.deepcopy(DEFAULT_OFFSITE_RENEWABLE_PROCUREMENT)
+
+
+def get_default_hvac_system_template():
+    """Return a deep copy of the default HVAC system template.
+
+    Defaults to an unknown cooling and heating equipment with no economizer,
+    single-duct distribution, and no fan system assigned.
+
+    Returns:
+        A new :class:`~comcheck_api.types.core_types.HVACSystem` instance.
+    """
+    return copy.deepcopy(DEFAULT_HVAC_SYSTEM)
+
+
+def get_default_fan_system_template():
+    """Return a deep copy of the default fan system template.
+
+    Defaults to motor nameplate HP compliance method with no fans and no
+    pressure drop credits.
+
+    Returns:
+        A new :class:`~comcheck_api.types.core_types.FanSystem` instance.
+    """
+    return copy.deepcopy(DEFAULT_FAN_SYSTEM)
+
+
+def get_default_fan_template():
+    """Return a deep copy of the default fan template.
+
+    Defaults to an unspecified fan type with 0.0 volume and no efficiency data.
+
+    Returns:
+        A new :class:`~comcheck_api.types.core_types.Fan` instance.
+    """
+    return copy.deepcopy(DEFAULT_FAN)
+
+
+def get_default_hvac_plant_template():
+    """Return a deep copy of the default HVAC plant template.
+
+    Defaults to a heating plant with hot water boiler (100 kBtu/hr capacity)
+    and forced draft.
+
+    Returns:
+        A new :class:`~comcheck_api.types.core_types.HVACPlant` instance.
+    """
+    return copy.deepcopy(DEFAULT_HVAC_PLANT)
+
+
+def get_default_water_heater_template():
+    """Return a deep copy of the default service water heating system template.
+
+    Defaults to a storage water heater with unknown fuel type, 1 quantity,
+    0 storage capacity, and 75 kBtu/hr input rating.
+
+    Returns:
+        A new :class:`~comcheck_api.types.core_types.ServiceWaterHeatingSystem` instance.
+    """
+    return copy.deepcopy(DEFAULT_WATER_HEATER)

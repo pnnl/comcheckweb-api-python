@@ -367,6 +367,11 @@ def get_model_info(model_class: Type[BaseModel]) -> IdInfo | None:
         WholeBldgUse,
         RenewableSystem,
         OffsiteRenewableProcurement,
+        HVACSystem,
+        FanSystem,
+        HVACPlant,
+        ServiceWaterHeatingSystem,
+        Fan,
     )
 
     MODEL_TO_ID_INFO = {
@@ -385,5 +390,10 @@ def get_model_info(model_class: Type[BaseModel]) -> IdInfo | None:
         OffsiteRenewableProcurement: IdInfo(
             identifier="description", id_prefix="Offsite Procurement"
         ),
+        HVACSystem: IdInfo(identifier="description", id_prefix="HVAC System"),
+        FanSystem: IdInfo(identifier="description", id_prefix="Fan System"),
+        HVACPlant: IdInfo(identifier="description", id_prefix="Plant"),
+        ServiceWaterHeatingSystem: IdInfo(identifier="description", id_prefix="Water Heater"),
+        Fan: IdInfo(identifier="description", id_prefix="Fan"),
     }
     return MODEL_TO_ID_INFO.get(model_class)
