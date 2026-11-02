@@ -54,8 +54,10 @@ project_id = str(project.id)
 
 
 # ── Step 1: Set the renewable exception ───────────────────────────────────────
-# A renewable exception can coexist with on-site renewable systems
-project = rn_ops.set_renewable_exception_in_project(
+# A renewable exception can coexist with on-site renewable systems. The
+# renewable capacity depends on the exception, so set_renewable_exception also
+# calls the renewable-capacity API and writes the results onto the project.
+project = client.set_renewable_exception(
     project, RenewableExceptionOptions.RENEWABLE_ONSITE_EXCEPTION_NONE
 )
 
@@ -121,13 +123,25 @@ print(f"Offsite procurement added: {offsite_procurement.description!r}")
 offsite_keys = rn_ops.get_offsite_renewable_procurement_keys_from_project(project)
 print(f"Offsite renewable procurements: {offsite_keys}")
 
-# ── Step 7: Update a scalar field on the renewable singleton ──────────────────
-project = rn_ops.update_renewable_in_project(project, {"numberOfFloors": 5})
+# ── Step 7: Update scalar fields on the renewable singleton ───────────────────
+# With more than 3 floors, largestThreeFloorArea is user-provided and can't
+# exceed the total building area floor area. (With 3 floors or fewer it is
+# calculated by client.area_for_renewable and can't be set here.)
+total_floor_area = sum(
+    area.floorArea or 0.0 for area in project.lighting.wholeBldgUse
+)
+project = rn_ops.update_renewable_in_project(
+    project,
+    {"numberOfFloors": 5, "largestThreeFloorArea": total_floor_area * 0.6},
+)
 
 project = client.update_project(project_id, project)
 if not project:
     raise ValueError("Project not found after update")
-print(f"Number of floors updated to 5")
+print(
+    f"Number of floors updated to 5, largestThreeFloorArea set to "
+    f"{project.renewable.largestThreeFloorArea}"
+)
 
 # ── Step 8: Remove the offsite renewable procurement ──────────────────────────
 project = rn_ops.remove_offsite_renewable_procurement_from_project(project, "Wind PPA")

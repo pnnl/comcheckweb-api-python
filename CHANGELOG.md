@@ -17,6 +17,8 @@ All notable changes to this project are documented in this file.
 - `COMcheckClient.area_for_renewable` — calculate `largestThreeFloorArea` and `roofAreaForRenewable` via `POST /renewable/area-for-renewable` and write them onto `project.renewable`
 - `COMcheckClient.renewable_capacity` — calculate required/proposed renewable capacity and off-site renewable energy via `POST /renewable/renewable-capacity` and write them onto `project.renewable`
 - `COMCheckApiService.area_for_renewable` and `COMCheckApiService.renewable_capacity` service methods
+- `COMcheckClient.set_renewable_exception` — set the renewable exception and refresh renewable capacity via `POST /renewable/renewable-capacity` in one call; the project is only changed if the API call succeeds
+- `update_renewable_in_project` accepts `largestThreeFloorArea` when `numberOfFloors` is greater than 3, and rejects values larger than the total building area floor area (sum of `lighting.wholeBldgUse[].floorArea`). With 3 floors or fewer it stays API-calculated and is rejected
 - `examples/client/renewable.py` example
 - `RenewableSystem` and `OffsiteRenewableProcurement` added to `MODEL_TO_ID_INFO` with auto-generated descriptions
 - Mechanical operations module (`project_mechanical_operations`) for managing HVAC systems, fan systems, HVAC plants, and water heaters

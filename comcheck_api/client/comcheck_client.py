@@ -18,6 +18,9 @@ from comcheck_api.exceptions import (
 from comcheck_api.project_operations.project_credit_operations import (
     add_energy_credit_to_project,
 )
+from comcheck_api.project_operations.project_renewable_operations import (
+    set_renewable_exception_in_project,
+)
 from comcheck_api.types.api_types import (
     EnergyCreditResult,
     WaterHeaterEfficiency,
@@ -30,6 +33,7 @@ from comcheck_api.types.common_types import InteriorSpace
 from comcheck_api.types.core_types import (
     ComBuilding,
     EfficiencyPackage,
+    RenewableExceptionOptions,
     ServiceWaterHeatingSystem,
     HVACSystem,
     HVACPlant,
@@ -377,6 +381,38 @@ class COMcheckClient:
         renewable.proposedOffsiteRenewableEnergy = _optional_float(
             capacity.get("proposedOffsiteRenewableProcurementEnergy")
         )
+        return project
+
+    def set_renewable_exception(
+        self,
+        project: ComBuilding,
+        renewable_exception: RenewableExceptionOptions,
+    ) -> ComBuilding:
+        """Set the renewable exception and refresh renewable capacity in place.
+
+        The capacity fields depend on the exception, so this applies
+        :func:`~comcheck_api.project_operations.project_renewable_operations.set_renewable_exception_in_project`
+        and then calls :meth:`renewable_capacity`. ``project`` is only changed
+        if the API call succeeds.
+
+        Args:
+            project: The project to update.
+            renewable_exception: A :class:`~comcheck_api.types.core_types.RenewableExceptionOptions`
+                value. Must not be ``NoneType_None``.
+
+        Returns:
+            The same ``project`` instance, with the exception set and renewable
+            capacity updated.
+
+        Raises:
+            TypeError: If renewable_exception is not a RenewableExceptionOptions member.
+            ValueError: If renewable_exception is NoneType_None.
+        """
+        updated_project = set_renewable_exception_in_project(
+            project, renewable_exception
+        )
+        self.renewable_capacity(updated_project)
+        project.renewable = updated_project.renewable
         return project
 
     def calculate_energy_credits(self, project: ComBuilding) -> EnergyCreditResult:

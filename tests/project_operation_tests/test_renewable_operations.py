@@ -4,6 +4,7 @@ import pytest
 from pydantic.experimental.missing_sentinel import MISSING
 
 from comcheck_api.defaults import (
+    get_default_building_area_template,
     get_default_renewable_system_template,
     get_default_offsite_renewable_procurement_template,
 )
@@ -127,9 +128,90 @@ def test_update_renewable_rejects_engine_fields(project: ComBuilding):
 def test_update_renewable_rejects_api_fields(project: ComBuilding):
     proj = _fresh(project)
     with pytest.raises(ValueError, match="API-calculated"):
-        rn_ops.update_renewable_in_project(proj, {"largestThreeFloorArea": 1000.0})
-    with pytest.raises(ValueError, match="API-calculated"):
         rn_ops.update_renewable_in_project(proj, {"roofAreaForRenewable": 500.0})
+
+
+def _with_floor_areas(project: ComBuilding, *floor_areas) -> ComBuilding:
+    """Copy of *project* with exactly one building area per given floorArea."""
+    proj = _fresh(project)
+    template = get_default_building_area_template()
+    proj.lighting.wholeBldgUse = [
+        template.model_copy(update={"floorArea": area, "areaDescription": f"A{i}"})
+        for i, area in enumerate(floor_areas)
+    ]
+    return proj
+
+
+def test_update_largest_three_floor_area_above_three_floors(project: ComBuilding):
+    proj = _with_floor_areas(project, 6000.0, 4000.0)
+    result = rn_ops.update_renewable_in_project(
+        proj, {"numberOfFloors": 5, "largestThreeFloorArea": 9000.0}
+    )
+    assert result.renewable.numberOfFloors == 5
+    assert result.renewable.largestThreeFloorArea == 9000.0
+
+
+def test_update_largest_three_floor_area_can_equal_total(project: ComBuilding):
+    proj = _with_floor_areas(project, 6000.0, 4000.0)
+    result = rn_ops.update_renewable_in_project(
+        proj, {"numberOfFloors": 4, "largestThreeFloorArea": 10000.0}
+    )
+    assert result.renewable.largestThreeFloorArea == 10000.0
+
+
+def test_update_largest_three_floor_area_rejects_more_than_total(
+    project: ComBuilding,
+):
+    proj = _with_floor_areas(project, 6000.0, 4000.0)
+    with pytest.raises(ValueError, match="cannot exceed the total building area"):
+        rn_ops.update_renewable_in_project(
+            proj, {"numberOfFloors": 5, "largestThreeFloorArea": 10000.5}
+        )
+
+
+def test_update_largest_three_floor_area_skips_unset_floor_areas(
+    project: ComBuilding,
+):
+    proj = _with_floor_areas(project, 6000.0, None)
+    with pytest.raises(ValueError, match="cannot exceed the total building area"):
+        rn_ops.update_renewable_in_project(
+            proj, {"numberOfFloors": 5, "largestThreeFloorArea": 6001.0}
+        )
+
+
+def test_update_floors_above_three_checks_existing_largest_area(
+    project: ComBuilding,
+):
+    # Raising numberOfFloors past 3 re-checks the stored largestThreeFloorArea.
+    proj = _with_floor_areas(project, 5000.0)
+    proj.renewable.numberOfFloors = 2
+    proj.renewable.largestThreeFloorArea = 8000.0
+    with pytest.raises(ValueError, match="cannot exceed the total building area"):
+        rn_ops.update_renewable_in_project(proj, {"numberOfFloors": 4})
+
+
+def test_update_largest_three_floor_area_rejected_at_three_floors_or_fewer(
+    project: ComBuilding,
+):
+    proj = _with_floor_areas(project, 6000.0)
+    with pytest.raises(ValueError, match="area_for_renewable"):
+        rn_ops.update_renewable_in_project(
+            proj, {"numberOfFloors": 3, "largestThreeFloorArea": 1000.0}
+        )
+    proj.renewable.numberOfFloors = 2
+    with pytest.raises(ValueError, match="greater than 3"):
+        rn_ops.update_renewable_in_project(proj, {"largestThreeFloorArea": 1000.0})
+
+
+def test_update_floors_at_or_below_three_ignores_stored_largest_area(
+    project: ComBuilding,
+):
+    # With 3 floors or fewer the stored value is recalculated by the API, so a
+    # stale value larger than the total doesn't block other updates.
+    proj = _with_floor_areas(project, 5000.0)
+    proj.renewable.largestThreeFloorArea = 8000.0
+    result = rn_ops.update_renewable_in_project(proj, {"numberOfFloors": 3})
+    assert result.renewable.numberOfFloors == 3
 
 
 def test_update_renewable_rejects_list_fields(project: ComBuilding):
