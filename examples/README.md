@@ -87,6 +87,7 @@ Demonstrates energy credit operations and the server-side credit calculation.
 **What it demonstrates:**
 - `add_energy_credit_to_project()` / `update_energy_credit_in_project()` - Adding energy credits to a building area and updating their inputs
 - `calculate_energy_credits()` - Calculating proposed vs. required credits per building area (the project is not modified)
+- `calculate_single_energy_credit()` - Calculating how many credits one credit earns when it is the only credit selected
 
 **Usage:**
 ```bash

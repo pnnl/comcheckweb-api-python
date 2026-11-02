@@ -88,6 +88,11 @@ Triggers:
   `required`, renewable and load management totals, `warnings`,
   `userAlerts`, and a derived `passes`). Unlike the renewable methods it
   does **not** modify the project.
+  `calculate_single_energy_credit(project, building_area_key, energy_credit)`
+  returns the same result for one `EfficiencyPackage` as if it were the only
+  credit (the other credits are dropped from a copy; `proposed` is that
+  credit's value). Use it when asked how much one
+  credit is worth.
 
 ## Quick start
 
@@ -181,7 +186,7 @@ print(result["performanceRating"])
   methods (`calculate_interior_space_allowed_wattage`,
   `calculate_interior_spaces_allowed_wattage`), the renewable methods
   (`area_for_renewable`, `renewable_capacity`), and
-  `calculate_energy_credits`. If asked for an
+  `calculate_energy_credits` / `calculate_single_energy_credit`. If asked for an
   unsupported mutation area, tell the user it's not implemented and
   offer building-area / envelope / lighting / mechanical / renewable / credits / simulation instead.
   `comcheck_api.list_operations()` enumerates the `building_area`,
@@ -531,6 +536,13 @@ project = cr_ops.add_energy_credit_to_project(
 
 result = client.calculate_energy_credits(project)  # project is not modified
 print(result.required, result.proposed, result.passes)
+
+# How much one credit is worth on its own (no need to add it first)
+single = client.calculate_single_energy_credit(
+    project, area_key,
+    EfficiencyPackage(type=Credit.EFF_PACKAGE_ENERGY_CREDIT_IECC2024_ENHANCED_FENESTRATION),
+)
+print(single.proposed, single.warnings)
 ```
 
 ## Gotchas

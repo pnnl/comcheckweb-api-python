@@ -68,3 +68,14 @@ for credit in result.energyCredits:
 for alert in result.userAlerts:
     print(f"  [{alert.level}] {alert.message}")
 print(f"Meets required credits: {result.passes}")
+
+# Example 4: Check how many credits one credit earns when it is the only credit
+# selected. The credit doesn't have to be in the project, and the project is not modified.
+single = client.calculate_single_energy_credit(
+    project,
+    building_area_key,
+    EfficiencyPackage(type=Credit.EFF_PACKAGE_ENERGY_CREDIT_IECC2024_ENHANCED_FENESTRATION),
+)
+print(f"Enhanced fenestration alone - Proposed: {single.proposed}")
+for warning in single.warnings:
+    print(f"  [{warning.level}] {warning.message}")

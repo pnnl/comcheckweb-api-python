@@ -285,7 +285,9 @@ pick credit types from the enum for the project's code family.
 
 `remove_building_area_from_project` also removes the building area's
 energy credits. Use `client.calculate_energy_credits(project)` for the
-proposed and required credits.
+proposed and required credits, and
+`client.calculate_single_energy_credit(project, building_area_key, energy_credit)`
+for what one credit earns when it is the only credit selected.
 
 ## U-value calculation requires a construction type
 

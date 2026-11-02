@@ -11,10 +11,17 @@ import pytest
 
 from comcheck_api import COMcheckClient
 from comcheck_api.api.api_services import COMCheckApiService
-from comcheck_api.defaults import get_default_project_template
+from comcheck_api.defaults import (
+    get_default_building_area_template,
+    get_default_project_template,
+)
 from comcheck_api.exceptions import COMCheckHTTPError
+from comcheck_api.project_operations import (
+    project_building_area_operations,
+    project_credit_operations,
+)
 from comcheck_api.types.api_types import EnergyCreditResult
-from comcheck_api.types.core_types import EnergyCodeOptions
+from comcheck_api.types.core_types import EfficiencyPackage, EnergyCodeOptions
 
 CREDITS_DATA = {
     "energyCredits": [
@@ -165,3 +172,80 @@ def test_calculate_energy_credits_handles_missing_data(requests, project):
 )
 def test_energy_credit_result_passes(totals, passes):
     assert EnergyCreditResult.model_validate(totals).passes is passes
+
+
+def _project_with_two_credits(project):
+    project = project_building_area_operations.add_building_area_to_project(
+        project, get_default_building_area_template()
+    )
+    area_key = str(project.lighting.wholeBldgUse[0].key)
+    for credit_type in (
+        "EFF_PACKAGE_ENERGY_CREDIT_IECC2024_ENHANCED_ROOF_R10",
+        "EFF_PACKAGE_ENERGY_CREDIT_IECC2024_ELECTRIC_STORAGE",
+    ):
+        project = project_credit_operations.add_energy_credit_to_project(
+            project, area_key, EfficiencyPackage(type=credit_type)
+        )
+    return project, area_key
+
+
+def test_calculate_single_energy_credit_sends_only_that_credit(requests, project):
+    project, area_key = _project_with_two_credits(project)
+    single = {
+        "energyCredits": [CREDITS_DATA["energyCredits"][0]],
+        "proposed": 3.2,
+        "required": 10,
+    }
+    client = _make_client(_ok(requests, single))
+    before = project.model_dump(mode="json")
+
+    result = client.calculate_single_energy_credit(
+        project,
+        area_key,
+        EfficiencyPackage(
+            type="EFF_PACKAGE_ENERGY_CREDIT_IECC2024_REDUCE_AIR_INFILTRATION",
+            airInfiltration=0.25,
+        ),
+    )
+
+    assert isinstance(result, EnergyCreditResult)
+    assert result.proposed == 3.2
+    (request,) = requests
+    assert request.url.path.endswith("/update-energy-credits")
+    sent = json.loads(request.content)
+    (sent_credit,) = sent["efficiencyPackages"]
+    assert sent_credit["type"] == "EFF_PACKAGE_ENERGY_CREDIT_IECC2024_REDUCE_AIR_INFILTRATION"
+    assert sent_credit["bldgUseKey"] == area_key
+    assert sent_credit["airInfiltration"] == 0.25
+    assert project.model_dump(mode="json") == before
+
+
+def test_calculate_single_energy_credit_accepts_credit_already_in_project(
+    requests, project
+):
+    project, area_key = _project_with_two_credits(project)
+    client = _make_client(_ok(requests, CREDITS_DATA))
+
+    client.calculate_single_energy_credit(
+        project,
+        area_key,
+        EfficiencyPackage(type="EFF_PACKAGE_ENERGY_CREDIT_IECC2024_ENHANCED_ROOF_R10"),
+    )
+
+    sent = json.loads(requests[0].content)
+    assert [c["type"] for c in sent["efficiencyPackages"]] == [
+        "EFF_PACKAGE_ENERGY_CREDIT_IECC2024_ENHANCED_ROOF_R10"
+    ]
+
+
+def test_calculate_single_energy_credit_unknown_building_area(requests, project):
+    project, _ = _project_with_two_credits(project)
+    client = _make_client(_ok(requests, CREDITS_DATA))
+
+    with pytest.raises(ValueError, match="not found"):
+        client.calculate_single_energy_credit(
+            project,
+            "no-such-area",
+            EfficiencyPackage(type="EFF_PACKAGE_ENERGY_CREDIT_IECC2024_ENHANCED_ROOF_R10"),
+        )
+    assert requests == []

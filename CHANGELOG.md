@@ -43,6 +43,7 @@ All notable changes to this project are documented in this file.
 - `get_energy_credit_keys_from_project` — list the energy credits in a project
 - `set_energy_credit_multiplier_exception_in_project` and `set_core_and_shell_credit_in_project` — set the project-level credit fields
 - `COMcheckClient.calculate_energy_credits` — calculate proposed and required energy credits via `POST /update-energy-credits`, returning an `EnergyCreditResult`
+- `COMcheckClient.calculate_single_energy_credit` — calculate the credits one energy credit earns for a building area when it is the only credit selected (runs on a copy of the project)
 - `COMCheckApiService.update_energy_credits` service method
 - `EnergyCreditResult`, `BuildingAreaCredit`, and `EnergyCreditMessage` response models
 - `examples/client/credits.py` example
