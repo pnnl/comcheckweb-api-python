@@ -23,7 +23,9 @@ them, and each code family has its own credit types (``EFF_PACKAGE_ENERGY_CREDIT
 ``EFF_PACKAGE_ENERGY_CREDIT_IECC2024_*``, ``ENERGY_CREDIT_VT_2024_*``, ...). These
 operations don't check ``control.code`` — which credits fit the project is up to
 you. Use :meth:`~comcheck_api.client.COMcheckClient.calculate_energy_credits` to
-get the proposed and required credits.
+get the proposed and required credits, and
+:meth:`~comcheck_api.client.COMcheckClient.calculate_single_energy_credit` to
+see what one credit earns when it is the only credit selected.
 """
 
 from typing import Any

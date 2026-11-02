@@ -15,6 +15,9 @@ from comcheck_api.exceptions import (
     COMCheckProjectNotFoundError,
     COMCheckSimulationError,
 )
+from comcheck_api.project_operations.project_credit_operations import (
+    add_energy_credit_to_project,
+)
 from comcheck_api.types.api_types import (
     EnergyCreditResult,
     WaterHeaterEfficiency,
@@ -26,6 +29,7 @@ from comcheck_api.types.api_types import (
 from comcheck_api.types.common_types import InteriorSpace
 from comcheck_api.types.core_types import (
     ComBuilding,
+    EfficiencyPackage,
     ServiceWaterHeatingSystem,
     HVACSystem,
     HVACPlant,
@@ -392,6 +396,44 @@ class COMcheckClient:
         project_data = project.model_dump(mode="json")
         credits = self._service.update_energy_credits(project_data).get("data") or {}
         return EnergyCreditResult.model_validate(credits)
+
+    def calculate_single_energy_credit(
+        self,
+        project: ComBuilding,
+        building_area_key: str,
+        energy_credit: EfficiencyPackage,
+    ) -> EnergyCreditResult:
+        """Calculate the credits one energy credit earns on its own.
+
+        Use this to check how many credits a credit is worth before (or
+        instead of) combining it with others. The calculation runs on a copy
+        of the project in which ``energy_credit`` is the only credit: all
+        ``efficiencyPackages`` are replaced by it, and all other project data
+        is kept. ``project`` is not modified, and the credit does not need to
+        be in it already.
+
+        Args:
+            project: The project the credit applies to.
+            building_area_key: The key of the building area (``WholeBldgUse.key``)
+                that gets the credit.
+            energy_credit: The EfficiencyPackage to calculate. ``type`` selects
+                the credit; set the inputs that credit needs.
+
+        Returns:
+            The result of the calculation. ``proposed`` (or
+            ``proposedRenewableAndLoadMgmt`` for renewable and load management
+            credits) is the credit's value, weighted by the building area's
+            share of the gross floor area. ``warnings`` report missing inputs.
+
+        Raises:
+            ValueError: If the building area is not found.
+        """
+        trial_project = project.model_copy(deep=True)
+        trial_project.efficiencyPackages = []
+        trial_project = add_energy_credit_to_project(
+            trial_project, building_area_key, energy_credit
+        )
+        return self.calculate_energy_credits(trial_project)
 
     def calculate_interior_space_allowed_wattage(
         self, interior_space: InteriorSpace, energy_code: str

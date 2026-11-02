@@ -120,3 +120,33 @@ print("Meets required credits:", result.passes)
 
 `passes` is derived from the totals. The compliance check
 (`COMcheckClient.check_UA_compliance`) reports the official energy credit status.
+
+## Calculating a single credit
+
+Credits can interact, so the full calculation doesn't always show what one
+credit is worth on its own. `COMcheckClient.calculate_single_energy_credit`
+calculates one credit for one building area as if it were the only credit
+selected. It works on a copy of the project with `efficiencyPackages` replaced
+by that credit; the rest of the project is kept. The project is not modified,
+and the credit doesn't need to be added to it first.
+
+```python
+result = client.calculate_single_energy_credit(
+    project,
+    building_area_key,
+    EfficiencyPackage(
+        type=Credit.EFF_PACKAGE_ENERGY_CREDIT_IECC2024_REDUCE_AIR_INFILTRATION,
+        airInfiltration=0.25,
+        airInfiltrationMeasurementType="AIR_INFILTRATION_MEASUREMENT_75PA",
+    ),
+)
+print(f"Credits from this credit alone: {result.proposed}")
+for warning in result.warnings:
+    print(warning.level, warning.message)
+```
+
+The return value is the same `EnergyCreditResult`. `proposed` is the credit's
+value (`proposedRenewableAndLoadMgmt` for renewable and load management
+credits), weighted by the building area's share of the gross floor area.
+Check `warnings` for missing inputs. Raises `ValueError` if the building area
+is not found.
