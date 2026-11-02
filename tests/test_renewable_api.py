@@ -13,7 +13,7 @@ from comcheck_api import COMcheckClient
 from comcheck_api.api.api_services import COMCheckApiService
 from comcheck_api.defaults import get_default_project_template
 from comcheck_api.exceptions import COMCheckHTTPError
-from comcheck_api.types.core_types import EnergyCodeOptions
+from comcheck_api.types.core_types import EnergyCodeOptions, RenewableExceptionOptions
 
 AREA_DATA = {"largestThreeFloorArea": 30000.0, "roofAreaForRenewable": 8000.0}
 CAPACITY_DATA = {
@@ -134,3 +134,49 @@ def test_renewable_capacity_updates_project(requests, project):
     assert renewable.proposedCapacity == 150.0
     assert renewable.requiredOffsiteRenewableEnergy is None
     assert renewable.proposedOffsiteRenewableEnergy is None
+
+
+def test_set_renewable_exception_sets_exception_and_refreshes_capacity(
+    requests, project
+):
+    client = _make_client(_ok(requests, CAPACITY_DATA))
+    exception = RenewableExceptionOptions.RENEWABLE_ONSITE_EXCEPTION_LOW_SOLAR_RAD
+
+    result = client.set_renewable_exception(project, exception)
+
+    assert result is project
+    assert project.renewable.renewableException == exception
+    assert project.renewable.requiredCapacity == 120.5
+    assert project.renewable.proposedCapacity == 150.0
+    # The capacity request is sent with the new exception already applied.
+    (request,) = requests
+    assert request.url.path.endswith("/renewable/renewable-capacity")
+    sent = json.loads(request.content)
+    assert sent["renewable"]["renewableException"] == exception.value
+
+
+def test_set_renewable_exception_leaves_project_unchanged_on_api_error(project):
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, json={"_tag": "InternalServerError"})
+
+    client = _make_client(handler)
+    before = project.model_dump(mode="json")
+
+    with pytest.raises(COMCheckHTTPError):
+        client.set_renewable_exception(
+            project, RenewableExceptionOptions.RENEWABLE_ONSITE_EXCEPTION_LOW_SOLAR_RAD
+        )
+
+    assert project.model_dump(mode="json") == before
+
+
+def test_set_renewable_exception_validates_before_calling_api(requests, project):
+    client = _make_client(_ok(requests, CAPACITY_DATA))
+
+    with pytest.raises(ValueError):
+        client.set_renewable_exception(project, RenewableExceptionOptions.NoneType_None)
+    with pytest.raises(TypeError):
+        client.set_renewable_exception(
+            project, "RENEWABLE_ONSITE_EXCEPTION_LOW_SOLAR_RAD"
+        )
+    assert requests == []

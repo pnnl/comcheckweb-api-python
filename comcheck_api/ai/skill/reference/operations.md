@@ -244,15 +244,16 @@ from comcheck_api import project_renewable_operations as rn_ops
 
 Renewable energy is managed at the project level through the
 `ComBuilding.renewable` singleton. Renewable requirements only apply under
-some energy codes; the operations don't check `control.code` — ask the user
-whether the project needs renewables. Exception and on-site systems coexist — setting an
+some energy codes, but the operations don't check `control.code` and you
+don't need to either: the API decides whether the code uses renewable data,
+and renewable inputs on other codes do no harm. Exception and on-site systems coexist — setting an
 exception does not preclude adding renewable systems. **Confirm with the user
 before adding off-site procurement** (not always present on projects).
 
 | Function | Purpose |
 |---|---|
-| `set_renewable_exception_in_project(project, renewable_exception)` | Set `renewable.renewableException`. Raises `ValueError` for `NoneType_None`, `TypeError` for non-enum values. |
-| `update_renewable_in_project(project, updates)` | Update scalar fields on the renewable singleton. Raises `ValueError` for engine-calculated, API-calculated, or list fields. |
+| `set_renewable_exception_in_project(project, renewable_exception)` | Set `renewable.renewableException`. Raises `ValueError` for `NoneType_None`, `TypeError` for non-enum values. Doesn't refresh capacity; prefer `client.set_renewable_exception(project, renewable_exception)`, which also calls the renewable-capacity API. |
+| `update_renewable_in_project(project, updates)` | Update `numberOfFloors` and, with more than 3 floors, `largestThreeFloorArea` (must be ≤ the sum of `lighting.wholeBldgUse[].floorArea`). Raises `ValueError` for `largestThreeFloorArea` with 3 floors or fewer (calculated by `area_for_renewable`), and for engine-calculated, API-calculated, or list fields. |
 | `add_renewable_system_to_project(project, new_renewable_system)` | Add an on-site `RenewableSystem`. |
 | `update_renewable_system_in_project(project, renewable_system_description, updates)` | Update a `RenewableSystem` by its `description`. |
 | `remove_renewable_system_from_project(project, renewable_system_description)` | Remove a `RenewableSystem` by its `description`. |

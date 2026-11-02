@@ -82,6 +82,19 @@ Triggers:
   `proposedOffsiteRenewableEnergy`. Both mutate and return the same
   project, like `update_uvalues`. Both send the full project; the energy
   code comes from `project.control.code`.
+- **Changing the renewable exception changes the capacity**: use
+  `client.set_renewable_exception(project, exception)`, which sets the
+  exception and calls `renewable_capacity` in one step (the project is only
+  changed if the API call succeeds). If you use
+  `rn_ops.set_renewable_exception_in_project` directly, call
+  `client.renewable_capacity(project)` right after.
+- **`largestThreeFloorArea` depends on `numberOfFloors`**: with 3 floors or
+  fewer it is the total building area floor area and `area_for_renewable`
+  calculates it (setting it via `update_renewable_in_project` raises). With
+  more than 3 floors **ask the user for it** and set it with
+  `update_renewable_in_project(project, {"numberOfFloors": n,
+  "largestThreeFloorArea": area})`; it can't exceed the sum of
+  `lighting.wholeBldgUse[].floorArea`, or the op raises `ValueError`.
 - **Energy credits are calculated server-side**:
   `calculate_energy_credits(project)` returns an `EnergyCreditResult`
   (`energyCredits[]` per building area and credit type, `proposed`,
@@ -406,9 +419,10 @@ library, so it returns metadata and lets the caller decide
 
 ### Adding renewable energy systems
 
-Renewable requirements only apply under some energy codes; the operations
-don't check `control.code`, so ask the user whether the project needs
-renewables rather than deciding from the code. Exception
+Renewable requirements only apply under some energy codes, but the
+operations don't check `control.code` and you don't need to either. The API
+decides whether the code uses renewable data, and renewable inputs on other
+codes do no harm. Exception
 and on-site systems coexist — setting an exception doesn't preclude adding
 renewable systems. **Confirm with the user before adding off-site
 procurement** (not always present on projects).
@@ -426,10 +440,17 @@ from comcheck_api.types import (
     OffsiteRenewableProcurementType,
 )
 
-# 1. Set a renewable exception (coexists with systems)
-project = rn_ops.set_renewable_exception_in_project(
+# 1. Set a renewable exception (coexists with systems). This also refreshes
+#    the renewable capacity from the API.
+project = client.set_renewable_exception(
     project, RenewableExceptionOptions.RENEWABLE_ONSITE_EXCEPTION_NONE
 )
+
+# 1b. More than 3 floors: largestThreeFloorArea comes from the user and can't
+#     exceed the total building area floor area
+# project = rn_ops.update_renewable_in_project(
+#     project, {"numberOfFloors": 5, "largestThreeFloorArea": 30000.0}
+# )
 
 # 2. Add an on-site renewable system
 renewable_system = get_default_renewable_system_template()

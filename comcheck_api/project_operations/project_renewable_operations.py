@@ -14,8 +14,23 @@ The renewable data lives in ``ComBuilding.renewable`` (a required singleton
 Energy codes
 ------------
 Renewable requirements only apply under some energy codes (and state codes
-based on them). These operations don't check ``control.code`` — whether the
-project needs renewable data is up to you.
+based on them). These operations don't check ``control.code``. The COMcheck Web
+API decides whether the project's code uses renewable data, and renewable
+inputs on a project whose code doesn't use them do no harm.
+
+Largest three floor area
+------------------------
+With 3 floors or fewer, ``largestThreeFloorArea`` is the sum of the building
+areas' ``floorArea`` and is calculated by
+:meth:`~comcheck_api.client.COMcheckClient.area_for_renewable`. With more than
+3 floors you provide it through :func:`update_renewable_in_project`, and it
+can't exceed the total building area floor area.
+
+Renewable capacity
+------------------
+The capacity fields depend on the renewable exception. Use
+:meth:`~comcheck_api.client.COMcheckClient.set_renewable_exception` to set the
+exception and refresh the capacity from the API in one call.
 
 Exception and systems coexistence
 ----------------------------------
@@ -54,10 +69,13 @@ _ENGINE_CALCULATED_RENEWABLE_FIELDS = frozenset(
         "proposedCapacity",
         "requiredOffsiteRenewableEnergy",
         "proposedOffsiteRenewableEnergy",
-        "largestThreeFloorArea",
         "roofAreaForRenewable",
     }
 )
+
+# Above this many floors, largestThreeFloorArea is user-provided instead of
+# being the sum of the building areas' floorArea.
+_MAX_FLOORS_FOR_CALCULATED_AREA = 3
 
 # List fields that must not be writable via update_renewable_in_project (use list operations instead)
 _LIST_FIELDS = frozenset(
@@ -76,6 +94,10 @@ def set_renewable_exception_in_project(
 
     On-site renewable systems and an exception can coexist — setting an exception
     does not preclude adding ``renewableSystem[]``, and vice versa.
+
+    This doesn't refresh the capacity fields, which depend on the exception.
+    Use :meth:`~comcheck_api.client.COMcheckClient.set_renewable_exception` to
+    set the exception and call the renewable-capacity API together.
 
     Args:
         project: The project to modify.
@@ -111,12 +133,18 @@ def update_renewable_in_project(
 ) -> ComBuilding:
     """Update scalar fields on the renewable singleton.
 
-    Only user-writable scalar fields (``numberOfFloors``) may be updated here.
+    User-writable scalar fields are ``numberOfFloors`` and, when the project
+    has more than 3 floors, ``largestThreeFloorArea``. With more than 3 floors,
+    ``largestThreeFloorArea`` can't exceed the total building area floor area
+    (the sum of ``lighting.wholeBldgUse[].floorArea``). With 3 floors or fewer
+    it is calculated by
+    :meth:`~comcheck_api.client.COMcheckClient.area_for_renewable` and can't
+    be set here.
+
     Engine-calculated fields (``requiredCapacity``, ``proposedCapacity``,
     ``requiredOffsiteRenewableEnergy``, ``proposedOffsiteRenewableEnergy``),
-    API-calculated fields (``largestThreeFloorArea``, ``roofAreaForRenewable``),
-    and list fields (``renewableSystem``, ``offsiteRenewableProcurement``) are
-    rejected.
+    the API-calculated ``roofAreaForRenewable``, and list fields
+    (``renewableSystem``, ``offsiteRenewableProcurement``) are rejected.
 
     Args:
         project: The project to modify.
@@ -128,7 +156,9 @@ def update_renewable_in_project(
     Raises:
         ValueError: If updates contains renewableException, engine-calculated,
             API-calculated, or list fields; if a value fails validation (e.g.
-            negative numberOfFloors).
+            negative numberOfFloors); if largestThreeFloorArea is set with 3
+            floors or fewer; or if, with more than 3 floors,
+            largestThreeFloorArea exceeds the total building area floor area.
     """
     if "renewableException" in updates:
         raise ValueError(
@@ -146,8 +176,39 @@ def update_renewable_in_project(
     # so e.g. a negative or non-integer numberOfFloors would slip through.
     updated_project = project.model_copy(deep=True)
     merged = {**updated_project.renewable.model_dump(mode="python"), **updates}
-    updated_project.renewable = Renewable.model_validate(merged)
+    renewable = Renewable.model_validate(merged)
+
+    if renewable.numberOfFloors <= _MAX_FLOORS_FOR_CALCULATED_AREA:
+        if "largestThreeFloorArea" in updates:
+            raise ValueError(
+                f"largestThreeFloorArea can only be set when numberOfFloors is "
+                f"greater than {_MAX_FLOORS_FOR_CALCULATED_AREA} (got "
+                f"{renewable.numberOfFloors}). With "
+                f"{_MAX_FLOORS_FOR_CALCULATED_AREA} floors or fewer it is the "
+                f"total building area floor area; use "
+                f"COMcheckClient.area_for_renewable to calculate it."
+            )
+    elif renewable.largestThreeFloorArea is not None:
+        total_floor_area = _total_building_area_floor_area(updated_project)
+        if renewable.largestThreeFloorArea > total_floor_area:
+            raise ValueError(
+                f"largestThreeFloorArea ({renewable.largestThreeFloorArea} ft2) "
+                f"cannot exceed the total building area floor area "
+                f"({total_floor_area} ft2) when numberOfFloors is greater than "
+                f"{_MAX_FLOORS_FOR_CALCULATED_AREA}."
+            )
+
+    updated_project.renewable = renewable
     return updated_project
+
+
+def _total_building_area_floor_area(project: ComBuilding) -> float:
+    """Sum ``floorArea`` across ``lighting.wholeBldgUse``, skipping unset values."""
+    return sum(
+        float(area.floorArea)
+        for area in project.lighting.wholeBldgUse
+        if area.floorArea is not MISSING and area.floorArea is not None
+    )
 
 
 def add_renewable_system_to_project(

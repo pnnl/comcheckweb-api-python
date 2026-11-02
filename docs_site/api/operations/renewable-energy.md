@@ -13,8 +13,9 @@ Renewable energy is managed at the **project level** through the
 ## Energy codes
 
 Renewable requirements only apply under some energy codes (and state codes
-based on them). These operations don't check `control.code` — whether the
-project needs renewable data is up to you.
+based on them). These operations don't check `control.code`. The COMcheck Web
+API decides whether the project's code uses renewable data, and renewable
+inputs on a project whose code doesn't use them do no harm.
 
 ## Key concepts
 
@@ -67,6 +68,18 @@ project = rn_ops.set_renewable_exception_in_project(
 `NoneType_None` is rejected with a `ValueError`. A raw string raises a
 `TypeError` — always use the enum.
 
+The renewable capacity depends on the exception, so after changing it call
+the renewable-capacity API. `COMcheckClient.set_renewable_exception` does
+both: it sets the exception, calls `renewable_capacity`, and updates the
+project in place (only if the API call succeeds):
+
+```python
+project = client.set_renewable_exception(
+    project, RenewableExceptionOptions.RENEWABLE_ONSITE_EXCEPTION_LOW_SOLAR_RAD
+)
+print(project.renewable.requiredCapacity, project.renewable.proposedCapacity)
+```
+
 ## Adding an on-site renewable system
 
 ```python
@@ -118,16 +131,34 @@ project = rn_ops.add_offsite_renewable_procurement_to_project(project, offsite_p
 
 ## Updating scalar fields
 
-Only user-writable scalar fields (currently just `numberOfFloors`) may be
-updated via `update_renewable_in_project`. Engine-calculated fields
+Only user-writable scalar fields may be updated via
+`update_renewable_in_project`: `numberOfFloors` and, when the project has
+more than 3 floors, `largestThreeFloorArea`. Engine-calculated fields
 (`requiredCapacity`, `proposedCapacity`, `requiredOffsiteRenewableEnergy`,
-`proposedOffsiteRenewableEnergy`), API-calculated fields
-(`largestThreeFloorArea`, `roofAreaForRenewable`), and list fields
-(`renewableSystem`, `offsiteRenewableProcurement`) are rejected with a
-`ValueError`:
+`proposedOffsiteRenewableEnergy`), the API-calculated `roofAreaForRenewable`,
+and list fields (`renewableSystem`, `offsiteRenewableProcurement`) are
+rejected with a `ValueError`:
 
 ```python
-project = rn_ops.update_renewable_in_project(project, {"numberOfFloors": 5})
+project = rn_ops.update_renewable_in_project(project, {"numberOfFloors": 2})
+```
+
+### Largest three floor area
+
+How `largestThreeFloorArea` is set depends on `numberOfFloors`:
+
+- **3 floors or fewer**: it is the total building area floor area (the sum of
+  `lighting.wholeBldgUse[].floorArea`), calculated by `area_for_renewable`.
+  Setting it through `update_renewable_in_project` raises a `ValueError`.
+- **More than 3 floors**: you provide it. It can't exceed the total building
+  area floor area, or `update_renewable_in_project` raises a `ValueError`.
+  The check also runs when you raise `numberOfFloors` above 3 with a stored
+  value already in place.
+
+```python
+project = rn_ops.update_renewable_in_project(
+    project, {"numberOfFloors": 5, "largestThreeFloorArea": 30000.0}
+)
 ```
 
 ## Renewable calculations (API)
