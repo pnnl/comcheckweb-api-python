@@ -508,6 +508,12 @@ a fan system if it's empty or already used. You cannot update `fanSystemKey`
 directly — use `assign_fan_system_to_hvac_system` or `remove_fan_system_from_project`
 (which clears `fanSystemKey` on referencing HVAC systems).
 
+**Mechanical requirements**: not supported by this package. `requirementAnswer`
+on HVAC systems, fan systems, plants, and water heaters can't be set through the
+update operations. Tell the user to save the project and fill out the mechanical
+requirements on [COMcheck Web](https://comcheck.energycode.pnl.gov/). Don't try
+to work around this.
+
 ### Adding energy credits
 
 Energy credits apply to IECC 2021+, ASHRAE 90.1-2022, and state codes

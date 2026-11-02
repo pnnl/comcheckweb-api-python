@@ -1,7 +1,7 @@
 # Getting Started
 
 !!! note "Supported Sections"
-    Currently, **Building Area**, **Envelope**, **Interior Lighting**, **Exterior Lighting**, **Renewable Energy**, **Credits**, and **Compliance Simulation** operations are fully supported. The mechanical section is planned but not yet implemented. See the [home page](index.md#current-status) for the full status table.
+    Currently, **Building Area**, **Envelope**, **Interior Lighting**, **Exterior Lighting**, **Mechanical**, **Renewable Energy**, **Credits**, and **Compliance Simulation** operations are supported. Mechanical requirements are not supported; fill them out on [COMcheck Web](https://comcheck.energycode.pnl.gov/). See the [home page](index.md#current-status) for the full status table.
 
 ## Setup
 

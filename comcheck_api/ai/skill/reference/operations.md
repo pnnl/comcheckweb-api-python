@@ -187,6 +187,11 @@ Mechanical operations manage HVAC systems, fan systems, HVAC plants, and service
 water heating. The `hvac` singleton can be `MISSING` and is created automatically
 on add. `swhSystem[]` is a top-level list (not under `hvac`).
 
+Mechanical requirements (`requirementAnswer` on HVAC systems, fan systems,
+plants, and water heaters) are not supported by this package. Save the project,
+then open it on [COMcheck Web](https://comcheck.energycode.pnl.gov/) to fill
+them out.
+
 | Function | Purpose |
 |---|---|
 | **HVAC systems** (`hvac.hvacSystem[]`) | |

@@ -13,11 +13,11 @@ This package is under active development. Here is the current support status for
 | Interior Lighting | Supported |
 | Exterior Lighting | Supported |
 | Compliance Simulation | Supported |
-| Mechanical | TBD |
+| Mechanical | Supported (requirements must be filled out on COMcheck Web) |
 | Credits | Supported |
 | Renewable Energy | Supported |
 
-Operations and data managers for the TBD sections are not yet implemented. The underlying types and models for these sections are available (see [Types Guide](types-guide.md)), but there are no high-level convenience functions for them yet.
+Mechanical requirements (`requirementAnswer` on HVAC systems, fan systems, plants, and water heaters) are not supported by this package. Save the project, then open it on [COMcheck Web](https://comcheck.energycode.pnl.gov/) to fill them out.
 
 ## Features
 

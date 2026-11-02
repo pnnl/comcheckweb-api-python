@@ -20,6 +20,12 @@ All four lists are identified by `description`, which is auto-generated if missi
 
 See `examples/project_operations/mechanical_operations.py` for a full walkthrough.
 
+!!! warning "Mechanical requirements"
+    Mechanical requirements (`requirementAnswer` on HVAC systems, fan systems,
+    plants, and water heaters) are not supported by this package. Save the project,
+    then open it on [COMcheck Web](https://comcheck.energycode.pnl.gov/) to fill
+    them out.
+
 ## HVAC Systems
 
 HVAC systems are identified by their `description`.

@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Added
+- Docs and AI skill note that mechanical requirements (`requirementAnswer`) are not supported and must be filled out on COMcheck Web
 - Renewable energy operations module (`project_renewable_operations`) for managing on-site renewable systems and off-site procurement
 - `set_renewable_exception_in_project` — set the renewable exception on a project
 - `update_renewable_in_project` — update scalar fields on the renewable singleton
