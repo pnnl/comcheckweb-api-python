@@ -21,6 +21,13 @@ When a fan system is assigned to an HVAC system, its UUID is copied into
 ``HVACSystem.fanSystemKey``. Use ``assign_fan_system_to_hvac_system`` to create
 this link by description; callers never handle the UUID directly.
 
+Mechanical requirements
+-----------------------
+Mechanical requirements (``requirementAnswer`` on HVAC systems, fan systems,
+plants, and water heaters) are not supported by this package. Save the project,
+then open it on COMcheck Web (https://comcheck.energycode.pnl.gov/) to fill
+them out.
+
 Energy codes
 ------------
 Mechanical operations don't check ``control.code`` — which mechanical components
