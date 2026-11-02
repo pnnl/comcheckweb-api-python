@@ -406,9 +406,10 @@ library, so it returns metadata and lets the caller decide
 
 ### Adding renewable energy systems
 
-Renewable requirements only apply under some energy codes; the operations
-don't check `control.code`, so ask the user whether the project needs
-renewables rather than deciding from the code. Exception
+Renewable requirements only apply under some energy codes, but the
+operations don't check `control.code` and you don't need to either. The API
+decides whether the code uses renewable data, and renewable inputs on other
+codes do no harm. Exception
 and on-site systems coexist — setting an exception doesn't preclude adding
 renewable systems. **Confirm with the user before adding off-site
 procurement** (not always present on projects).

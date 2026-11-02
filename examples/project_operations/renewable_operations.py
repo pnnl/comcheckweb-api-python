@@ -8,8 +8,9 @@ and off-site procurement (offsiteRenewableProcurement[]).
 Energy codes
 ------------
 Renewable requirements only apply under some energy codes (and state codes
-based on them). These operations don't check ``control.code`` — whether the
-project needs renewable data is up to you.
+based on them). These operations don't check ``control.code``. The COMcheck Web
+API decides whether the project's code uses renewable data, and renewable
+inputs on a project whose code doesn't use them do no harm.
 
 Key concepts
 ------------

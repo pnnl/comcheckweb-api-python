@@ -244,8 +244,9 @@ from comcheck_api import project_renewable_operations as rn_ops
 
 Renewable energy is managed at the project level through the
 `ComBuilding.renewable` singleton. Renewable requirements only apply under
-some energy codes; the operations don't check `control.code` — ask the user
-whether the project needs renewables. Exception and on-site systems coexist — setting an
+some energy codes, but the operations don't check `control.code` and you
+don't need to either: the API decides whether the code uses renewable data,
+and renewable inputs on other codes do no harm. Exception and on-site systems coexist — setting an
 exception does not preclude adding renewable systems. **Confirm with the user
 before adding off-site procurement** (not always present on projects).
 

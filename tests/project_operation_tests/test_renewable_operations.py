@@ -249,8 +249,8 @@ def test_get_renewable_system_keys(project: ComBuilding):
 
 
 def test_mutating_ops_do_not_check_energy_code(project: ComBuilding):
-    # Whether a project needs renewable data is the caller's call, so ops
-    # must not reject codes (e.g. state codes) outside a fixed list.
+    # The API decides whether the code uses renewable data, so ops must not
+    # reject codes (e.g. state codes) outside a fixed list.
     proj = _fresh(project)
     proj.control.code = EnergyCodeOptions.CEZ_IECC2009
     proj = rn_ops.set_renewable_exception_in_project(
