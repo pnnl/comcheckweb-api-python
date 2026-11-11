@@ -1,6 +1,6 @@
 # Types Guide
 
-The `comcheck_api` library is fully typed with Pydantic models and `StrEnum`/`IntEnum` option types defined in `comcheck_api.types.core_types`. Understanding these types is essential for correctly building and modifying COMcheck projects.
+The `comcheck_api` library is fully typed with Pydantic models and `StrEnum`/`Enum` option types defined in `comcheck_api.types.core_types`. Understanding these types is essential for correctly building and modifying COMcheck projects.
 
 ## Importing Types
 
@@ -44,7 +44,7 @@ print(roof.roofType)       # IDE shows available attributes
 print(roof.orientation)    # typed as OrientationOptions | None
 ```
 
-### Enum Options (`StrEnum` / `IntEnum`)
+### Enum Options (`StrEnum` / `Enum`)
 
 Enum options define the valid values for fields like building types, orientations, energy codes, etc. Using them prevents typos and gives you IDE auto-completion for all valid choices.
 
@@ -77,28 +77,56 @@ for code in EnergyCodeOptions:
 
 ## Common Types by Domain
 
+Each domain below has a matching project operations
+module for adding, updating, and removing its components:
+
+| Domain | Operations module | Page |
+|---|---|---|
+| Building Area | `project_building_area_operations` | [Building Area](api/operations/building-area.md) |
+| Envelope | `project_envelope_operations` | [Envelope](api/operations/envelope.md) |
+| Interior Lighting | `project_interior_lighting_operations` | [Interior Lighting](api/operations/interior-lighting.md) |
+| Exterior Lighting | `project_exterior_lighting_operations` | [Exterior Lighting](api/operations/exterior-lighting.md) |
+| Mechanical | `project_mechanical_operations` | [Mechanical](api/operations/mechanical.md) |
+| Credits | `project_credit_operations` | [Credits](api/operations/credits.md) |
+| Renewable | `project_renewable_operations` | [Renewable Energy](api/operations/renewable-energy.md) |
+
 ### Project Structure
 
 The top-level model is `ComBuilding`, which contains all project data:
 
-| Model | Description |
-|---|---|
-| `ComBuilding` | Top-level project model |
-| `Project` | Project info (name, address) |
-| `Location` | Geographic location |
-| `Envelope` | All envelope assemblies (roofs, walls, floors) |
-| `Lighting` | Lighting data (building areas, exterior) |
-| `HVAC` | HVAC systems |
+| Attribute | Model | Description |
+|---|---|---|
+| — | `ComBuilding` | Top-level project model |
+| `project` | `Project` | Project info (name, address) |
+| `location` | `Location` | Geographic location |
+| `envelope` | `Envelope` | Envelope assemblies (roofs, walls, floors, fenestration) |
+| `lighting` | `Lighting` | Building areas, interior lighting spaces, and exterior lighting areas |
+| `hvac` | `HVAC` | HVAC systems, fan systems, and HVAC plants |
+| `swhSystem` | `list[ServiceWaterHeatingSystem]` | Service water heating systems |
+| `efficiencyPackages` | `list[EfficiencyPackage]` | Energy credits |
+| `renewable` | `Renewable` | On-site renewable systems and off-site procurement |
 
 ```python
 from comcheck_api.types import ComBuilding
 
 project: ComBuilding = client.get_project("project-id")
-project.project       # Project
-project.location      # Location
-project.envelope      # Envelope
-project.lighting      # Lighting
+project.project             # Project
+project.location            # Location
+project.envelope            # Envelope
+project.lighting            # Lighting
+project.hvac                # HVAC
+project.swhSystem           # list[ServiceWaterHeatingSystem]
+project.efficiencyPackages  # list[EfficiencyPackage]
+project.renewable           # Renewable
 ```
+
+### Building Area
+
+| Model | Description | Key Options |
+|---|---|---|
+| `WholeBldgUse` | Building use area — parent of envelope components, interior lighting spaces, and energy credits | `WholeBuildingTypeOptions` |
+
+See also: [Building Area operations](api/operations/building-area.md).
 
 ### Envelope Components
 
@@ -113,27 +141,41 @@ project.lighting      # Lighting
 | `Skylight` | Skylight component | `SkylightCurbTypeOptions`, `GlazingTypeOptions` |
 | `ThermalBridge` | Thermal bridge | `ThermalBridgeTypeOptions` |
 
+See also: [Envelope operations](api/operations/envelope.md).
+
 ```python
 from comcheck_api.types import Roof, RoofTypeOptions, OrientationOptions
 
 # Type hints show you what fields are available
 roof = Roof(
-    roofType=RoofTypeOptions.ATTIC_ROOF_WITH_WOOD_JOIST,
+    roofType=RoofTypeOptions.WOOD_STD_JOIST_TRUSS,
     orientation=OrientationOptions.NORTH,
     # ... IDE auto-completes all fields
 )
 ```
 
-### Building Area & Lighting
+### Interior Lighting
 
 | Model | Description | Key Options |
 |---|---|---|
-| `WholeBldgUse` | Building use area | `WholeBuildingTypeOptions` |
-| `ActivityUse` | Interior lighting space within a building use, aliased as `InteriorSpace` | `ActivityTypeOptions` |
-| `ExteriorUse` | Exterior lighting area, aliased as `ExteriorArea` | `ExteriorUseTypeOptions` |
+| `ActivityUse` | Interior lighting space within a building area, aliased as `InteriorSpace` | `ActivityTypeOptions` |
+| `InteriorLightingSpace` | Lighting details of an interior space (fixtures, daylight areas) | - |
 | `Fixture` | Lighting fixture | `LightingTypeOptions` |
 | `FixtureSchedule` | Fixture schedule | - |
 | `LightingControls` | Lighting controls | `LightingControlTypeOptions` |
+
+See also: [Interior Lighting operations](api/operations/interior-lighting.md).
+
+### Exterior Lighting
+
+| Model | Description | Key Options |
+|---|---|---|
+| `Lighting` | Holds the project-wide exterior lighting zone | `ExteriorLightingZoneTypeOptions` |
+| `ExteriorUse` | Exterior lighting area, aliased as `ExteriorArea` | `ExteriorUseTypeOptions` |
+| `ExteriorLightingSpace` | Lighting details of an exterior area (fixtures) | - |
+| `Fixture` | Lighting fixture | `LightingTypeOptions` |
+
+See also: [Exterior Lighting operations](api/operations/exterior-lighting.md).
 
 !!! tip "InteriorSpace and ExteriorArea aliases"
     `comcheck_api.types.common_types` defines `InteriorSpace = ActivityUse` and
@@ -147,10 +189,35 @@ roof = Roof(
 | Model | Description | Key Options |
 |---|---|---|
 | `HVACSystem` | HVAC system | `CoolingEquipmentTypeOptions`, `FuelTypeOptions` |
-| `HVACPlant` | HVAC plant | `BoilerDraftTypeOptions` |
-| `Fan` | Fan | `FanEfficiencyExceptionTypeOptions` |
 | `FanSystem` | Fan system | `FanSystemComplianceMethodOptions` |
+| `Fan` | Fan within a fan system | `FanEfficiencyExceptionTypeOptions` |
+| `FanSystemPressureDropCredits` | Pressure drop credit within a fan system | `PressureDropTypeOptions` |
+| `HVACPlant` | HVAC plant | `BoilerDraftTypeOptions` |
 | `ServiceWaterHeatingSystem` | Water heating | `SWHSystemDrawPatternTypeOptions` |
+
+See also: [Mechanical operations](api/operations/mechanical.md).
+
+### Credits
+
+| Model | Description | Key Options |
+|---|---|---|
+| `EfficiencyPackage` | Energy credit tied to a building area by `bldgUseKey`; its `type` selects the credit | `IECC2024EnergyCreditTypeOptions`, `VT2024EnergyCreditTypeOptions`, `Denver2022EnergyCreditTypeOptions`, `MAS2022EnergyCreditTypeOptions`, `EfficiencyPackageTypeOptions` |
+| `ComBuilding` | Project-level `energyCreditMultiplierException` | `EnergyCreditMultiplierException` |
+
+See also: [Credits operations](api/operations/credits.md).
+
+Each energy code family has its own credit type enum — pick the one that
+matches `project.control.code`.
+
+### Renewable
+
+| Model | Description | Key Options |
+|---|---|---|
+| `Renewable` | Renewable section: exception, required/proposed capacity, systems, and off-site procurement | `RenewableExceptionOptions` |
+| `RenewableSystem` | On-site renewable system | `RenewableSystemTypeOptions`, `RenewableSystemCapacityUnitOptions` |
+| `OffsiteRenewableProcurement` | Off-site renewable energy procurement | `OffsiteRenewableProcurementType` |
+
+See also: [Renewable Energy operations](api/operations/renewable-energy.md).
 
 ## Tips
 

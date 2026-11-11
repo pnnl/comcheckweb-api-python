@@ -483,6 +483,11 @@ def update_fan_in_fan_system(
 ) -> ComBuilding:
     """Update an existing fan in a fan system.
 
+    Changing ``designBrakeHp`` clears ``maxNameplateHp`` so a stale value
+    isn't kept, unless the updates set ``maxNameplateHp`` too; recalculate it
+    with :meth:`~comcheck_api.client.COMcheckClient.update_fan_maximum_allowable_hp`.
+    Engine-calculated fan fields can be updated: compliance recalculates them.
+
     Args:
         project: The project to modify.
         fan_system_description: The description of the fan system.
@@ -497,18 +502,29 @@ def update_fan_in_fan_system(
     """
     _require_fan_system(project, fan_system_description)
 
+    updates = _updates_to_dict(updates)
+    fans = _find_by_description(project.hvac.fanSystem, fan_system_description).fan
+    current_fan = _find_by_description(fans if fans is not MISSING else [], fan_description)
     updated_project = project.model_copy(deep=True)
+    fan_system = _find_by_description(updated_project.hvac.fanSystem, fan_system_description)
+    fan_system.update_subcomponent_list(
+        subcomponent_updates=updates,
+        subcomponent_id=fan_description,
+        subcomponent_name="fan",
+    )
 
-    # Find the fan system and update the fan
-    fan_systems = updated_project.hvac.fanSystem or []
-    for fan_system in fan_systems:
-        if getattr(fan_system, "description", None) == fan_system_description:
-            fan_system.update_subcomponent_list(
-                subcomponent_updates=updates,
-                subcomponent_id=fan_description,
-                subcomponent_name="fan",
-            )
-            break
+    if (
+        current_fan is not None
+        and "designBrakeHp" in updates
+        and "maxNameplateHp" not in updates
+    ):
+        before = current_fan.model_dump(mode="json").get("designBrakeHp")
+        updated_fan = _find_by_description(
+            fan_system.fan, updates.get("description", fan_description)
+        )
+        after = updated_fan.model_dump(mode="json").get("designBrakeHp")
+        if after != before:
+            updated_fan.maxNameplateHp = MISSING
 
     return updated_project
 

@@ -36,8 +36,8 @@ _OP_MODULES = {
     "interior_lighting": project_interior_lighting_operations,
     "exterior_lighting": project_exterior_lighting_operations,
     "mechanical": project_mechanical_operations,
-    "renewable": project_renewable_operations,
     "credits": project_credit_operations,
+    "renewable": project_renewable_operations,
 }
 
 
@@ -64,12 +64,14 @@ class FieldSchema(BaseModel):
 
 
 class EnumMember(BaseModel):
+    """One member of an enum: its Python name and its value."""
+
     name: str
     value: str
 
 
 class TypeSchema(BaseModel):
-    """Reflected schema of a Pydantic model or StrEnum."""
+    """Reflected schema of a Pydantic model or enum."""
 
     name: str
     kind: Literal["model", "enum"]
@@ -82,7 +84,10 @@ def list_operations() -> list[OperationInfo]:
     """Discover public functions in the project operation modules.
 
     Discovered live via :mod:`inspect` so the list always matches the
-    installed SDK version.
+    installed SDK version. Groups are returned in the order
+    ``building_area``, ``envelope``, ``interior_lighting``,
+    ``exterior_lighting``, ``mechanical``, ``credits``, ``renewable``.
+    ``COMcheckClient`` methods (API calls) are not included.
     """
     out: list[OperationInfo] = []
     for group, mod in _OP_MODULES.items():

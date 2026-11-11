@@ -65,5 +65,8 @@ uv add comcheck_api
 
 | Module | Description |
 |--------|-------------|
-| [`comcheck_api.client`](api/client.md) | High-level client interface |
-| [`comcheck_api.project_operations`](api/operations/building-area.md) | [Building area](api/operations/building-area.md), [envelope](api/operations/envelope.md), [interior lighting](api/operations/interior-lighting.md), and [exterior lighting](api/operations/exterior-lighting.md) operations |
+| [`comcheck_api.client`](api/client.md) | High-level client interface (`COMcheckClient`), including [simulation](api/simulation.md) and [compliance & reports](api/compliance.md) |
+| [`comcheck_api.project_operations`](api/operations/building-area.md) | [Building area](api/operations/building-area.md), [envelope](api/operations/envelope.md), [interior lighting](api/operations/interior-lighting.md), [exterior lighting](api/operations/exterior-lighting.md), [mechanical](api/operations/mechanical.md), [credits](api/operations/credits.md), and [renewable energy](api/operations/renewable-energy.md) operations |
+| [`comcheck_api.defaults`](api/defaults.md) | Default templates for projects and building components |
+| [`comcheck_api.introspection`](api/introspection.md) / [`comcheck_api.validation`](api/introspection.md) | Runtime discovery of SDK capabilities and project data validation |
+| [`comcheck_api.types`](types-guide.md) | Pydantic models for projects and building components |

@@ -201,7 +201,7 @@ def add_bg_wall_to_project(
 def update_bg_wall_in_project(
     project: ComBuilding, bg_wall_assembly_type: str, updates: dict[str, Any] | BgWall
 ) -> ComBuilding:
-    """Update an bgWall in the project's envelope.
+    """Update a bgWall in the project's envelope.
 
     Args:
         project: The project object to modify
@@ -225,7 +225,7 @@ def update_bg_wall_in_project(
 def remove_bg_wall_from_project(
     project: ComBuilding, bg_wall_assembly_type: str
 ) -> ComBuilding:
-    """Remove an bgWall from the envelope in any project object.
+    """Remove a bgWall from the envelope in any project object.
 
     Args:
         project: The project object to modify
@@ -275,7 +275,7 @@ def add_floor_to_project(
 def update_floor_in_project(
     project: ComBuilding, floor_assembly_type: str, updates: dict[str, Any] | Floor
 ) -> ComBuilding:
-    """Update an floor in the project's envelope.
+    """Update a floor in the project's envelope.
 
     Args:
         project: The project object to modify
@@ -299,7 +299,7 @@ def update_floor_in_project(
 def remove_floor_from_project(
     project: ComBuilding, floor_assembly_type: str
 ) -> ComBuilding:
-    """Remove an bgWall from the envelope in any project object.
+    """Remove a floor from the envelope in any project object.
 
     Args:
         project: The project object to modify
@@ -378,17 +378,20 @@ def remove_skylight_from_project(
     project: ComBuilding,
     skylight_assembly_type: str,
 ) -> ComBuilding:
-    """Add a new skylight to a specific roof in the envelope.
+    """Remove a skylight from the project.
+
+    Looks for the skylight on the roofs, or in the orphaned
+    ``envelope.skylight`` list for alteration projects.
 
     Args:
-        project: ComBuilding,
-        skylight_assembly_type: str
+        project: The project object to modify
+        skylight_assembly_type: The assemblyType of the skylight to remove
 
     Returns:
-        Updated project object with the skylight added to the specified roof
+        Updated project object with the skylight removed
 
     Raises:
-        ValueError: If buildingAreaKey is not found or if roof's bldgUseKey doesn't match buildingAreaKey
+        ValueError: If no skylight with the given assemblyType is found
     """
     updated_project = project.model_copy(deep=True)
 

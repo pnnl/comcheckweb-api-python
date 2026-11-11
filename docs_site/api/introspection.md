@@ -25,6 +25,18 @@ if not result.ok:
         print(err.loc, err.msg)
 ```
 
+- `list_operations` covers the project operation modules, grouped as
+  `building_area`, `envelope`, `interior_lighting`, `exterior_lighting`,
+  `mechanical`, `credits`, and `renewable`. `COMcheckClient` methods (API
+  calls) are not included — see [COMcheckClient](client.md).
+- `lookup_type` accepts any model or enum name from `comcheck_api.types`,
+  including the `InteriorSpace` and `ExteriorArea` aliases. The match is
+  case-insensitive; it returns `None` if nothing matches.
+- `validate_project` checks the schema only (field types, required fields,
+  enum values). Rules the project operations enforce, such as unique
+  descriptions or a `fanSystemKey` that points to an existing fan system, are
+  not checked.
+
 ## Introspection
 
 ::: comcheck_api.introspection

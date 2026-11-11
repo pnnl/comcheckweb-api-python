@@ -1,20 +1,28 @@
 # Credits Operations
 
-Energy credits are stored in the flat `ComBuilding.efficiencyPackages` list.
-Each `EfficiencyPackage` entry:
+Energy credits are stored in the flat `ComBuilding.efficiencyPackages` list,
+one `EfficiencyPackage` per credit.
 
-- belongs to one building area — `bldgUseKey` is the `WholeBldgUse.key`
-- is identified by its `type` — a building area holds at most one entry per credit type
-- carries the inputs its credit type needs, e.g. `airInfiltration` for the
-  reduced air infiltration credits or `onSiteRenewableCapacity` for on-site
-  renewable credits (see the field descriptions on `EfficiencyPackage`)
+```python
+from comcheck_api import project_credit_operations as cr_ops
+```
 
-Two project-level fields also affect credits:
+## Key concepts
 
-- `energyCreditMultiplierException` — the IECC 2024 Appendix C/F energy credit
-  multiplier exception (new construction and additions)
-- `projectCoreAndShellCredit` — credits gained from core and shell (initial
-  build-out with a core and shell mechanical type)
+- **Credits belong to a building area.** `bldgUseKey` is the building area's
+  `WholeBldgUse.key`. Removing the building area removes its credits.
+- **Credits are identified by `type`.** A building area holds at most one
+  credit of each type. Update and remove operations take the building area
+  key and the credit type.
+- **Each credit type needs its own inputs.** For example, the reduced air
+  infiltration credits need `airInfiltration`, and the on-site renewable
+  credits need `onSiteRenewableCapacity`. See the field descriptions on
+  `EfficiencyPackage`.
+- **Two project-level fields also affect credits.**
+    - `energyCreditMultiplierException` — the IECC 2024 Appendix C/F energy
+      credit multiplier exception (new construction and additions)
+    - `projectCoreAndShellCredit` — credits gained from core and shell
+      (initial build-out with a core and shell mechanical type)
 
 ## Energy codes
 
@@ -35,10 +43,6 @@ up to you. Older codes that use additional efficiency packages instead
 
 ## Operations
 
-```python
-from comcheck_api import project_credit_operations as cr_ops
-```
-
 | Function | Description |
 |---|---|
 | `add_energy_credit_to_project(project, building_area_key, new_energy_credit)` | Add an energy credit to a building area |
@@ -48,15 +52,10 @@ from comcheck_api import project_credit_operations as cr_ops
 | `set_energy_credit_multiplier_exception_in_project(project, multiplier_exception)` | Set `energyCreditMultiplierException` |
 | `set_core_and_shell_credit_in_project(project, core_and_shell_credit)` | Set `projectCoreAndShellCredit` |
 
-Removing a building area with
-`project_building_area_operations.remove_building_area_from_project` also
-removes its energy credits.
-
 ## Adding and updating credits
 
 ```python
-from comcheck_api import project_credit_operations as cr_ops
-from comcheck_api.types.core_types import (
+from comcheck_api.types import (
     EfficiencyPackage,
     IECC2024EnergyCreditTypeOptions as Credit,
 )
@@ -89,7 +88,7 @@ project = cr_ops.update_energy_credit_in_project(
 
 `type` and `bldgUseKey` can't be updated — remove the credit and add a new one.
 
-## Calculating credits
+## Calculating credits (API)
 
 `COMcheckClient.calculate_energy_credits` sends the project to
 `POST /update-energy-credits` and returns an `EnergyCreditResult`. The project
@@ -121,7 +120,7 @@ print("Meets required credits:", result.passes)
 `passes` is derived from the totals. The compliance check
 (`COMcheckClient.check_UA_compliance`) reports the official energy credit status.
 
-## Calculating a single credit
+## Calculating a single credit (API)
 
 Credits can interact, so the full calculation doesn't always show what one
 credit is worth on its own. `COMcheckClient.calculate_single_energy_credit`
@@ -150,3 +149,11 @@ value (`proposedRenewableAndLoadMgmt` for renewable and load management
 credits), weighted by the building area's share of the gross floor area.
 Check `warnings` for missing inputs. Raises `ValueError` if the building area
 is not found.
+
+See `examples/client/credits.py` for a full walkthrough.
+
+## Related
+
+- [Types Guide — Credits](../../types-guide.md#credits) — `EfficiencyPackage` and the credit type enums
+- [Building Area](building-area.md) — credits belong to a building area
+- [COMcheckClient — Credits](../client.md#credits) — `calculate_energy_credits`, `calculate_single_energy_credit`
