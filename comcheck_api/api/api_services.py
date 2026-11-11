@@ -197,7 +197,7 @@ class COMCheckApiService:
             self._handle_api_error(error)
 
     def assemblies_uvalue(
-        self, envelope_data: Dict[str, Any], energy_code
+        self, envelope_data: Dict[str, Any], energy_code: str
     ) -> Dict[str, Any]:
         """get assemblies u values
 
@@ -672,7 +672,9 @@ class COMCheckApiService:
         """Calculate maximum allowable horsepower for a fan.
 
         Args:
-            fan_data: Fan data
+            fan_data: A single object with ``designBrakeHp`` and ``brakeHp``.
+                Both keys are required; the endpoint returns a server error
+                if ``brakeHp`` is absent or if a list is sent.
             energy_code: The energy code for the endpoint path
 
         Returns:

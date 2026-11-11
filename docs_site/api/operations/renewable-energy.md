@@ -10,6 +10,24 @@ Renewable energy is managed at the **project level** through the
 - Off-site fields — `requiredOffsiteRenewableEnergy`, `proposedOffsiteRenewableEnergy`,
   and `offsiteRenewableProcurement[]`
 
+```python
+from comcheck_api import project_renewable_operations as rn_ops
+```
+
+## Key concepts
+
+- **Exception and systems coexist.** Setting a renewable exception does **not**
+  preclude adding on-site renewable systems, and vice versa — the two can
+  coexist on the same project.
+- **Off-site procurement confirmation.** Off-site renewable procurement is
+  **not** always present. Before adding any `offsiteRenewableProcurement[]`
+  entry, confirm with the user that the project actually uses off-site
+  procurement.
+- **`description` must be unique** within `renewable.renewableSystem[]` and
+  `renewable.offsiteRenewableProcurement[]`. It is the identifier used by
+  update and remove operations. If missing, a unique value is auto-generated
+  with the prefix `"Renewable System"` or `"Offsite Procurement"`.
+
 ## Energy codes
 
 Renewable requirements only apply under some energy codes (and state codes
@@ -17,29 +35,7 @@ based on them). These operations don't check `control.code`. The COMcheck Web
 API decides whether the project's code uses renewable data, and renewable
 inputs on a project whose code doesn't use them do no harm.
 
-## Key concepts
-
-- **Exception and systems coexist.** Setting a renewable exception does **not**
-  preclude adding on-site renewable systems, and vice versa — the two can
-  coexist on the same project.
-
-- **Off-site procurement confirmation.** Off-site renewable procurement is
-  **not** always present. Before adding any `offsiteRenewableProcurement[]`
-  entry, confirm with the user that the project actually uses off-site
-  procurement.
-
-## description uniqueness
-
-`description` must be unique within `renewable.renewableSystem[]` and
-`renewable.offsiteRenewableProcurement[]`. It is the identifier used by update
-and remove operations. If missing, a unique value is auto-generated with the
-prefix `"Renewable System"` or `"Offsite Procurement"`.
-
 ## Operations
-
-```python
-from comcheck_api import project_renewable_operations as rn_ops
-```
 
 | Function | Description |
 |---|---|
@@ -57,8 +53,7 @@ from comcheck_api import project_renewable_operations as rn_ops
 ## Setting the renewable exception
 
 ```python
-from comcheck_api import project_renewable_operations as rn_ops
-from comcheck_api.types.core_types import RenewableExceptionOptions
+from comcheck_api.types import RenewableExceptionOptions
 
 project = rn_ops.set_renewable_exception_in_project(
     project, RenewableExceptionOptions.RENEWABLE_ONSITE_EXCEPTION_LOW_SOLAR_RAD
@@ -84,7 +79,7 @@ print(project.renewable.requiredCapacity, project.renewable.proposedCapacity)
 
 ```python
 from comcheck_api.defaults import get_default_renewable_system_template
-from comcheck_api.types.core_types import (
+from comcheck_api.types import (
     RenewableSystemTypeOptions,
     RenewableSystemCapacityUnitOptions,
 )
@@ -119,7 +114,7 @@ project = rn_ops.update_renewable_system_in_project(
 
 ```python
 from comcheck_api.defaults import get_default_offsite_renewable_procurement_template
-from comcheck_api.types.core_types import OffsiteRenewableProcurementType
+from comcheck_api.types import OffsiteRenewableProcurementType
 
 offsite_procurement = get_default_offsite_renewable_procurement_template()
 offsite_procurement.description = "Wind PPA"
@@ -161,6 +156,23 @@ project = rn_ops.update_renewable_in_project(
 )
 ```
 
+## Removing renewable systems and procurements
+
+```python
+project = rn_ops.remove_renewable_system_from_project(project, "Rooftop Solar")
+project = rn_ops.remove_offsite_renewable_procurement_from_project(project, "Wind PPA")
+```
+
+## Listing renewable systems and procurements
+
+```python
+renewable_systems = rn_ops.get_renewable_system_keys_from_project(project)
+# [{"description": "Rooftop Solar", "renewableSystemType": "RENEWABLE_SYSTEM_TYPE_SOLAR", ...}]
+
+offsite_procurements = rn_ops.get_offsite_renewable_procurement_keys_from_project(project)
+# [{"description": "Wind PPA", "offsiteRenewableProcurementType": "...", ...}]
+```
+
 ## Renewable calculations (API)
 
 Two `COMcheckClient` methods call the COMcheck Web API to calculate renewable
@@ -200,30 +212,12 @@ Any value the engine does not produce is set to `None`. The endpoint also
 returns a `renewableComplianceStatus`, but the project model has no field for
 it, so it is not written back.
 
-## Removing renewable systems
-
-```python
-project = rn_ops.remove_renewable_system_from_project(project, "Rooftop Solar")
-```
-
-## Removing offsite renewable procurement
-
-```python
-project = rn_ops.remove_offsite_renewable_procurement_from_project(project, "Wind PPA")
-```
-
-## Listing renewable systems and procurements
-
-```python
-renewable_systems = rn_ops.get_renewable_system_keys_from_project(project)
-# [{"description": "Rooftop Solar", "renewableSystemType": "RENEWABLE_SYSTEM_TYPE_SOLAR", ...}]
-
-offsite_procurements = rn_ops.get_offsite_renewable_procurement_keys_from_project(project)
-# [{"description": "Wind PPA", "offsiteRenewableProcurementType": "...", ...}]
-```
+See `examples/project_operations/renewable_operations.py` and
+`examples/client/renewable.py` for full walkthroughs.
 
 ## Related
 
-- [Types Guide](types-guide.md) — `Renewable`, `RenewableSystem`, `OffsiteRenewableProcurement`
-- [Interior Lighting](interior-lighting.md) — Similar pattern for lighting spaces
-- [Exterior Lighting](exterior-lighting.md) — Similar pattern for exterior lighting areas
+- [Types Guide — Renewable](../../types-guide.md#renewable) — `Renewable`, `RenewableSystem`, `OffsiteRenewableProcurement`
+- [Credits](credits.md) — on-site renewable energy credits
+- [Project Defaults](../defaults.md) — `get_default_renewable_system_template`, `get_default_offsite_renewable_procurement_template`
+- [COMcheckClient — Renewable Energy](../client.md#renewable-energy) — `area_for_renewable`, `renewable_capacity`, `set_renewable_exception`

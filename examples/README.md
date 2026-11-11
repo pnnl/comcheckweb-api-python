@@ -107,6 +107,7 @@ Demonstrates mechanical system efficiency and compliance calculations.
 - `calculate_fan_maximum_allowable_hp()` - Calculating maximum allowable horsepower for a fan
 - `update_fan_system_compliance()` - Updating fan system compliance fields in a project
 - `update_fan_pressure_drop_credits()` - Updating pressure drop credit values in a project
+- `update_fan_maximum_allowable_hp()` - Updating fan maximum nameplate HP values in a project
 
 **Usage:**
 ```bash
@@ -185,7 +186,7 @@ Demonstrates managing HVAC systems, fan systems (with fans and pressure drop cre
 - `add_hvac_system_to_project()` / `add_fan_system_to_project()` / `add_hvac_plant_to_project()` / `add_water_heater_to_project()` - Adding mechanical items
 - `add_fan_to_fan_system()` / `add_pressure_drop_credit_to_fan_system()` - Adding fans and pressure drop credits to a fan system
 - `assign_fan_system_to_hvac_system()` - Linking a fan system to an HVAC system by description
-- `client.update_fan_pressure_drop_credits()` / `client.update_fan_system_compliance()` - Filling in engine-calculated fan system values
+- `client.update_fan_pressure_drop_credits()` / `client.update_fan_system_compliance()` / `client.update_fan_maximum_allowable_hp()` - Filling in engine-calculated fan system values
 - `update_*` / `remove_*` and `get_*_keys_from_project()` - Updating, renaming, removing, and listing items
 
 **Usage:**

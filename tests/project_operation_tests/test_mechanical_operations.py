@@ -433,6 +433,89 @@ def test_update_fan_in_fan_system(project: ComBuilding):
     assert result.hvac.fanSystem[0].fan[0].description == "Updated Fan"
 
 
+def _with_sized_fan(project: ComBuilding) -> ComBuilding:
+    """A fan system with one fan whose maxNameplateHp was already calculated."""
+    proj = _fresh(project)
+    proj = mech_ops.add_fan_system_to_project(proj, FanSystem(description="FS"))
+    proj = mech_ops.add_fan_to_fan_system(
+        proj, "FS", Fan(description="Fan 1", designBrakeHp=5.0, brakeHp=5.0)
+    )
+    proj.hvac.fanSystem[0].fan[0].maxNameplateHp = 7.5  # as written back by the client
+    return proj
+
+
+def test_update_fan_design_brake_hp_clears_max_nameplate_hp(project: ComBuilding):
+    proj = _with_sized_fan(project)
+
+    result = mech_ops.update_fan_in_fan_system(proj, "FS", "Fan 1", {"designBrakeHp": 10.0})
+
+    fan = result.hvac.fanSystem[0].fan[0]
+    assert fan.designBrakeHp == 10.0
+    assert fan.maxNameplateHp is MISSING
+    assert "maxNameplateHp" not in result.model_dump(mode="json")["hvac"]["fanSystem"][0]["fan"][0]
+    # The input project is not modified.
+    assert proj.hvac.fanSystem[0].fan[0].maxNameplateHp == 7.5
+
+
+def test_update_fan_design_brake_hp_clears_after_rename(project: ComBuilding):
+    proj = _with_sized_fan(project)
+
+    result = mech_ops.update_fan_in_fan_system(
+        proj, "FS", "Fan 1", {"description": "Fan A", "designBrakeHp": 10.0}
+    )
+
+    fan = result.hvac.fanSystem[0].fan[0]
+    assert fan.description == "Fan A"
+    assert fan.maxNameplateHp is MISSING
+
+
+@pytest.mark.parametrize(
+    "updates",
+    [
+        {"nameplateHp": 7.5},
+        {"brakeHp": 6.0},
+        {"designBrakeHp": 5.0},  # unchanged value
+    ],
+)
+def test_update_fan_keeps_max_nameplate_hp(project: ComBuilding, updates):
+    proj = _with_sized_fan(project)
+
+    result = mech_ops.update_fan_in_fan_system(proj, "FS", "Fan 1", updates)
+
+    assert result.hvac.fanSystem[0].fan[0].maxNameplateHp == 7.5
+
+
+def test_update_fan_allows_max_nameplate_hp(project: ComBuilding):
+    """Engine-calculated fan fields can be set; compliance recalculates them."""
+    proj = _with_sized_fan(project)
+
+    result = mech_ops.update_fan_in_fan_system(proj, "FS", "Fan 1", {"maxNameplateHp": 100.0})
+
+    assert result.hvac.fanSystem[0].fan[0].maxNameplateHp == 100.0
+
+
+def test_update_fan_explicit_max_nameplate_hp_is_not_cleared(project: ComBuilding):
+    proj = _with_sized_fan(project)
+
+    result = mech_ops.update_fan_in_fan_system(
+        proj, "FS", "Fan 1", {"designBrakeHp": 10.0, "maxNameplateHp": 15.0}
+    )
+
+    assert result.hvac.fanSystem[0].fan[0].maxNameplateHp == 15.0
+
+
+def test_update_fan_accepts_unchanged_copy(project: ComBuilding):
+    """An edited copy of the fan (same maxNameplateHp) can be passed back."""
+    proj = _with_sized_fan(project)
+    edited = proj.hvac.fanSystem[0].fan[0].model_copy(update={"nameplateHp": 7.5})
+
+    result = mech_ops.update_fan_in_fan_system(proj, "FS", "Fan 1", edited)
+
+    fan = result.hvac.fanSystem[0].fan[0]
+    assert fan.nameplateHp == 7.5
+    assert fan.maxNameplateHp == 7.5
+
+
 def test_remove_fan_from_fan_system(project: ComBuilding):
     proj = _fresh(project)
 

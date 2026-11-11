@@ -1,13 +1,20 @@
 # Interior Lighting Operations
 
-Interior lighting is managed at the **`InteriorSpace`** granularity. In the
-COMcheck API schema, an interior lighting space is represented by the
-`ActivityUse` model, aliased as `InteriorSpace`. Each `InteriorSpace` belongs
-to a `WholeBldgUse` (building area) and carries exactly one singleton
-`InteriorLightingSpace` whose `fixture[]` holds the fixtures.
+Interior lighting spaces are stored in each building area's
+`lighting.wholeBldgUse[].activityUse[]`, one `InteriorSpace` per space. Each
+space holds one `InteriorLightingSpace`, whose `fixture[]` list holds its
+fixtures.
+
+```python
+from comcheck_api import project_interior_lighting_operations as il_ops
+```
 
 ## Key concepts
 
+- **`InteriorSpace` is an alias of `ActivityUse`.** The schema name is
+  `ActivityUse`. These operations use the `InteriorSpace` alias so it isn't
+  confused with `ExteriorArea` (see the
+  [Types Guide](../../types-guide.md#interior-lighting)).
 - **Fixtures are batch-edited by `fixtureType`.** Use
   `update_fixtures_in_interior_space` to add, update, and/or remove fixtures
   on a space in one call — fixtures are matched by `fixtureType` (the
@@ -15,19 +22,15 @@ to a `WholeBldgUse` (building area) and carries exactly one singleton
   not `id`. You can still edit `interiorLightingSpace.fixture[]` directly
   and pass the whole `InteriorSpace` through `update_interior_space_in_project`
   if you prefer.
-- **InteriorSpace.key** is always set to the parent `WholeBldgUse.key` — the
-  add operation sets this automatically.
+- **`InteriorSpace.key` is the parent building area's key.** The add
+  operation sets it to `WholeBldgUse.key` for you.
 - **`areaDescription` must be unique** within a building area's `activityUse[]`
   list. It is the identifier used by update and remove operations. If missing,
   a unique value is auto-generated with the prefix `"Space"`.
-- A building area must exist before adding interior spaces — add one with
-  `project_building_area_operations.add_building_area_to_project` first.
+- **A building area must exist first.** Add one with
+  [`add_building_area_to_project`](building-area.md).
 
 ## Operations
-
-```python
-from comcheck_api import project_interior_lighting_operations as il_ops
-```
 
 | Function | Description |
 |---|---|
@@ -49,7 +52,7 @@ from comcheck_api.defaults import (
     get_default_interior_space_template,
     get_default_fixture_template,
 )
-from comcheck_api.types.core_types import ActivityTypeOptions
+from comcheck_api.types import ActivityTypeOptions
 
 # A building area must exist first
 area = get_default_building_area_template()
@@ -158,7 +161,7 @@ keys = il_ops.get_interior_space_keys_from_project(project, area_key)
 # [{"areaDescription": "Open Office", "activityType": "ACTIVITY_COMMON_OFFICE_OPEN"}, ...]
 ```
 
-## Calculating allowed wattage
+## Calculating allowed wattage (API)
 
 Allowed wattage is calculated server-side via two `COMcheckClient` methods,
 not the `il_ops` free functions above. Both take the energy code as an
@@ -182,3 +185,13 @@ results = client.calculate_interior_spaces_allowed_wattage(
 These calls don't mutate the `InteriorSpace` objects passed in or write the
 result onto `allowedWattage` — they return the raw calculation payload for
 the caller to use as needed.
+
+See `examples/project_operations/interior_lighting_operations.py` and
+`examples/client/allowed_wattage.py` for full walkthroughs.
+
+## Related
+
+- [Types Guide — Interior Lighting](../../types-guide.md#interior-lighting) — `InteriorSpace` (`ActivityUse`), `Fixture`, `ActivityTypeOptions`
+- [Building Area](building-area.md) — interior spaces belong to a building area
+- [Project Defaults](../defaults.md) — `get_default_interior_space_template`, `get_default_fixture_template`
+- [COMcheckClient — Interior Lighting](../client.md#interior-lighting) — allowed wattage methods

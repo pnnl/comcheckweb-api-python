@@ -1,14 +1,20 @@
 # Exterior Lighting Operations
 
-Exterior lighting is managed at the **`ExteriorArea`** granularity. In the
-COMcheck API schema, an exterior lighting area is represented by the
-`ExteriorUse` model, aliased as `ExteriorArea`. Each `ExteriorArea` lives
-directly under `lighting.exteriorUse[]` (no parent building area needed) and
-carries exactly one singleton `ExteriorLightingSpace` whose `fixture[]` holds
-the fixtures.
+Exterior lighting areas are stored in `lighting.exteriorUse[]`, one
+`ExteriorArea` per area. They don't need a parent building area. Each area
+holds one `ExteriorLightingSpace`, whose `fixture[]` list holds its fixtures.
+The project-wide zone type is `lighting.exteriorLightingZoneType`.
+
+```python
+from comcheck_api import project_exterior_lighting_operations as el_ops
+```
 
 ## Key concepts
 
+- **`ExteriorArea` is an alias of `ExteriorUse`.** The schema name is
+  `ExteriorUse`. These operations use the `ExteriorArea` alias so it isn't
+  confused with `InteriorSpace` (see the
+  [Types Guide](../../types-guide.md#exterior-lighting)).
 - **Fixtures are batch-edited by `fixtureType`.** Use
   `update_fixtures_in_exterior_area` to add, update, and/or remove fixtures
   on an area in one call — fixtures are matched by `fixtureType` (the
@@ -16,27 +22,16 @@ the fixtures.
   not `id`. You can still edit `exteriorLightingSpace.fixture[]` directly
   and pass the whole `ExteriorArea` through `update_exterior_area_in_project`
   if you prefer.
-
-## Zone type
-
-Exterior compliance requires a real zone type on
-`lighting.exteriorLightingZoneType`.  Set it with
-`set_exterior_lighting_zone_type_in_project` **before** exterior compliance
-can be evaluated.  Adding an `ExteriorArea` while the zone is still
-`EXT_ZONE_UNSPECIFIED` emits a `UserWarning` (not an error) so you can build
-up a project incrementally.
-
-## areaDescription uniqueness
-
-`areaDescription` must be unique within `lighting.exteriorUse[]`. It is the
-identifier used by update and remove operations. If missing, a unique value is
-auto-generated with the prefix `"Ext Area"`.
+- **`areaDescription` must be unique** within `lighting.exteriorUse[]`. It is
+  the identifier used by update and remove operations. If missing, a unique
+  value is auto-generated with the prefix `"Ext Area"`.
+- **Set the zone type before checking compliance.** Exterior compliance
+  requires a real zone type on `lighting.exteriorLightingZoneType`. Set it
+  with `set_exterior_lighting_zone_type_in_project`. Adding an `ExteriorArea`
+  while the zone is still `EXT_ZONE_UNSPECIFIED` emits a `UserWarning` (not an
+  error), so you can build up a project incrementally.
 
 ## Operations
-
-```python
-from comcheck_api import project_exterior_lighting_operations as el_ops
-```
 
 | Function | Description |
 |---|---|
@@ -50,8 +45,7 @@ from comcheck_api import project_exterior_lighting_operations as el_ops
 ## Setting the zone type
 
 ```python
-from comcheck_api import project_exterior_lighting_operations as el_ops
-from comcheck_api.types.core_types import ExteriorLightingZoneTypeOptions
+from comcheck_api.types import ExteriorLightingZoneTypeOptions
 
 project = el_ops.set_exterior_lighting_zone_type_in_project(
     project, ExteriorLightingZoneTypeOptions.EXT_ZONE_NEIGHBORHOOD_BUS_DISTRICT
@@ -65,7 +59,7 @@ a `TypeError` — always use the enum.
 
 ```python
 from comcheck_api.defaults import get_default_exterior_area_template, get_default_fixture_template
-from comcheck_api.types.core_types import ExteriorUseTypeOptions
+from comcheck_api.types import ExteriorUseTypeOptions
 
 # fixtureType is the required identifier (a description string); lightingType
 # is optional and marked for deprecation.
@@ -162,3 +156,10 @@ project = el_ops.remove_exterior_area_from_project(project, "Main Parking Area")
 keys = el_ops.get_exterior_area_keys_from_project(project)
 # [{"areaDescription": "Main Parking Area", "exteriorType": "EXTERIOR_PARKING_AREA"}, ...]
 ```
+
+See `examples/project_operations/exterior_lighting_operations.py` for a full walkthrough.
+
+## Related
+
+- [Types Guide — Exterior Lighting](../../types-guide.md#exterior-lighting) — `ExteriorArea` (`ExteriorUse`), `Fixture`, `ExteriorLightingZoneTypeOptions`
+- [Project Defaults](../defaults.md) — `get_default_exterior_area_template`, `get_default_fixture_template`

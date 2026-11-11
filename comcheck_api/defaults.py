@@ -1,6 +1,7 @@
 """Module for project default templates/values."""
 
 import copy
+from typing import NoReturn
 from uuid import uuid4
 
 from comcheck_api.constants.building_area_constants import DEFAULT_BUILDING_AREA
@@ -34,11 +35,32 @@ from comcheck_api.constants.envelope_constants import (
 )
 
 from comcheck_api.constants.common_constants import PROJECT_TEMPLATE
+from comcheck_api.types.common_types import ExteriorArea, InteriorSpace
+from comcheck_api.types.core_types import (
+    AgWall,
+    BgWall,
+    ComBuilding,
+    Door,
+    Fan,
+    FanSystem,
+    Fixture,
+    Floor,
+    HVACPlant,
+    HVACSystem,
+    OffsiteRenewableProcurement,
+    RenewableSystem,
+    Roof,
+    ServiceWaterHeatingSystem,
+    Skylight,
+    ThermalBridge,
+    WholeBldgUse,
+    Window,
+)
 
 # from comcheck_api.constants.lighting_constants import DEFAULT_FIXTURE_SCHEDULE
 
 
-def get_default_project_template():
+def get_default_project_template() -> ComBuilding:
     """Return a deep copy of the default :class:`~comcheck_api.types.core_types.ComBuilding` template.
 
     The template is pre-populated with sensible defaults for location
@@ -50,7 +72,7 @@ def get_default_project_template():
     return copy.deepcopy(PROJECT_TEMPLATE)
 
 
-def get_default_building_area_template():
+def get_default_building_area_template() -> WholeBldgUse:
     """Return a deep copy of the default :class:`~comcheck_api.types.core_types.WholeBldgUse` template.
 
     Defaults to an *Automotive Facility* with 1 000 sq ft floor area and
@@ -68,7 +90,7 @@ def get_default_building_area_template():
     return area
 
 
-def get_default_roof_template():
+def get_default_roof_template() -> Roof:
     """Return a deep copy of the default :class:`~comcheck_api.types.core_types.Roof` template.
 
     Defaults to an above-deck roof with 6 000 sq ft gross area and
@@ -80,7 +102,7 @@ def get_default_roof_template():
     return copy.deepcopy(DEFAULT_ROOF)
 
 
-def get_default_ag_wall_template():
+def get_default_ag_wall_template() -> AgWall:
     """Return a deep copy of the default :class:`~comcheck_api.types.core_types.AgWall` template.
 
     Defaults to a metal-frame 24-inch above-grade wall with 4 800 sq ft
@@ -92,7 +114,7 @@ def get_default_ag_wall_template():
     return copy.deepcopy(DEFAULT_AG_WALL)
 
 
-def get_default_floor_template():
+def get_default_floor_template() -> Floor:
     """Return a deep copy of the default :class:`~comcheck_api.types.core_types.Floor` template.
 
     Defaults to a heated slab-on-grade floor with 320 sq ft gross area
@@ -104,7 +126,7 @@ def get_default_floor_template():
     return copy.deepcopy(DEFAULT_FLOOR)
 
 
-def get_default_bg_wall_template():
+def get_default_bg_wall_template() -> BgWall:
     """Return a deep copy of the default :class:`~comcheck_api.types.core_types.BgWall` template.
 
     Defaults to a concrete below-grade wall with 3 000 sq ft gross area,
@@ -116,7 +138,7 @@ def get_default_bg_wall_template():
     return copy.deepcopy(DEFAULT_BG_WALL)
 
 
-def get_default_skylight_template():
+def get_default_skylight_template() -> Skylight:
     """Return a deep copy of the default :class:`~comcheck_api.types.core_types.Skylight` template.
 
     Defaults to a no-curb, double-pane low-E skylight with 100 sq ft
@@ -128,7 +150,7 @@ def get_default_skylight_template():
     return copy.deepcopy(DEFAULT_SKYLIGHT)
 
 
-def get_default_window_template():
+def get_default_window_template() -> Window:
     """Return a deep copy of the default :class:`~comcheck_api.types.core_types.Window` template.
 
     Defaults to a triple-pane, non-operable, metal-frame window with
@@ -140,7 +162,7 @@ def get_default_window_template():
     return copy.deepcopy(DEFAULT_WINDOW)
 
 
-def get_default_door_template():
+def get_default_door_template() -> Door:
     """Return a deep copy of the default :class:`~comcheck_api.types.core_types.Door` template.
 
     Defaults to a swinging, insulated metal entrance door with 23 sq ft
@@ -152,7 +174,7 @@ def get_default_door_template():
     return copy.deepcopy(DEFAULT_DOOR)
 
 
-def get_default_thermal_bridge_template():
+def get_default_thermal_bridge_template() -> ThermalBridge:
     """Return a deep copy of the default :class:`~comcheck_api.types.core_types.ThermalBridge` template.
 
     Defaults to a prescriptive linear floor-to-wall intersection thermal
@@ -164,7 +186,7 @@ def get_default_thermal_bridge_template():
     return copy.deepcopy(DEFAULT_THERMAL_BRIDGE)
 
 
-def get_default_interior_space_template():
+def get_default_interior_space_template() -> InteriorSpace:
     """Return a deep copy of the default interior lighting space template.
 
     In the COMcheck API schema, an interior lighting space is represented by
@@ -182,7 +204,7 @@ def get_default_interior_space_template():
     return copy.deepcopy(DEFAULT_INTERIOR_SPACE_AREA)
 
 
-def get_default_fixture_template():
+def get_default_fixture_template() -> Fixture:
     """Return a deep copy of the default :class:`~comcheck_api.types.core_types.Fixture` template.
 
     Defaults to an LED fixture at 32 W, quantity 1, with no lighting controls.
@@ -193,7 +215,7 @@ def get_default_fixture_template():
     return copy.deepcopy(DEFAULT_FIXTURE)
 
 
-def get_default_exterior_area_template():
+def get_default_exterior_area_template() -> ExteriorArea:
     """Return a deep copy of the default exterior lighting area template.
 
     In the COMcheck API schema, an exterior lighting area is represented by
@@ -210,7 +232,7 @@ def get_default_exterior_area_template():
     return copy.deepcopy(DEFAULT_EXTERIOR_AREA)
 
 
-def get_default_fixture_schedule_template():
+def get_default_fixture_schedule_template() -> NoReturn:
     """Return a default fixture schedule template with a unique key.
 
     .. warning::
@@ -221,7 +243,7 @@ def get_default_fixture_schedule_template():
     raise NotImplementedError("DEFAULT_FIXTURE_SCHEDULE constant not yet implemented")
 
 
-def get_default_renewable_system_template():
+def get_default_renewable_system_template() -> RenewableSystem:
     """Return a deep copy of the default renewable system template.
 
     Defaults to a Solar PV system with 0.0 capacity in Watts.
@@ -232,7 +254,7 @@ def get_default_renewable_system_template():
     return copy.deepcopy(DEFAULT_RENEWABLE_SYSTEM)
 
 
-def get_default_offsite_renewable_procurement_template():
+def get_default_offsite_renewable_procurement_template() -> OffsiteRenewableProcurement:
     """Return a deep copy of the default offsite renewable procurement template.
 
     Defaults to an unspecified procurement type with 0.0 kWh annual energy.
@@ -243,7 +265,7 @@ def get_default_offsite_renewable_procurement_template():
     return copy.deepcopy(DEFAULT_OFFSITE_RENEWABLE_PROCUREMENT)
 
 
-def get_default_hvac_system_template():
+def get_default_hvac_system_template() -> HVACSystem:
     """Return a deep copy of the default HVAC system template.
 
     Defaults to an unknown cooling and heating equipment with no economizer,
@@ -255,7 +277,7 @@ def get_default_hvac_system_template():
     return copy.deepcopy(DEFAULT_HVAC_SYSTEM)
 
 
-def get_default_fan_system_template():
+def get_default_fan_system_template() -> FanSystem:
     """Return a deep copy of the default fan system template.
 
     Defaults to motor nameplate HP compliance method with no fans and no
@@ -267,7 +289,7 @@ def get_default_fan_system_template():
     return copy.deepcopy(DEFAULT_FAN_SYSTEM)
 
 
-def get_default_fan_template():
+def get_default_fan_template() -> Fan:
     """Return a deep copy of the default fan template.
 
     Defaults to an unspecified fan type with 0.0 volume and no efficiency data.
@@ -278,7 +300,7 @@ def get_default_fan_template():
     return copy.deepcopy(DEFAULT_FAN)
 
 
-def get_default_hvac_plant_template():
+def get_default_hvac_plant_template() -> HVACPlant:
     """Return a deep copy of the default HVAC plant template.
 
     Defaults to a heating plant with hot water boiler (100 kBtu/hr capacity)
@@ -290,7 +312,7 @@ def get_default_hvac_plant_template():
     return copy.deepcopy(DEFAULT_HVAC_PLANT)
 
 
-def get_default_water_heater_template():
+def get_default_water_heater_template() -> ServiceWaterHeatingSystem:
     """Return a deep copy of the default service water heating system template.
 
     Defaults to a storage water heater with unknown fuel type, 1 quantity,

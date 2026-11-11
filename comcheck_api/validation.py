@@ -42,6 +42,11 @@ def validate_project(data: dict[str, Any] | ComBuilding) -> ValidationResult:
 
     Accepts a dict or an existing ``ComBuilding`` (round-trips through
     ``model_dump`` so the same code path runs in both cases).
+
+    This checks the data against the schema only (field types, required
+    fields, enum values). Rules the project operations enforce — such as
+    unique descriptions or a ``fanSystemKey`` that points to an existing fan
+    system — are not checked.
     """
     payload = data.model_dump() if isinstance(data, ComBuilding) else data
     try:

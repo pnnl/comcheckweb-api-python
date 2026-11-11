@@ -204,7 +204,7 @@ print(result["performanceRating"])
   offer building-area / envelope / lighting / mechanical / renewable / credits / simulation instead.
   `comcheck_api.list_operations()` enumerates the `building_area`,
   `envelope`, `interior_lighting`, `exterior_lighting`, `mechanical`,
-  `renewable`, and `credits` groups.
+  `credits`, and `renewable` groups.
 
 ## Common patterns
 

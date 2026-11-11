@@ -356,11 +356,33 @@ def test_fan_maximum_allowable_hp_service(requests):
 def test_calculate_fan_maximum_allowable_hp(requests):
     data = {"maxNameplateHp": 7.5}
     client = _make_client(_ok(requests, data))
-    fan = Fan(motorHp=5.0)
+    fan = Fan(description="Fan 1", designBrakeHp=5.0, nameplateHp=7.0)
 
     result = client.calculate_fan_maximum_allowable_hp(fan, "CEZ_IECC2024")
 
     assert result == 7.5
+    (request,) = requests
+    # Only the endpoint's inputs are sent; a missing brakeHp is sent as 0.
+    assert json.loads(request.content) == {"designBrakeHp": 5.0, "brakeHp": 0.0}
+
+
+def test_calculate_fan_maximum_allowable_hp_sends_brake_hp(requests):
+    client = _make_client(_ok(requests, {"maxNameplateHp": 7.5}))
+
+    client.calculate_fan_maximum_allowable_hp(
+        Fan(designBrakeHp=5.0, brakeHp=4.0), "CEZ_IECC2024"
+    )
+
+    (request,) = requests
+    assert json.loads(request.content) == {"designBrakeHp": 5.0, "brakeHp": 4.0}
+
+
+def test_calculate_fan_maximum_allowable_hp_requires_design_brake_hp(requests):
+    client = _make_client(_ok(requests, {"maxNameplateHp": 7.5}))
+
+    with pytest.raises(ValueError, match="designBrakeHp"):
+        client.calculate_fan_maximum_allowable_hp(Fan(description="Fan 1"), "CEZ_IECC2024")
+    assert requests == []
 
 
 # Project write-back tests
@@ -429,6 +451,82 @@ def test_update_fan_pressure_drop_credits_no_hvac():
         client.update_fan_pressure_drop_credits(project, "Test")
 
 
+def _fan_project(project, fans, comply_method="FAN_SYSTEM_MOTOR_NAMEPLATE_HP"):
+    fan_system = project.hvac.fanSystem[0]
+    fan_system.fan = fans
+    fan_system.complyMethod = comply_method
+    return project
+
+
+def test_update_fan_maximum_allowable_hp(requests, project):
+    client = _make_client(_ok(requests, {"maxNameplateHp": 7.5}))
+    project = _fan_project(
+        project,
+        [Fan(description="Fan 1", designBrakeHp=5.0), Fan(description="No design HP")],
+    )
+
+    result = client.update_fan_maximum_allowable_hp(project, "Test Fan System")
+
+    assert result is project
+    fan_1, skipped = project.hvac.fanSystem[0].fan
+    assert fan_1.maxNameplateHp == 7.5
+    assert fan_1.brakeHp is MISSING  # input field, left unchanged
+    assert skipped.maxNameplateHp is MISSING
+    (request,) = requests  # fans without designBrakeHp are not sent
+    assert request.url.path.endswith("/CEZ_IECC2024/mechanical/fan-systems/maximum-allowable-hp")
+    # The written values are kept when the project is serialized for saving.
+    dumped = project.model_dump(mode="json")["hvac"]["fanSystem"][0]["fan"][0]
+    assert dumped["maxNameplateHp"] == 7.5
+
+
+def test_update_fan_maximum_allowable_hp_keeps_brake_hp_input(requests, project):
+    """brakeHp is an input: it is sent to the API and never overwritten."""
+    client = _make_client(_ok(requests, {"maxNameplateHp": 7.5, "brakeHp": 4.2}))
+    project = _fan_project(
+        project, [Fan(description="Fan 1", designBrakeHp=5.0, brakeHp=6.0)]
+    )
+
+    client.update_fan_maximum_allowable_hp(project, "Test Fan System")
+
+    fan = project.hvac.fanSystem[0].fan[0]
+    assert fan.maxNameplateHp == 7.5
+    assert fan.brakeHp == 6.0
+    (request,) = requests
+    assert json.loads(request.content) == {"designBrakeHp": 5.0, "brakeHp": 6.0}
+
+
+def test_update_fan_maximum_allowable_hp_skips_brake_hp_method(requests, project):
+    client = _make_client(_ok(requests, {"maxNameplateHp": 7.5}))
+    project = _fan_project(
+        project,
+        [Fan(description="Fan 1", designBrakeHp=5.0)],
+        comply_method="FAN_SYSTEM_MOTOR_BRAKE_HP",
+    )
+
+    with pytest.warns(UserWarning, match="FAN_SYSTEM_MOTOR_NAMEPLATE_HP"):
+        result = client.update_fan_maximum_allowable_hp(project, "Test Fan System")
+
+    assert result is project
+    assert project.hvac.fanSystem[0].fan[0].maxNameplateHp is MISSING
+    assert requests == []
+
+
+def test_update_fan_maximum_allowable_hp_not_found(requests, project):
+    client = _make_client(_ok(requests, {}))
+
+    with pytest.raises(ValueError, match="not found"):
+        client.update_fan_maximum_allowable_hp(project, "Nonexistent")
+
+
+def test_update_fan_maximum_allowable_hp_no_hvac():
+    client = _make_client(lambda r: httpx.Response(200, json={}))
+    project = get_default_project_template()
+    project.hvac = MISSING
+
+    with pytest.raises(ValueError, match="no hvac"):
+        client.update_fan_maximum_allowable_hp(project, "Test")
+
+
 # Error handling tests
 def test_mechanical_service_maps_http_errors():
     def handler(request: httpx.Request) -> httpx.Response:
@@ -464,7 +562,9 @@ def test_calculate_fan_maximum_allowable_hp_missing_value_raises(requests):
     client = _make_client(_ok(requests, {}))
 
     with pytest.raises(COMCheckAPIError):
-        client.calculate_fan_maximum_allowable_hp(Fan(description="Fan 1"), "CEZ_IECC2024")
+        client.calculate_fan_maximum_allowable_hp(
+            Fan(description="Fan 1", designBrakeHp=5.0), "CEZ_IECC2024"
+        )
 
 
 def test_validate_hvac_system_economizer_string_capacity(requests):

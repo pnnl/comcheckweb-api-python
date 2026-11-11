@@ -93,10 +93,10 @@ print(f"Message: {compliance.complianceMessage}")
 
 # Example 7: Calculate fan maximum allowable HP
 print("\n=== Fan Maximum Allowable HP ===")
+# Only designBrakeHp and brakeHp are sent; brakeHp defaults to 0 when unset.
 fan = Fan(
     description="Supply Fan 1",
-    motorHp=5.0,
-    airflow=10000,
+    designBrakeHp=5.0,
 )
 max_hp = client.calculate_fan_maximum_allowable_hp(fan, energy_code)
 print(f"Maximum allowable nameplate HP: {max_hp}")
@@ -110,6 +110,7 @@ project.hvac = HVAC(
         FanSystem(
             description="Main Supply Fan System",
             complyMethod="FAN_SYSTEM_MOTOR_NAMEPLATE_HP",
+            fan=[Fan(description="Supply Fan 1", designBrakeHp=5.0)],
             pressureDropCredits=[
                 FanSystemPressureDropCredits(
                     type="PARTICULATE_FILTRATION_CREDIT_MERV_9_THRU_12",
@@ -128,5 +129,10 @@ print(f"Updated fan system - Complies: {fs.complies}, Method: {fs.complyMethod}"
 project = client.update_fan_pressure_drop_credits(project, "Main Supply Fan System")
 credit = fs.pressureDropCredits[0]
 print(f"Updated pressure drop credit: {credit.pressureDropCredit}")
+
+# Update maximum allowable HP on each fan
+project = client.update_fan_maximum_allowable_hp(project, "Main Supply Fan System")
+fan = fs.fan[0]
+print(f"Updated fan max nameplate HP: {fan.maxNameplateHp}")
 
 client.close()

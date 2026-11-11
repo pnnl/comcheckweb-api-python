@@ -3,6 +3,14 @@ site_description: Type-safe Python client for the PNNL COMcheck Web API
 site_url: https://pnnl.github.io/comcheckweb-api-python/
 repo_url: https://github.com/pnnl/comcheckweb-api-python
 docs_dir: docs_site
+# Low-level reference pages kept in the repo but intentionally hidden from nav
+not_in_nav: |
+  /api/api-service.md
+  /api/exceptions.md
+  /api/managers/
+  /api/constants/
+  /api/types/
+  /api/utilities/
 
 theme:
   name: material
