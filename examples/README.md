@@ -61,8 +61,8 @@ python examples/client/compliance_and_report.py
 Demonstrates interior lighting allowed-wattage calculation.
 
 **What it demonstrates:**
-- `calculate_interior_space_allowed_wattage()` - Calculating allowed wattage for a single InteriorSpace
-- `calculate_interior_spaces_allowed_wattage()` - Calculating allowed wattage for a list of InteriorSpace objects
+- `calculate_interior_space_allowed_wattage()` - Calculating allowed wattage for one InteriorSpace in a project, selected by `areaDescription`
+- `calculate_interior_spaces_allowed_wattage()` - Calculating allowed wattage for every InteriorSpace in a project
 
 **Usage:**
 ```bash

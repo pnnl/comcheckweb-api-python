@@ -30,7 +30,6 @@ from comcheck_api.types.api_types import (
     PlantEfficiency,
     FanSystemComplianceResult,
 )
-from comcheck_api.types.common_types import InteriorSpace
 from comcheck_api.types.core_types import (
     MISSING,
     ComBuilding,
@@ -283,11 +282,13 @@ class COMcheckClient:
     def update_uvalues(self, project: ComBuilding) -> ComBuilding:
         """Calculate assembly u-values and update the project in place.
 
-        Sends the full envelope to the u-value endpoint and writes the returned
-        values back onto the matching ``agWall``, ``bgWall``, ``roof``, and
-        ``floor`` components (matched by ``assemblyType``). Only these assembly
-        types receive calculated u-values; ``effectiveUFactor`` applies to
-        ``agWall`` only.
+        Sends the envelope and the project ``location`` to the u-value
+        endpoint and writes the returned values back onto the matching
+        ``agWall``, ``bgWall``, ``roof``, and ``floor`` components (matched by
+        ``assemblyType``). Only these assembly types receive calculated
+        u-values; ``effectiveUFactor`` applies to ``agWall`` only. The
+        location is required because the required u-values depend on the
+        climate zone.
 
         Args:
             project: The project whose envelope u-values should be refreshed.
@@ -296,70 +297,87 @@ class COMcheckClient:
             The same ``project`` instance, with u-values updated.
         """
         energy_code = str(project.control.code)
-        envelope_data = project.envelope.model_dump(mode="json")
+        request_data = project.envelope.model_dump(mode="json")
+        request_data["location"] = project.location.model_dump(mode="json")
         updated_assembly_uvalues = self._service.assemblies_uvalue(
-            envelope_data, energy_code
+            request_data, energy_code
         )["data"]
 
-        for wall in project.envelope.agWall:
-            for uvalue in updated_assembly_uvalues.get("agWall", []):
-                if wall.assemblyType == uvalue["assemblyType"]:
-                    wall.effectiveUFactor = float(uvalue["effectiveUFactor"])
-                    wall.propUValue = float(uvalue["propUValue"])
-        for wall in project.envelope.bgWall:
-            for uvalue in updated_assembly_uvalues.get("bgWall", []):
-                if wall.assemblyType == uvalue["assemblyType"]:
-                    wall.propUValue = float(uvalue["propUValue"])
-        for roof in project.envelope.roof:
-            for uvalue in updated_assembly_uvalues.get("roof", []):
-                if roof.assemblyType == uvalue["assemblyType"]:
-                    roof.propUValue = float(uvalue["propUValue"])
-        for floor in project.envelope.floor:
-            for uvalue in updated_assembly_uvalues.get("floor", []):
-                if floor.assemblyType == uvalue["assemblyType"]:
-                    floor.propUValue = float(uvalue["propUValue"])
+        def _apply(components, key: str, effective: bool = False) -> None:
+            results = {
+                uvalue["assemblyType"]: uvalue
+                for uvalue in updated_assembly_uvalues.get(key, [])
+            }
+            for component in components:
+                uvalue = results.get(component.assemblyType)
+                if uvalue is None:
+                    continue
+                prop_uvalue = _optional_float(uvalue.get("propUValue"))
+                if prop_uvalue is not None:
+                    component.propUValue = prop_uvalue
+                if effective:
+                    effective_ufactor = _optional_float(uvalue.get("effectiveUFactor"))
+                    if effective_ufactor is not None:
+                        component.effectiveUFactor = effective_ufactor
+
+        _apply(project.envelope.agWall, "agWall", effective=True)
+        _apply(project.envelope.bgWall, "bgWall")
+        _apply(project.envelope.roof, "roof")
+        _apply(project.envelope.floor, "floor")
 
         return project
 
     def calculate_interior_space_allowed_wattage(
-        self, interior_space: InteriorSpace, energy_code: str
+        self,
+        project: ComBuilding,
+        area_description: str,
+        energy_code: Optional[str] = None,
     ) -> Any:
         """Calculate allowed wattage for a single interior lighting space.
 
+        Sends the whole project; the space is selected by its
+        ``areaDescription`` and must exist in
+        ``project.lighting.wholeBldgUse[].activityUse[]``.
+
         Args:
-            interior_space: The interior space (``InteriorSpace``) to
-                calculate allowed wattage for.
+            project: The project containing the interior space.
+            area_description: The ``areaDescription`` of the interior space
+                (``InteriorSpace``) to calculate allowed wattage for.
             energy_code: The energy code for the api end point path.
+                Defaults to ``project.control.code``.
 
         Returns:
             A dict with the calculated wattage, e.g.
             ``{"spaceAllowedWattage": 560}``.
         """
-        interior_space_data = interior_space.model_dump(mode="json")
+        project_data = project.model_dump(mode="json")
         response = self._service.interior_space_allowed_wattage(
-            interior_space_data, energy_code
+            project_data,
+            energy_code or str(project.control.code),
+            area_description,
         )
         return response.get("data")
 
     def calculate_interior_spaces_allowed_wattage(
-        self, interior_spaces: List[InteriorSpace], energy_code: str
+        self, project: ComBuilding, energy_code: Optional[str] = None
     ) -> Any:
-        """Calculate allowed wattage for a list of interior lighting spaces.
+        """Calculate allowed wattage for every interior lighting space in a project.
+
+        Sends the whole project; allowed wattage is returned for every
+        interior space in ``project.lighting.wholeBldgUse[].activityUse[]``.
 
         Args:
-            interior_spaces: The interior spaces (``InteriorSpace`` objects)
-                to calculate allowed wattage for.
+            project: The project containing the interior spaces.
             energy_code: The energy code for the api end point path.
+                Defaults to ``project.control.code``.
 
         Returns:
             A dict keyed by each interior space's ``areaDescription``, e.g.
             ``{"Test Space": 610}``.
         """
-        interior_spaces_data = [
-            interior_space.model_dump(mode="json") for interior_space in interior_spaces
-        ]
+        project_data = project.model_dump(mode="json")
         response = self._service.interior_spaces_allowed_wattage(
-            interior_spaces_data, energy_code
+            project_data, energy_code or str(project.control.code)
         )
         return response.get("data")
 

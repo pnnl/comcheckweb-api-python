@@ -10,8 +10,13 @@ import os
 import pytest
 from dotenv import load_dotenv
 
+from comcheck_api import (
+    project_building_area_operations as ba_ops,
+    project_interior_lighting_operations as il_ops,
+)
 from comcheck_api.client import COMcheckClient
 from comcheck_api.defaults import (
+    get_default_building_area_template,
     get_default_interior_space_template,
     get_default_project_template,
 )
@@ -66,17 +71,36 @@ def test_fetch_single_project(client: COMcheckClient):
         assert True
 
 
+def _project_with_interior_spaces():
+    """Default project with one building area holding two interior spaces."""
+    project = get_default_project_template()
+    project.control.code = EnergyCodeOptions.CEZ_90_1_2022
+
+    area = get_default_building_area_template()
+    area.areaDescription = "Office Area"
+    project = ba_ops.add_building_area_to_project(project, area)
+
+    first = get_default_interior_space_template()
+    first.areaDescription = "Open Office"
+    first.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE_OPEN
+    first.floorArea = 2000.0
+    project = il_ops.add_interior_space_to_project(project, area.key, first)
+
+    second = get_default_interior_space_template()
+    second.areaDescription = "Conference Room"
+    second.activityType = ActivityTypeOptions.ACTIVITY_COMMON_CONFERENCE_HALL
+    second.floorArea = 500.0
+    project = il_ops.add_interior_space_to_project(project, area.key, second)
+    return project
+
+
 def test_calculate_interior_space_allowed_wattage(client: COMcheckClient):
-    """Test calculating allowed wattage for a single InteriorSpace."""
-    interior_space = get_default_interior_space_template()
-    interior_space.areaDescription = "Open Office"
-    interior_space.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE_OPEN
-    interior_space.floorArea = 2000.0
-    energy_code = str(EnergyCodeOptions.CEZ_90_1_2022)
+    """Test calculating allowed wattage for a single InteriorSpace in a project."""
+    project = _project_with_interior_spaces()
 
     try:
         result = client.calculate_interior_space_allowed_wattage(
-            interior_space, energy_code
+            project, "Open Office"
         )
     except COMCheckHTTPError as exc:
         if exc.status_code in (401, 403):
@@ -89,23 +113,11 @@ def test_calculate_interior_space_allowed_wattage(client: COMcheckClient):
 
 
 def test_calculate_interior_spaces_allowed_wattage(client: COMcheckClient):
-    """Test calculating allowed wattage for a list of InteriorSpace objects."""
-    first = get_default_interior_space_template()
-    first.areaDescription = "Open Office"
-    first.activityType = ActivityTypeOptions.ACTIVITY_COMMON_OFFICE_OPEN
-    first.floorArea = 2000.0
-
-    second = get_default_interior_space_template()
-    second.areaDescription = "Conference Room"
-    second.activityType = ActivityTypeOptions.ACTIVITY_COMMON_CONFERENCE_HALL
-    second.floorArea = 500.0
-
-    energy_code = str(EnergyCodeOptions.CEZ_90_1_2022)
+    """Test calculating allowed wattage for every InteriorSpace in a project."""
+    project = _project_with_interior_spaces()
 
     try:
-        result = client.calculate_interior_spaces_allowed_wattage(
-            [first, second], energy_code
-        )
+        result = client.calculate_interior_spaces_allowed_wattage(project)
     except COMCheckHTTPError as exc:
         if exc.status_code in (401, 403):
             pytest.skip(
