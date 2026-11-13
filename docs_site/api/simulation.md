@@ -66,8 +66,10 @@ session_id = client.start_run_simulation(project, project_id="your-project-id")
 ## Envelope u-values
 
 `start_run_simulation` always refreshes the calculated envelope u-values
-before submitting, by calling `update_uvalues(project)`. This fetches the
-proposed/effective u-values for the envelope assemblies and writes them
+before submitting, by calling `update_uvalues(project)`. This sends the
+envelope assemblies and the project `location` (required — the climate zone
+drives the required u-values), fetches the proposed/effective u-values, and
+writes them
 back onto the matching `agWall`, `bgWall`, `roof`, and `floor` components
 (matched by `assemblyType`). Only these assembly types receive calculated
 u-values, and `effectiveUFactor` applies to `agWall` only.

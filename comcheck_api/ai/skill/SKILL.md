@@ -60,18 +60,21 @@ Triggers:
   for known lifecycle values (the catalog isn't exhaustive — only
   the terminal pair is guaranteed stable).
 - **U-values are calculated server-side**: `update_uvalues(project)`
-  fetches the proposed/effective u-values for the envelope and writes
+  sends the envelope plus `project.location` (required — the climate zone
+  drives the required u-values), fetches the proposed/effective u-values, and
+  writes
   them back onto the matching `agWall`, `bgWall`, `roof`, and `floor`
   assemblies (only these get calculated u-values; `effectiveUFactor`
   is `agWall`-only). `start_run_simulation` calls this automatically,
   so you rarely call it directly — use it only when you need refreshed
   u-values on a project outside the simulation flow.
 - **Interior lighting allowed wattage is also calculated server-side**:
-  `calculate_interior_space_allowed_wattage(interior_space, energy_code)` and
-  `calculate_interior_spaces_allowed_wattage(interior_spaces, energy_code)`
-  take an `InteriorSpace` (or a list of them) plus the energy code as an
-  explicit string — `InteriorSpace` has no `control.code` of its own. Neither
-  method mutates the input or writes to `allowedWattage`; both return the
+  `calculate_interior_space_allowed_wattage(project, area_description)` and
+  `calculate_interior_spaces_allowed_wattage(project)` send the whole
+  project; the single form picks the interior space by its
+  `areaDescription`, which must already exist in the project. The energy code
+  defaults to `project.control.code` (override with `energy_code=`). Neither
+  method mutates the project or writes to `allowedWattage`; both return the
   raw calculation payload (`{"spaceAllowedWattage": ...}` for the single
   form, `{areaDescription: wattage, ...}` for the list form).
 - **Renewable areas and capacity are calculated server-side**:

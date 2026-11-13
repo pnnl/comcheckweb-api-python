@@ -199,14 +199,17 @@ class COMCheckApiService:
     def assemblies_uvalue(
         self, envelope_data: Dict[str, Any], energy_code: str
     ) -> Dict[str, Any]:
-        """get assemblies u values
+        """Calculate assembly u-values.
 
         Args:
-            envelope_data: The envelope data to send in the request body
+            envelope_data: The request body: the envelope assembly arrays
+                (``roof``, ``agWall``, ``bgWall``, ``floor``) plus the
+                project ``location``, which is required because the
+                required u-values depend on the climate zone.
             energy_code: The energy code for the api end point path
 
         Returns:
-            RunSimulationResponse with session information
+            API response data as dictionary
 
         Raises:
             COMCheckHTTPError: If the API returns an error status
@@ -224,13 +227,15 @@ class COMCheckApiService:
             self._handle_api_error(error)
 
     def interior_space_allowed_wattage(
-        self, interior_space_data: Dict[str, Any], energy_code: str
+        self, project_data: Dict[str, Any], energy_code: str, area_description: str
     ) -> Dict[str, Any]:
         """Calculate allowed wattage for a single interior lighting space.
 
         Args:
-            interior_space_data: The interior space data to send in the request body
+            project_data: The whole project to send in the request body
             energy_code: The energy code for the api end point path
+            area_description: The ``areaDescription`` of the interior space
+                (``activityUse``) in the project to calculate
 
         Returns:
             API response data as dictionary
@@ -242,7 +247,9 @@ class COMCheckApiService:
         try:
             client = self._get_client()
             response = client.post(
-                f"/{energy_code}/activity-use/allowed-wattage", json=interior_space_data
+                f"/{energy_code}/activity-use/allowed-wattage",
+                params={"areaDescription": area_description},
+                json=project_data,
             )
             response.raise_for_status()
             return response.json()
@@ -250,12 +257,12 @@ class COMCheckApiService:
             self._handle_api_error(error)
 
     def interior_spaces_allowed_wattage(
-        self, interior_spaces_data: list[Dict[str, Any]], energy_code: str
+        self, project_data: Dict[str, Any], energy_code: str
     ) -> Dict[str, Any]:
-        """Calculate allowed wattage for a list of interior lighting spaces.
+        """Calculate allowed wattage for every interior lighting space in a project.
 
         Args:
-            interior_spaces_data: The list of interior space data to send in the request body
+            project_data: The whole project to send in the request body
             energy_code: The energy code for the api end point path
 
         Returns:
@@ -269,7 +276,7 @@ class COMCheckApiService:
             client = self._get_client()
             response = client.post(
                 f"/{energy_code}/activity-uses/allowed-wattage",
-                json=interior_spaces_data,
+                json=project_data,
             )
             response.raise_for_status()
             return response.json()

@@ -173,8 +173,10 @@ thermal bridges on it.
 
 ## Calculating U-values (API)
 
-`COMcheckClient.update_uvalues` sends the envelope to the COMcheck Web API.
-It writes the calculated U-values back onto the matching `agWall`, `bgWall`,
+`COMcheckClient.update_uvalues` sends the envelope and the project
+`location` to the COMcheck Web API. The location is required because the
+required U-values depend on the climate zone, so set `project.location`
+(`state`, `city`, `climateZone`) first. It writes the calculated U-values back onto the matching `agWall`, `bgWall`,
 `roof`, and `floor` components (matched by `assemblyType`). It updates the
 project in place and returns it:
 

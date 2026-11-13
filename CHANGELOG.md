@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Changed (breaking)
+- `COMcheckClient.calculate_interior_space_allowed_wattage(project, area_description, energy_code=None)` now takes the whole project and the `areaDescription` of the interior space, instead of an `InteriorSpace` and an energy code. It sends the project to `POST /{energyCode}/activity-use/allowed-wattage?areaDescription=...`. The energy code defaults to `project.control.code`
+- `COMcheckClient.calculate_interior_spaces_allowed_wattage(project, energy_code=None)` now takes the whole project instead of a list of `InteriorSpace` objects and returns allowed wattage for every interior space in it. The energy code defaults to `project.control.code`
+- `COMCheckApiService.interior_space_allowed_wattage(project_data, energy_code, area_description)` and `COMCheckApiService.interior_spaces_allowed_wattage(project_data, energy_code)` send the whole project
+- `COMcheckClient.update_uvalues` now also sends `project.location` with the envelope; the u-value endpoint requires it because the required u-values depend on the climate zone
+
+### Fixed
+- `update_uvalues` no longer raises when the API returns `null` for `propUValue` or `effectiveUFactor`; the existing value is kept
+
 ### Added
 - Docs and AI skill note that mechanical requirements (`requirementAnswer`) are not supported and must be filled out on COMcheck Web
 - Renewable energy operations module (`project_renewable_operations`) for managing on-site renewable systems and off-site procurement

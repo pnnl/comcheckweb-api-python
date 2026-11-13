@@ -135,19 +135,17 @@ Allowed wattage is calculated server-side via two `COMcheckClient` methods,
 not an `il_ops` function:
 
 ```python
-energy_code = str(project.control.code)  # InteriorSpace alone has no control.code
-
-result = client.calculate_interior_space_allowed_wattage(interior_space, energy_code)
+# Both send the whole project; energy code defaults to project.control.code
+result = client.calculate_interior_space_allowed_wattage(project, "Open Office")
 # {"spaceAllowedWattage": 560}
 
-results = client.calculate_interior_spaces_allowed_wattage(
-    [interior_space, second_interior_space], energy_code
-)
+results = client.calculate_interior_spaces_allowed_wattage(project)
 # {"Open Office": 560, "Conference Room": 610} — keyed by areaDescription
 ```
 
-Neither call mutates the `InteriorSpace` objects or writes onto
-`allowedWattage` — they return the raw calculation payload.
+The interior space must already be in the project (add it with
+`il_ops.add_interior_space_to_project`). Neither call mutates the project or
+writes onto `allowedWattage` — they return the raw calculation payload.
 
 ## Exterior lighting operations
 
