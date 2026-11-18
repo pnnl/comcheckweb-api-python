@@ -8,12 +8,17 @@ on:
         required: false
 
 permissions:
-  id-token: write
+  contents: read
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v5
 
@@ -25,10 +30,48 @@ jobs:
         run: sed -i "s/^version = .*/version = \"${{ inputs.version }}\"/" pyproject.toml
 
       - name: Show version
-        run: grep '^version' pyproject.toml
+        id: version
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
+          echo "Version: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Build package
         run: uv build
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+  # After a successful publish, tag the commit and create a GitHub Release
+  # whose notes are this version's section of CHANGELOG.md.
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.publish.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Extract release notes from CHANGELOG.md
+        run: |
+          # Lines after "## [VERSION]" up to (not including) the next "## [" heading.
+          awk -v v="$VERSION" '
+            index($0, "## [" v "]") == 1 { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "::error::No '## [$VERSION]' section found in CHANGELOG.md"
+            exit 1
+          fi
+          cat release-notes.md
+
+      - name: Create GitHub Release
+        run: |
+          gh release create "v$VERSION" \
+            --target "$GITHUB_SHA" \
+            --title "v$VERSION" \
+            --notes-file release-notes.md
