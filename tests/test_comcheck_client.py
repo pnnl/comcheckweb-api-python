@@ -2,7 +2,9 @@
 
 These hit the real COMcheck Web API and need a valid ``COM_API_KEY``. They
 skip (rather than fail) when no key is set or the key is rejected, so the
-offline suite stays green; provide a valid key to exercise them.
+offline suite stays green; provide a valid key to exercise them. Set
+``REQUIRE_LIVE_API=1`` (as the scheduled integration workflow does) to make
+those cases fail instead of skip.
 """
 
 import os
@@ -19,12 +21,19 @@ from comcheck_api.types.core_types import ActivityTypeOptions, EnergyCodeOptions
 load_dotenv()
 
 
+def _skip_or_fail(reason: str) -> None:
+    """Skip the live test, or fail it when ``REQUIRE_LIVE_API`` is set."""
+    if os.getenv("REQUIRE_LIVE_API") == "1":
+        pytest.fail(reason)
+    pytest.skip(reason)
+
+
 @pytest.fixture(scope="module")
 def client():
     """Fixture to create and configure COMcheckClient."""
     api_key = os.getenv("COM_API_KEY")
     if not api_key:
-        pytest.skip("COM_API_KEY is not set; skipping live client tests.")
+        _skip_or_fail("COM_API_KEY is not set; skipping live client tests.")
 
     client = COMcheckClient()
     client.set_api_key(api_key)
@@ -37,7 +46,7 @@ def test_fetch_project_list(client: COMcheckClient):
         project_list = client.list_projects()
     except COMCheckHTTPError as exc:
         if exc.status_code in (401, 403):
-            pytest.skip(
+            _skip_or_fail(
                 f"COM_API_KEY rejected ({exc.status_code}); skipping live test."
             )
         raise
@@ -50,7 +59,7 @@ def test_fetch_single_project(client: COMcheckClient):
         project_list = client.list_projects()
     except COMCheckHTTPError as exc:
         if exc.status_code in (401, 403):
-            pytest.skip(
+            _skip_or_fail(
                 f"COM_API_KEY rejected ({exc.status_code}); skipping live test."
             )
         raise
@@ -77,7 +86,7 @@ def test_calculate_interior_space_allowed_wattage(client: COMcheckClient):
         )
     except COMCheckHTTPError as exc:
         if exc.status_code in (401, 403):
-            pytest.skip(
+            _skip_or_fail(
                 f"COM_API_KEY rejected ({exc.status_code}); skipping live test."
             )
         raise
@@ -105,7 +114,7 @@ def test_calculate_interior_spaces_allowed_wattage(client: COMcheckClient):
         )
     except COMCheckHTTPError as exc:
         if exc.status_code in (401, 403):
-            pytest.skip(
+            _skip_or_fail(
                 f"COM_API_KEY rejected ({exc.status_code}); skipping live test."
             )
         raise

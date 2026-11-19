@@ -1,0 +1,56 @@
+name: Integration Tests
+
+# Weekly run of the live tests against the production COMcheck Web API, to
+# catch server-side changes that break this client. Kept separate from
+# test.yml, which stays offline and runs on every PR.
+#
+# Secret handling (this repo is public):
+# - COM_API_KEY lives in the "integration" environment, not as a repo secret.
+#   Restrict that environment's deployment branches to `main` so only code
+#   already merged to main can read it; PR branches and forks cannot.
+# - The workflow has no pull_request / pull_request_target trigger, so code
+#   from a PR never runs with the secret.
+# - GitHub masks the key in logs; the client sends it only as a request header
+#   and never logs it.
+# - Use a dedicated test account: --integration writes back to the first
+#   project in the account.
+on:
+  schedule:
+    - cron: "0 14 * * 1" # Mondays 14:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Runs share one test account and project, so never overlap.
+concurrency:
+  group: integration
+  cancel-in-progress: false
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    environment: integration
+    timeout-minutes: 30
+    env:
+      COM_API_KEY: ${{ secrets.COM_API_KEY }}
+      # Fail instead of skip when the key is missing/rejected or the account
+      # has no projects, so the run can't pass without testing anything.
+      REQUIRE_LIVE_API: "1"
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.2.0
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run live integration tests
+        run: >
+          uv run pytest -q --integration
+          tests/test_comcheck_client.py
+          tests/project_operation_tests
