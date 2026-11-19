@@ -53,7 +53,10 @@ def project(request, client: COMcheckClient) -> ComBuilding:
     if request.config.getoption("--integration"):
         projects = client.list_projects()
         if not projects or not (project_id := projects[0].get("_id")):
-            pytest.skip("No projects found for integration tests.")
+            reason = "No projects found for integration tests."
+            if os.getenv("REQUIRE_LIVE_API") == "1":
+                pytest.fail(reason)
+            pytest.skip(reason)
         snapshot = client.get_project(project_id, mode="json")
         os.makedirs("testProjectJson", exist_ok=True)
         export_to_json(snapshot, "testProjectJson/initialProject.json")
